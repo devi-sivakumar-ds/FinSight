@@ -1,0 +1,164 @@
+# ============================================================================
+# FinSight .gitignore
+# ============================================================================
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Expo
+.expo/
+.expo-shared/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native builds
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+android/
+ios/
+
+# Metro bundler
+.metro-health-check*
+.metro
+
+# Debug logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+lerna-debug.log*
+.pnpm-debug.log*
+
+# Diagnostic reports
+report.[0-9]*.[0-9]*.[0-9]*.[0-9]*.json
+
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env*.local
+
+# Testing
+coverage/
+*.lcov
+.nyc_output
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Editor directories and files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# EAS (Expo Application Services)
+eas-build-*/
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+*.temp
+*.log
+*.pid
+*.seed
+*.pid.lock
+
+# Build artifacts
+build/
+.next/
+out/
+
+# Lock files (choose one package manager and uncomment)
+# package-lock.json  # npm
+# yarn.lock          # yarn
+# pnpm-lock.yaml     # pnpm
+
+# Optional: Uncomment if using specific tools
+# .eslintcache
+# .stylelintcache
+# .cache/
+
+# Certificates and keys
+*.pem
+*.p12
+*.cer
+*.crt
+*.der
+*.pfx
+
+# Google Services (if using Firebase)
+google-services.json
+GoogleService-Info.plist
+
+# Secrets and credentials
+secrets.json
+credentials.json
+serviceAccountKey.json
+
+# Misc
+.vercel
+*.swp
+*.bak
+*.backup
+
+*.md

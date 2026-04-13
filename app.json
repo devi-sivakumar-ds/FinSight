@@ -1,0 +1,49 @@
+{
+  "expo": {
+    "name": "FinSight",
+    "slug": "finsight",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.finsight.app",
+      "infoPlist": {
+        "NSCameraUsageDescription": "FinSight needs camera access to capture check images for deposit.",
+        "NSMicrophoneUsageDescription": "FinSight needs microphone access for voice commands to help navigate the app.",
+        "NSSpeechRecognitionUsageDescription": "FinSight uses speech recognition to understand your voice commands for accessible banking.",
+        "UIAccessibilityTraits": "button"
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.finsight.app",
+      "permissions": [
+        "CAMERA",
+        "RECORD_AUDIO",
+        "VIBRATE"
+      ]
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "finsight-accessible-banking"
+      }
+    }
+  }
+}
