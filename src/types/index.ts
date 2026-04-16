@@ -123,26 +123,49 @@ export interface CaptureScore {
 }
 
 // Navigation Types
-export type RootStackParamList = {
-  Main: undefined;
+export type DepositStackParamList = {
   AccountSelect: undefined;
-  AmountInput: { accountId: string };
-  CheckCapture: { accountId: string; amount: number };
-  CheckFlip: { frontImageUri: string; accountId: string; amount: number };
+  AmountInput: { accountId: string; accountType: 'checking' | 'savings' };
+  CheckCapture: {
+    accountId: string;
+    accountType: 'checking' | 'savings';
+    amount: number;
+    side: 'front' | 'back';
+    frontImageUri?: string; // Present when capturing back side
+  };
+  CheckFlip: {
+    frontImageUri: string;
+    accountId: string;
+    accountType: 'checking' | 'savings';
+    amount: number;
+  };
+  OCRProcessing: {
+    frontImageUri: string;
+    backImageUri: string;
+    accountId: string;
+    accountType: 'checking' | 'savings';
+    amount: number;
+  };
   Confirmation: {
     accountId: string;
+    accountType: 'checking' | 'savings';
     amount: number;
     frontImageUri: string;
     backImageUri: string;
-    ocrData: CheckOCRResponse['data'];
+    ocrData?: CheckOCRResponse['data'];
   };
   Success: { deposit: Deposit };
-  Error: { error: string; canRetry: boolean };
+  Error: { error: string; canRetry: boolean; retryScreen?: keyof DepositStackParamList };
 };
 
 export type TabParamList = {
   Tasks: undefined;
   Settings: undefined;
+};
+
+export type RootStackParamList = {
+  TabNavigator: undefined;
+  DepositFlow: undefined;
 };
 
 // State Management

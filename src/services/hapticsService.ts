@@ -4,7 +4,7 @@
 // ============================================================================
 
 import * as Haptics from 'expo-haptics';
-import { HapticPattern } from '@types/index';
+import { HapticPattern } from '@/types/index';
 
 class HapticsService {
   private enabled: boolean = true;

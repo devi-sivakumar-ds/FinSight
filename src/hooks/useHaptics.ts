@@ -5,7 +5,7 @@
 
 import { useCallback, useEffect } from 'react';
 import hapticsService from '@services/hapticsService';
-import { HapticPattern } from '@types/index';
+import { HapticPattern } from '@/types/index';
 
 export const useHaptics = () => {
   // Cleanup continuous patterns on unmount

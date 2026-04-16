@@ -3,13 +3,9 @@
 // Command registration, recognition, and fuzzy matching
 // ============================================================================
 
-import {
-  ExpoSpeechRecognitionModule,
-  useSpeechRecognitionEvent,
-} from 'expo-speech-recognition';
-import { VoiceCommand } from '@types/index';
-import { VOICE_RECOGNITION } from '@utils/constants';
+import { VoiceCommand } from '@/types/index';
 import ttsService from './ttsService';
+import sttService from './sttService';
 
 class VoiceService {
   private commands: Map<string, VoiceCommand> = new Map();
@@ -24,10 +20,9 @@ class VoiceService {
   /**
    * Initialize voice recognition
    */
-  private async initialize(): Promise<void> {
-    // Check if speech recognition is available
-    const available = await ExpoSpeechRecognitionModule.getStateAsync();
-    console.log('[Voice] Recognition state:', available);
+  private initialize(): void {
+    // STT is handled by sttService (Groq Whisper via expo-av)
+    console.log('[Voice] VoiceService ready — STT: Groq Whisper, NLU: fuzzy match (Step 3)');
   }
 
   /**
@@ -80,32 +75,13 @@ class VoiceService {
 
     try {
       this.onResultCallback = onResult || null;
-
-      // Request permissions
-      const { granted } = await ExpoSpeechRecognitionModule.requestPermissionsAsync();
-      if (!granted) {
-        console.error('[Voice] Microphone permission denied');
-        await ttsService.speakHigh(
-          'Microphone permission is required for voice commands. Please enable it in settings.'
-        );
-        return;
-      }
-
-      // Start recognition
-      await ExpoSpeechRecognitionModule.start({
-        lang: VOICE_RECOGNITION.LANGUAGE,
-        interimResults: false,
-        maxAlternatives: VOICE_RECOGNITION.MAX_ALTERNATIVES,
-        continuous: VOICE_RECOGNITION.CONTINUOUS_LISTENING,
-        requiresOnDeviceRecognition: false,
-      });
-
+      await sttService.start();
       this.isListening = true;
-      console.log('[Voice] Started listening');
+      console.log('[Voice] Started listening (Groq Whisper)');
     } catch (error) {
-      console.error('[Voice] Error starting recognition:', error);
+      console.error('[Voice] Error starting recording:', error);
       await ttsService.speakHigh(
-        'Unable to start voice recognition. Please try again.'
+        'Unable to start voice input. Please check microphone permissions and try again.'
       );
     }
   }
@@ -118,19 +94,23 @@ class VoiceService {
       return;
     }
 
+    this.isListening = false;
+
     try {
-      await ExpoSpeechRecognitionModule.stop();
-      this.isListening = false;
-      this.onResultCallback = null;
-      console.log('[Voice] Stopped listening');
+      const transcript = await sttService.stop();
+      console.log('[Voice] Stopped listening. Transcript:', transcript);
+      this.handleResult(transcript);
     } catch (error) {
-      console.error('[Voice] Error stopping recognition:', error);
+      console.error('[Voice] Error stopping / transcribing:', error);
+      await ttsService.speakHigh("Sorry, I couldn't hear that. Please try again.");
+    } finally {
+      this.onResultCallback = null;
     }
   }
 
   /**
-   * Handle speech recognition result
-   * This should be called from the component using useSpeechRecognitionEvent
+   * Handle a transcription result — dispatch to callback and/or fuzzy-match commands.
+   * Called internally by stopListening() after Groq Whisper returns the transcript.
    */
   public handleResult(transcription: string): void {
     console.log('[Voice] Received transcription:', transcription);

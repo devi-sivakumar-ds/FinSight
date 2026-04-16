@@ -6,7 +6,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useSpeechRecognitionEvent } from 'expo-speech-recognition';
 import voiceService from '@services/voiceService';
-import { VoiceCommand } from '@types/index';
+import { VoiceCommand } from '@/types/index';
 
 interface UseVoiceCommandsOptions {
   context?: string;

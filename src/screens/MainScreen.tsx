@@ -13,10 +13,16 @@ import {
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { useNavigation } from '@react-navigation/native';
+import { StackNavigationProp } from '@react-navigation/stack';
 import { VoiceButton } from '@components';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
+import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { RootStackParamList } from '@/types/index';
 import { COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+
+type MainNavProp = StackNavigationProp<RootStackParamList>;
 
 interface TaskCardProps {
   title: string;
@@ -65,41 +71,61 @@ const TaskCard: React.FC<TaskCardProps> = ({
 
 export const MainScreen: React.FC = () => {
   const { speakMedium } = useTTS();
+  const navigation = useNavigation<MainNavProp>();
   const [isListening, setIsListening] = React.useState(false);
 
   useEffect(() => {
-    // Welcome message when screen loads
     speakMedium('Welcome to FinSight. Turn on FinSight mode to start.');
   }, []);
 
+  const handleDepositCheck = () => {
+    navigation.navigate('DepositFlow');
+  };
+
   const handleVoicePress = () => {
-    setIsListening(!isListening);
-    if (!isListening) {
-      speakMedium('Listening for commands');
-    } else {
-      speakMedium('Stopped listening');
-    }
+    setIsListening(prev => !prev);
+    speakMedium(isListening ? 'Stopped listening' : 'Listening for commands');
   };
 
   const handleSendMoney = () => {
-    speakMedium('Send money selected');
-    // TODO: Navigate to send money flow
+    speakMedium('Send money is coming soon.');
   };
 
   const handleCheckBalance = () => {
-    speakMedium('Check balance selected');
-    // TODO: Navigate to balance view
-  };
-
-  const handleDepositCheck = () => {
-    speakMedium('Deposit a check selected');
-    // TODO: Navigate to check deposit flow
+    speakMedium('Check balance is coming soon.');
   };
 
   const handleTransferMoney = () => {
-    speakMedium('Transfer money selected');
-    // TODO: Navigate to transfer flow
+    speakMedium('Transfer money is coming soon.');
   };
+
+  // Voice commands on main screen
+  useVoiceCommands(
+    {
+      'deposit-check': {
+        phrases: ['deposit a check', 'deposit check', 'check deposit'],
+        action: handleDepositCheck,
+        context: ['main'],
+        confirmation: 'Opening check deposit.',
+      },
+      'send-money': {
+        phrases: ['send money', 'send'],
+        action: handleSendMoney,
+        context: ['main'],
+      },
+      'check-balance': {
+        phrases: ['check balance', 'balance', 'my balance'],
+        action: handleCheckBalance,
+        context: ['main'],
+      },
+      'transfer-money': {
+        phrases: ['transfer money', 'transfer'],
+        action: handleTransferMoney,
+        context: ['main'],
+      },
+    },
+    { context: 'main' }
+  );
 
   return (
     <SafeAreaView style={styles.container}>

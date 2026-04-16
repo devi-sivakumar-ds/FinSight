@@ -5,7 +5,7 @@
 
 import { useEffect, useCallback } from 'react';
 import ttsService from '@services/ttsService';
-import { TTSPriority } from '@types/index';
+import { TTSPriority } from '@/types/index';
 
 export const useTTS = () => {
   // Cleanup on unmount

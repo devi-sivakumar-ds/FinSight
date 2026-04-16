@@ -3,7 +3,7 @@
 // Simulates backend API calls for development and testing
 // ============================================================================
 
-import { Account, Deposit, CheckOCRResponse } from '@types/index';
+import { Account, Deposit, CheckOCRResponse } from '@/types/index';
 
 class MockBankingAPI {
   private mockAccounts: Account[] = [

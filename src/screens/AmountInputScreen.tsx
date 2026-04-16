@@ -1,0 +1,355 @@
+// ============================================================================
+// AmountInputScreen
+// Step 2 — enter the check amount via voice or numpad
+// ============================================================================
+
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  SafeAreaView,
+  Pressable,
+} from 'react-native';
+import { StackNavigationProp } from '@react-navigation/stack';
+import { RouteProp } from '@react-navigation/native';
+import { DepositStackParamList, HapticPattern } from '@/types/index';
+import { ScreenHeader } from '@components/ScreenHeader';
+import { AccessibleButton } from '@components/AccessibleButton';
+import { VoiceButton } from '@components/VoiceButton';
+import { useTTS } from '@hooks/useTTS';
+import { useHaptics } from '@hooks/useHaptics';
+import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import voiceService from '@services/voiceService';
+import {
+  parseVoiceAmount,
+  formatAmountForSpeech,
+  formatAmountDisplay,
+} from '@utils/amountParser';
+import { COLORS, DEPOSIT_LIMITS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+
+type Props = {
+  navigation: StackNavigationProp<DepositStackParamList, 'AmountInput'>;
+  route: RouteProp<DepositStackParamList, 'AmountInput'>;
+};
+
+type InputMode = 'idle' | 'listening' | 'confirming' | 'error';
+
+const NUMPAD_KEYS = [
+  '1', '2', '3',
+  '4', '5', '6',
+  '7', '8', '9',
+  '.', '0', '⌫',
+];
+
+export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
+  const { accountId, accountType } = route.params;
+  const { speakMedium, speakHigh, stop } = useTTS();
+  const { selection, trigger } = useHaptics();
+
+  const [displayValue, setDisplayValue] = useState('0');
+  const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null);
+  const [mode, setMode] = useState<InputMode>('idle');
+  const [isListening, setIsListening] = useState(false);
+  const pendingAmount = useRef<number | null>(null);
+
+  const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
+
+  // ── On mount: announce context ──────────────────────────────────────────
+  useEffect(() => {
+    setTimeout(() => {
+      speakMedium(`You're depositing to ${accountLabel} account.`);
+      setTimeout(() => {
+        speakMedium('How much are you depositing?');
+        setTimeout(() => {
+          speakMedium(`Daily limit: ${formatAmountForSpeech(DEPOSIT_LIMITS.DAILY_LIMIT)}.`);
+        }, 1500);
+      }, 1000);
+    }, 400);
+  }, []);
+
+  // ── Numpad logic ────────────────────────────────────────────────────────
+  const handleNumpadPress = useCallback((key: string) => {
+    selection();
+    setDisplayValue(prev => {
+      if (key === '⌫') {
+        const next = prev.length > 1 ? prev.slice(0, -1) : '0';
+        return next;
+      }
+      if (key === '.' && prev.includes('.')) return prev;
+      if (key === '.' && prev === '0') return '0.';
+      if (prev === '0' && key !== '.') return key;
+      // Limit to 2 decimal places
+      if (prev.includes('.')) {
+        const decimals = prev.split('.')[1];
+        if (decimals.length >= 2) return prev;
+      }
+      return prev + key;
+    });
+    setConfirmedAmount(null);
+    setMode('idle');
+  }, []);
+
+  const numericAmount = parseFloat(displayValue) || 0;
+
+  // ── Validation ──────────────────────────────────────────────────────────
+  const validateAmount = useCallback((amount: number): string | null => {
+    if (amount < DEPOSIT_LIMITS.MIN_AMOUNT) return 'Amount must be at least 1 cent.';
+    if (amount > DEPOSIT_LIMITS.MAX_AMOUNT)
+      return `Amount exceeds daily limit of ${formatAmountForSpeech(DEPOSIT_LIMITS.DAILY_LIMIT)}.`;
+    return null;
+  }, []);
+
+  // ── Voice amount result handler ─────────────────────────────────────────
+  const handleVoiceResult = useCallback((transcript: string) => {
+    setIsListening(false);
+    const amount = parseVoiceAmount(transcript);
+
+    if (amount === null) {
+      speakHigh("Sorry, I didn't catch that. Please say an amount like 'one hundred fifty dollars'.");
+      setMode('error');
+      return;
+    }
+
+    const error = validateAmount(amount);
+    if (error) {
+      speakHigh(error);
+      setMode('error');
+      return;
+    }
+
+    pendingAmount.current = amount;
+    setDisplayValue(amount.toFixed(2));
+    setMode('confirming');
+    setTimeout(() => {
+      speakMedium(`I heard ${formatAmountForSpeech(amount)}. Is that correct? Say yes to continue or no to try again.`);
+    }, 300);
+  }, [validateAmount]);
+
+  // ── Confirm typed/numpad amount ─────────────────────────────────────────
+  const handleConfirmAmount = useCallback(() => {
+    const error = validateAmount(numericAmount);
+    if (error) {
+      speakHigh(error);
+      return;
+    }
+    setConfirmedAmount(numericAmount);
+    setMode('confirming');
+    speakMedium(`${formatAmountForSpeech(numericAmount)}. Is that correct? Say yes to continue or no to change it.`);
+  }, [numericAmount, validateAmount]);
+
+  // ── Navigate to camera ──────────────────────────────────────────────────
+  const proceedToCamera = useCallback(() => {
+    const amount = confirmedAmount ?? numericAmount;
+    const error = validateAmount(amount);
+    if (error) { speakHigh(error); return; }
+
+    navigation.navigate('CheckCapture', {
+      accountId,
+      accountType,
+      amount,
+      side: 'front',
+    });
+  }, [confirmedAmount, numericAmount, accountId, accountType, navigation]);
+
+  // ── Voice commands ──────────────────────────────────────────────────────
+  useVoiceCommands(
+    {
+      'confirm-yes': {
+        phrases: ['yes', 'correct', 'confirm', 'that is correct', 'yep', 'yeah'],
+        action: () => {
+          if (mode === 'confirming') proceedToCamera();
+        },
+        context: ['amount-input'],
+      },
+      'confirm-no': {
+        phrases: ['no', 'wrong', 'incorrect', 'try again', 'nope'],
+        action: () => {
+          setMode('idle');
+          setDisplayValue('0');
+          pendingAmount.current = null;
+          speakMedium('Okay, how much are you depositing?');
+        },
+        context: ['amount-input'],
+      },
+      'go-back': {
+        phrases: ['go back', 'back', 'cancel'],
+        action: () => navigation.goBack(),
+        context: ['amount-input'],
+      },
+    },
+    { context: 'amount-input' }
+  );
+
+  const handleClose = () => navigation.getParent()?.goBack();
+
+  return (
+    <SafeAreaView style={styles.container}>
+      <ScreenHeader showClose onClose={handleClose} />
+
+      <View style={styles.content}>
+        {/* Context label */}
+        <Text style={styles.contextLabel} accessibilityRole="text">
+          Depositing to {accountLabel}
+        </Text>
+
+        {/* Prompt */}
+        <Text style={styles.prompt} accessibilityRole="header">
+          How much are you depositing?
+        </Text>
+
+        {/* Amount display */}
+        <View
+          style={styles.amountContainer}
+          accessible
+          accessibilityLabel={`Amount: ${formatAmountForSpeech(numericAmount)}`}
+          accessibilityRole="text"
+        >
+          <Text style={styles.currencySymbol}>$</Text>
+          <Text
+            style={[
+              styles.amountText,
+              mode === 'error' && styles.amountError,
+              mode === 'confirming' && styles.amountConfirming,
+            ]}
+            adjustsFontSizeToFit
+            numberOfLines={1}
+          >
+            {displayValue}
+          </Text>
+        </View>
+
+        {/* Daily limit note */}
+        <Text style={styles.limitNote}>
+          Daily limit: {formatAmountDisplay(DEPOSIT_LIMITS.DAILY_LIMIT)}
+        </Text>
+
+        {/* Mode feedback */}
+        {mode === 'confirming' && (
+          <Text style={styles.confirmBanner} accessibilityLiveRegion="polite">
+            Is this correct? Say "yes" or tap Continue.
+          </Text>
+        )}
+        {mode === 'error' && (
+          <Text style={styles.errorBanner} accessibilityLiveRegion="assertive">
+            Please enter a valid amount.
+          </Text>
+        )}
+
+        {/* Numpad */}
+        <View style={styles.numpad} accessibilityLabel="Numpad" accessibilityRole="keyboardkey">
+          {NUMPAD_KEYS.map(key => (
+            <Pressable
+              key={key}
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel={key === '⌫' ? 'Backspace' : key}
+              onPress={() => handleNumpadPress(key)}
+              style={({ pressed }) => [
+                styles.numpadKey,
+                key === '⌫' && styles.numpadBackspace,
+                pressed && styles.numpadKeyPressed,
+              ]}
+            >
+              <Text style={styles.numpadKeyText}>{key}</Text>
+            </Pressable>
+          ))}
+        </View>
+      </View>
+
+      {/* Footer: voice + continue */}
+      <View style={styles.footer}>
+        <VoiceButton
+          isListening={isListening}
+          onPress={() => {
+            if (isListening) {
+              voiceService.stopListening();
+              setIsListening(false);
+            } else {
+              setIsListening(true);
+              voiceService.startListening(handleVoiceResult);
+            }
+          }}
+          size={72}
+          accessibilityLabel="Voice input"
+          accessibilityHint="Tap to speak the amount"
+        />
+        <AccessibleButton
+          label={mode === 'confirming' ? 'Continue' : 'Confirm Amount'}
+          onPress={mode === 'confirming' ? proceedToCamera : handleConfirmAmount}
+          disabled={numericAmount <= 0}
+          size="large"
+          style={styles.continueBtn}
+          accessibilityHint="Confirm this amount and proceed to capture your check"
+        />
+      </View>
+    </SafeAreaView>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  content: { flex: 1, paddingHorizontal: 21, paddingTop: 16, gap: 12 },
+  contextLabel: { fontSize: 16, color: COLORS.GRAY_700 },
+  prompt: { fontSize: 26, fontWeight: 'bold', color: COLORS.GRAY_900, lineHeight: 34 },
+  amountContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 8,
+    borderBottomWidth: 2,
+    borderBottomColor: COLORS.BLUE_600,
+    marginHorizontal: 16,
+  },
+  currencySymbol: { fontSize: 36, fontWeight: '600', color: COLORS.GRAY_700, marginRight: 4 },
+  amountText: { fontSize: 52, fontWeight: 'bold', color: COLORS.GRAY_900, flex: 1, textAlign: 'center' },
+  amountError: { color: '#cc0000' },
+  amountConfirming: { color: COLORS.BLUE_600 },
+  limitNote: { fontSize: 14, color: COLORS.GRAY_400, textAlign: 'center' },
+  confirmBanner: {
+    backgroundColor: COLORS.BLUE_50,
+    color: COLORS.BLUE_600,
+    padding: 10,
+    borderRadius: 8,
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  errorBanner: {
+    backgroundColor: '#fff0f0',
+    color: '#cc0000',
+    padding: 10,
+    borderRadius: 8,
+    textAlign: 'center',
+    fontWeight: '600',
+    fontSize: 15,
+  },
+  numpad: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+    justifyContent: 'center',
+    marginTop: 4,
+  },
+  numpadKey: {
+    width: '30%',
+    height: 56,
+    borderRadius: 12,
+    backgroundColor: COLORS.GRAY_200,
+    alignItems: 'center',
+    justifyContent: 'center',
+    minHeight: MIN_TOUCH_TARGET_SIZE,
+  },
+  numpadBackspace: { backgroundColor: COLORS.ORANGE_50 },
+  numpadKeyPressed: { opacity: 0.6 },
+  numpadKeyText: { fontSize: 22, fontWeight: '600', color: COLORS.GRAY_900 },
+  footer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: 21,
+    paddingBottom: 24,
+    paddingTop: 8,
+    gap: 12,
+  },
+  continueBtn: { flex: 1 },
+});

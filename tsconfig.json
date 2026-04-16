@@ -5,7 +5,7 @@
     "esModuleInterop": true,
     "skipLibCheck": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
     "jsx": "react-native",
     "lib": [
@@ -18,8 +18,14 @@
       "@/*": [
         "src/*"
       ],
+      "@components": [
+        "src/components/index"
+      ],
       "@components/*": [
         "src/components/*"
+      ],
+      "@screens": [
+        "src/screens/index"
       ],
       "@screens/*": [
         "src/screens/*"
@@ -32,9 +38,6 @@
       ],
       "@utils/*": [
         "src/utils/*"
-      ],
-      "@types/*": [
-        "src/types/*"
       ]
     }
   },

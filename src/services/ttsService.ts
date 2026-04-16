@@ -4,7 +4,7 @@
 // ============================================================================
 
 import * as Speech from 'expo-speech';
-import { TTSMessage, TTSPriority } from '@types/index';
+import { TTSMessage, TTSPriority } from '@/types/index';
 import { isScreenReaderEnabled } from '@utils/accessibility';
 import { TTS_SETTINGS } from '@utils/constants';
 

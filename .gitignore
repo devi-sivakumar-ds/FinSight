@@ -113,6 +113,9 @@ $RECYCLE.BIN/
 # EAS (Expo Application Services)
 eas-build-*/
 
+# Claude Code local settings (personal permissions, not shared)
+.claude/settings.local.json
+
 # Temporary files
 tmp/
 temp/
