@@ -3,7 +3,7 @@
 // Main navigation setup with tabs and deposit flow
 // ============================================================================
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -12,6 +12,7 @@ import { MainScreen, SettingsScreen } from '@screens';
 import { DepositNavigator } from './DepositNavigator';
 import { RootStackParamList, TabParamList } from '@/types/index';
 import { COLORS } from '@utils/constants';
+import voiceService from '@services/voiceService';
 
 const Tab = createBottomTabNavigator<TabParamList>();
 const RootStack = createStackNavigator<RootStackParamList>();
@@ -69,6 +70,13 @@ const TabNavigator: React.FC = () => {
 };
 
 export const AppNavigator: React.FC = () => {
+  // Start always-on continuous listening once the app mounts.
+  // A single VAD segment loop runs for the entire app lifetime — no mic button.
+  useEffect(() => {
+    voiceService.startContinuousListening().catch(console.error);
+    return () => voiceService.stopContinuousListening();
+  }, []);
+
   return (
     <NavigationContainer>
       <RootStack.Navigator

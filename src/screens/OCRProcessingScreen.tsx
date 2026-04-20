@@ -17,7 +17,7 @@ import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { useTTS } from '@hooks/useTTS';
 import mockBankingAPI from '@services/mockBankingAPI';
-import { COLORS } from '@utils/constants';
+import { DARK_COLORS } from '@utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -109,13 +109,13 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
               <Ionicons
                 name="scan"
                 size={100}
-                color={COLORS.BLUE_600}
+                color={DARK_COLORS.BLUE}
                 accessible
                 accessibilityLabel="Scanning"
               />
               <ActivityIndicator
                 size="large"
-                color={COLORS.BLUE_600}
+                color={DARK_COLORS.BLUE}
                 style={styles.spinner}
                 accessibilityLabel="Processing"
               />
@@ -125,7 +125,7 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
             <Ionicons
               name="alert-circle"
               size={100}
-              color={COLORS.ORANGE_600}
+              color={DARK_COLORS.RED}
               accessible
               accessibilityLabel="Error"
             />
@@ -180,7 +180,7 @@ async function convertImageToBase64(uri: string): Promise<string> {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   content: {
     flex: 1,
     justifyContent: 'center',
@@ -200,13 +200,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     textAlign: 'center',
     marginTop: 40,
   },
   subtitle: {
     fontSize: 16,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     width: 12,
     height: 12,
     borderRadius: 6,
-    backgroundColor: COLORS.BLUE_600,
+    backgroundColor: DARK_COLORS.BLUE,
     opacity: 0.3,
   },
   progressDotDelay1: {

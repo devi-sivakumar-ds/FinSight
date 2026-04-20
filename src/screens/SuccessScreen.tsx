@@ -15,10 +15,12 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
+import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
-import { COLORS } from '@utils/constants';
+import { DARK_COLORS } from '@utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -31,6 +33,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
 
   const [countdown, setCountdown] = useState(10);
+  const { voiceState } = useAlwaysOnVoice();
 
   // Announce success on mount
   useEffect(() => {
@@ -66,20 +69,17 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   const handleDone = () => {
-    // Navigate back to main screen (exit deposit flow)
     navigation.getParent()?.getParent()?.navigate('TabNavigator');
   };
 
-  // Voice commands
+  // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
-      done: {
-        phrases: ['done', 'home', 'finish', 'close', 'exit'],
-        action: handleDone,
-        context: ['success'],
-      },
+      CONFIRM: handleDone,
+      GO_BACK: handleDone,
+      CANCEL: handleDone,
     },
-    { context: 'success' }
+    { context: 'Success' }
   );
 
   const expectedDate = deposit.expectedAvailability
@@ -98,18 +98,14 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
           <Ionicons
             name="checkmark-circle"
             size={120}
-            color={COLORS.GREEN_600}
+            color={DARK_COLORS.GREEN}
             accessible
             accessibilityLabel="Success"
           />
         </View>
 
         {/* Title */}
-        <Text
-          style={styles.title}
-          accessible
-          accessibilityRole="header"
-        >
+        <Text style={styles.title} accessible accessibilityRole="header">
           Deposit Submitted Successfully
         </Text>
 
@@ -152,23 +148,24 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Info message */}
         <View style={styles.infoBox}>
-          <Ionicons name="information-circle" size={20} color={COLORS.BLUE_600} />
+          <Ionicons name="information-circle" size={20} color={DARK_COLORS.BLUE} />
           <Text style={styles.infoText}>
             Your deposit is being processed. You'll receive a notification once it's complete.
           </Text>
         </View>
 
         {/* Auto-return countdown */}
-        <Text
-          style={styles.countdown}
-          accessibilityLiveRegion="polite"
-        >
+        <Text style={styles.countdown} accessibilityLiveRegion="polite">
           Returning to home in {countdown} seconds...
         </Text>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
+        <VoiceBanner
+          state={voiceState}
+          listeningText="Say 'done' to return to the home screen."
+        />
         <AccessibleButton
           label="Done"
           onPress={handleDone}
@@ -182,7 +179,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   content: {
     flex: 1,
     paddingHorizontal: 24,
@@ -196,18 +193,18 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     textAlign: 'center',
     lineHeight: 36,
     marginBottom: 8,
   },
   card: {
     width: '100%',
-    backgroundColor: COLORS.GREEN_50,
+    backgroundColor: DARK_COLORS.SURFACE,
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
-    borderColor: COLORS.GREEN_600,
+    borderColor: DARK_COLORS.GREEN,
     gap: 16,
   },
   detailRow: {
@@ -217,28 +214,28 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 15,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     fontWeight: '500',
   },
   detailValue: {
     fontSize: 18,
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     fontWeight: '700',
   },
   detailValueMono: {
     fontSize: 16,
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     fontWeight: '700',
     fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.GREEN_600,
-    opacity: 0.2,
+    backgroundColor: DARK_COLORS.GREEN,
+    opacity: 0.3,
   },
   infoBox: {
     flexDirection: 'row',
-    backgroundColor: COLORS.BLUE_50,
+    backgroundColor: DARK_COLORS.BLUE_DIM,
     borderRadius: 12,
     padding: 16,
     gap: 12,
@@ -247,18 +244,19 @@ const styles = StyleSheet.create({
   infoText: {
     flex: 1,
     fontSize: 14,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     lineHeight: 20,
   },
   countdown: {
     fontSize: 14,
-    color: COLORS.GRAY_400,
+    color: DARK_COLORS.TEXT_MUTED,
     marginTop: 8,
   },
   footer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
     paddingTop: 12,
+    gap: 12,
   },
   doneButton: { width: '100%' },
 });

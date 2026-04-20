@@ -16,6 +16,11 @@ class TTSService {
   private rate: number = TTS_SETTINGS.DEFAULT_RATE;
   private pitch: number = TTS_SETTINGS.DEFAULT_PITCH;
 
+  // Callbacks fired when TTS starts/ends a spoken utterance.
+  // Used by voiceService to pause/resume the always-on microphone.
+  private onSpeakStartCb: (() => void) | null = null;
+  private onSpeakEndCb: (() => void) | null = null;
+
   constructor() {
     this.initialize();
   }
@@ -106,29 +111,44 @@ class TTSService {
   }
 
   /**
+   * Register callbacks that fire when any TTS utterance starts or ends.
+   * voiceService uses this to pause the always-on microphone while speaking.
+   */
+  public setSpeakCallbacks(onStart: () => void, onEnd: () => void): void {
+    this.onSpeakStartCb = onStart;
+    this.onSpeakEndCb = onEnd;
+  }
+
+  /**
    * Speak a single message
    */
   private async speakMessage(message: TTSMessage): Promise<void> {
     return new Promise((resolve) => {
       console.log('[TTS] Speaking:', message.text);
 
+      const handleEnd = () => {
+        this.currentMessage = null;
+        this.onSpeakEndCb?.();
+        resolve();
+      };
+
       Speech.speak(message.text, {
         rate: this.rate,
         pitch: this.pitch,
+        onStart: () => {
+          this.onSpeakStartCb?.();
+        },
         onDone: () => {
           console.log('[TTS] Finished speaking');
-          this.currentMessage = null;
-          resolve();
+          handleEnd();
         },
         onError: (error) => {
           console.error('[TTS] Error:', error);
-          this.currentMessage = null;
-          resolve();
+          handleEnd();
         },
         onStopped: () => {
           console.log('[TTS] Stopped');
-          this.currentMessage = null;
-          resolve();
+          handleEnd();
         },
       });
     });

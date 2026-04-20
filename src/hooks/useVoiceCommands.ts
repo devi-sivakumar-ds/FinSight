@@ -1,12 +1,30 @@
 // ============================================================================
 // useVoiceCommands Hook
-// React hook for voice command registration and handling
+// Registers LLM action handlers for the current screen and manages mic state.
+//
+// Usage:
+//   useVoiceCommands(
+//     {
+//       SELECT_CHECKING: () => selectChecking(),
+//       SELECT_SAVINGS:  () => selectSavings(),
+//       GO_BACK:         () => navigation.goBack(),
+//       CANCEL:          () => navigation.goBack(),
+//     },
+//     { context: 'AccountSelect' }
+//   );
+//
+// Design note — stale closure fix:
+//   The `actions` object changes identity on every render (new inline closures).
+//   If we registered it directly in the effect, voiceService would hold stale
+//   handler references captured from the first render (e.g. accounts = []).
+//
+//   Solution: synchronously keep `actionsRef.current` up-to-date each render,
+//   then register *stable wrapper* functions that always delegate through the
+//   ref. voiceService always calls the *current* handler.
 // ============================================================================
 
-import { useEffect, useCallback, useState } from 'react';
-import { useSpeechRecognitionEvent } from 'expo-speech-recognition';
+import { useEffect, useCallback, useState, useRef } from 'react';
 import voiceService from '@services/voiceService';
-import { VoiceCommand } from '@/types/index';
 
 interface UseVoiceCommandsOptions {
   context?: string;
@@ -14,53 +32,40 @@ interface UseVoiceCommandsOptions {
 }
 
 export const useVoiceCommands = (
-  commands: Record<string, VoiceCommand>,
+  actions: Record<string, () => void>,
   options: UseVoiceCommandsOptions = {}
 ) => {
   const { context = 'global', autoStart = false } = options;
   const [isListening, setIsListening] = useState(false);
 
-  // Register commands on mount
+  // Always points at the latest `actions` — updated synchronously during render
+  const actionsRef = useRef(actions);
+  actionsRef.current = actions;
+
+  // Register stable wrapper functions on mount (or when screen context changes).
+  // Wrappers delegate to actionsRef.current so voiceService always calls the
+  // latest closure even though the wrappers themselves are only created once.
   useEffect(() => {
-    // Set context
     voiceService.setContext(context);
 
-    // Register all commands
-    Object.entries(commands).forEach(([id, command]) => {
-      voiceService.registerCommand(id, command);
+    const actionKeys = Object.keys(actions);
+    const stableWrappers: Record<string, () => void> = {};
+    actionKeys.forEach((key) => {
+      stableWrappers[key] = () => actionsRef.current[key]?.();
     });
 
-    // Auto-start if requested
+    voiceService.registerActions(stableWrappers);
+
     if (autoStart) {
       startListening();
     }
 
-    // Cleanup on unmount
     return () => {
-      Object.keys(commands).forEach(id => {
-        voiceService.unregisterCommand(id);
-      });
+      voiceService.unregisterActions(actionKeys);
       stopListening();
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [context]);
-
-  // Listen for speech recognition events
-  useSpeechRecognitionEvent('result', event => {
-    if (event.results && event.results[0]?.transcript) {
-      const transcription = event.results[0].transcript;
-      voiceService.handleResult(transcription);
-    }
-  });
-
-  useSpeechRecognitionEvent('error', event => {
-    console.error('[Voice Hook] Recognition error:', event.error);
-    setIsListening(false);
-  });
-
-  useSpeechRecognitionEvent('end', () => {
-    console.log('[Voice Hook] Recognition ended');
-    setIsListening(false);
-  });
 
   const startListening = useCallback(async () => {
     await voiceService.startListening();
@@ -80,10 +85,5 @@ export const useVoiceCommands = (
     }
   }, [isListening, startListening, stopListening]);
 
-  return {
-    isListening,
-    startListening,
-    stopListening,
-    toggleListening,
-  };
+  return { isListening, startListening, stopListening, toggleListening };
 };

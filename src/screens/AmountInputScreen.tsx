@@ -1,6 +1,11 @@
 // ============================================================================
 // AmountInputScreen
 // Step 2 — enter the check amount via voice or numpad
+//
+// Voice path:
+//   useFocusEffect registers setRawTranscriptCallback(handleVoiceResult) while
+//   this screen is focused.  The always-on VAD segment is already running;
+//   captured speech is routed here instead of the NLU intent pipeline.
 // ============================================================================
 
 import React, { useEffect, useState, useCallback, useRef } from 'react';
@@ -12,21 +17,22 @@ import {
   Pressable,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { ScreenHeader } from '@components/ScreenHeader';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceButton } from '@components/VoiceButton';
+import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import voiceService from '@services/voiceService';
 import {
   parseVoiceAmount,
   formatAmountForSpeech,
   formatAmountDisplay,
 } from '@utils/amountParser';
-import { COLORS, DEPOSIT_LIMITS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { DARK_COLORS, DEPOSIT_LIMITS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'AmountInput'>;
@@ -44,13 +50,13 @@ const NUMPAD_KEYS = [
 
 export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType } = route.params;
-  const { speakMedium, speakHigh, stop } = useTTS();
-  const { selection, trigger } = useHaptics();
+  const { speakMedium, speakHigh } = useTTS();
+  const { selection } = useHaptics();
+  const { voiceState } = useAlwaysOnVoice();
 
   const [displayValue, setDisplayValue] = useState('0');
   const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null);
   const [mode, setMode] = useState<InputMode>('idle');
-  const [isListening, setIsListening] = useState(false);
   const pendingAmount = useRef<number | null>(null);
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
@@ -101,8 +107,9 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   // ── Voice amount result handler ─────────────────────────────────────────
+  // Receives raw transcript from the always-on VAD (bypasses NLU intent pipeline).
+  // Registered via voiceService.setRawTranscriptCallback in useFocusEffect below.
   const handleVoiceResult = useCallback((transcript: string) => {
-    setIsListening(false);
     const amount = parseVoiceAmount(transcript);
 
     if (amount === null) {
@@ -125,6 +132,14 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
       speakMedium(`I heard ${formatAmountForSpeech(amount)}. Is that correct? Say yes to continue or no to try again.`);
     }, 300);
   }, [validateAmount]);
+
+  // ── Wire raw transcript callback while this screen is focused ───────────
+  useFocusEffect(
+    useCallback(() => {
+      voiceService.setRawTranscriptCallback(handleVoiceResult);
+      return () => voiceService.setRawTranscriptCallback(null);
+    }, [handleVoiceResult])
+  );
 
   // ── Confirm typed/numpad amount ─────────────────────────────────────────
   const handleConfirmAmount = useCallback(() => {
@@ -152,40 +167,26 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   }, [confirmedAmount, numericAmount, accountId, accountType, navigation]);
 
-  // ── Voice commands ──────────────────────────────────────────────────────
+  // ── Voice commands — LLM maps natural speech to these action keys ────────
   useVoiceCommands(
     {
-      'confirm-yes': {
-        phrases: ['yes', 'correct', 'confirm', 'that is correct', 'yep', 'yeah'],
-        action: () => {
-          if (mode === 'confirming') proceedToCamera();
-        },
-        context: ['amount-input'],
+      CONFIRM: () => { if (mode === 'confirming') proceedToCamera(); },
+      CANCEL: () => {
+        setMode('idle');
+        setDisplayValue('0');
+        pendingAmount.current = null;
+        speakMedium('Okay, how much are you depositing?');
       },
-      'confirm-no': {
-        phrases: ['no', 'wrong', 'incorrect', 'try again', 'nope'],
-        action: () => {
-          setMode('idle');
-          setDisplayValue('0');
-          pendingAmount.current = null;
-          speakMedium('Okay, how much are you depositing?');
-        },
-        context: ['amount-input'],
-      },
-      'go-back': {
-        phrases: ['go back', 'back', 'cancel'],
-        action: () => navigation.goBack(),
-        context: ['amount-input'],
-      },
+      GO_BACK: () => navigation.goBack(),
     },
-    { context: 'amount-input' }
+    { context: 'AmountInput' }
   );
 
   const handleClose = () => navigation.getParent()?.goBack();
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScreenHeader showClose onClose={handleClose} />
+      <ScreenHeader dark showClose onClose={handleClose} />
 
       <View style={styles.content}>
         {/* Context label */}
@@ -257,22 +258,11 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </View>
 
-      {/* Footer: voice + continue */}
+      {/* Footer: voice banner + continue */}
       <View style={styles.footer}>
-        <VoiceButton
-          isListening={isListening}
-          onPress={() => {
-            if (isListening) {
-              voiceService.stopListening();
-              setIsListening(false);
-            } else {
-              setIsListening(true);
-              voiceService.startListening(handleVoiceResult);
-            }
-          }}
-          size={72}
-          accessibilityLabel="Voice input"
-          accessibilityHint="Tap to speak the amount"
+        <VoiceBanner
+          state={voiceState}
+          listeningText="Say an amount, like 'one hundred fifty dollars'."
         />
         <AccessibleButton
           label={mode === 'confirming' ? 'Continue' : 'Confirm Amount'}
@@ -288,27 +278,27 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   content: { flex: 1, paddingHorizontal: 21, paddingTop: 16, gap: 12 },
-  contextLabel: { fontSize: 16, color: COLORS.GRAY_700 },
-  prompt: { fontSize: 26, fontWeight: 'bold', color: COLORS.GRAY_900, lineHeight: 34 },
+  contextLabel: { fontSize: 16, color: DARK_COLORS.TEXT_SECONDARY },
+  prompt: { fontSize: 26, fontWeight: 'bold', color: DARK_COLORS.TEXT_PRIMARY, lineHeight: 34 },
   amountContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 8,
     borderBottomWidth: 2,
-    borderBottomColor: COLORS.BLUE_600,
+    borderBottomColor: DARK_COLORS.BLUE,
     marginHorizontal: 16,
   },
-  currencySymbol: { fontSize: 36, fontWeight: '600', color: COLORS.GRAY_700, marginRight: 4 },
-  amountText: { fontSize: 52, fontWeight: 'bold', color: COLORS.GRAY_900, flex: 1, textAlign: 'center' },
-  amountError: { color: '#cc0000' },
-  amountConfirming: { color: COLORS.BLUE_600 },
-  limitNote: { fontSize: 14, color: COLORS.GRAY_400, textAlign: 'center' },
+  currencySymbol: { fontSize: 36, fontWeight: '600', color: DARK_COLORS.TEXT_SECONDARY, marginRight: 4 },
+  amountText: { fontSize: 52, fontWeight: 'bold', color: DARK_COLORS.TEXT_PRIMARY, flex: 1, textAlign: 'center' },
+  amountError: { color: DARK_COLORS.RED },
+  amountConfirming: { color: DARK_COLORS.BLUE },
+  limitNote: { fontSize: 14, color: DARK_COLORS.TEXT_MUTED, textAlign: 'center' },
   confirmBanner: {
-    backgroundColor: COLORS.BLUE_50,
-    color: COLORS.BLUE_600,
+    backgroundColor: DARK_COLORS.BLUE_DIM,
+    color: DARK_COLORS.BLUE,
     padding: 10,
     borderRadius: 8,
     textAlign: 'center',
@@ -316,8 +306,8 @@ const styles = StyleSheet.create({
     fontSize: 15,
   },
   errorBanner: {
-    backgroundColor: '#fff0f0',
-    color: '#cc0000',
+    backgroundColor: '#3a1010',
+    color: DARK_COLORS.RED,
     padding: 10,
     borderRadius: 8,
     textAlign: 'center',
@@ -335,21 +325,19 @@ const styles = StyleSheet.create({
     width: '30%',
     height: 56,
     borderRadius: 12,
-    backgroundColor: COLORS.GRAY_200,
+    backgroundColor: DARK_COLORS.SURFACE_2,
     alignItems: 'center',
     justifyContent: 'center',
     minHeight: MIN_TOUCH_TARGET_SIZE,
   },
-  numpadBackspace: { backgroundColor: COLORS.ORANGE_50 },
+  numpadBackspace: { backgroundColor: '#3a1f00' },
   numpadKeyPressed: { opacity: 0.6 },
-  numpadKeyText: { fontSize: 22, fontWeight: '600', color: COLORS.GRAY_900 },
+  numpadKeyText: { fontSize: 22, fontWeight: '600', color: DARK_COLORS.TEXT_PRIMARY },
   footer: {
-    flexDirection: 'row',
-    alignItems: 'center',
     paddingHorizontal: 21,
     paddingBottom: 24,
     paddingTop: 8,
     gap: 12,
   },
-  continueBtn: { flex: 1 },
+  continueBtn: { width: '100%' },
 });

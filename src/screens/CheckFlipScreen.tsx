@@ -15,9 +15,11 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
+import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { COLORS } from '@utils/constants';
+import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { DARK_COLORS } from '@utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -28,6 +30,7 @@ type Props = {
 export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
   const { frontImageUri, accountId, accountType, amount } = route.params;
   const { speakMedium } = useTTS();
+  const { voiceState } = useAlwaysOnVoice();
 
   // Announce instructions on mount
   useEffect(() => {
@@ -52,21 +55,14 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     });
   };
 
-  // Voice commands
+  // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
-      ready: {
-        phrases: ['ready', 'continue', 'next', 'done', 'okay'],
-        action: proceedToBackSide,
-        context: ['check-flip'],
-      },
-      cancel: {
-        phrases: ['cancel', 'go back', 'stop'],
-        action: () => navigation.getParent()?.goBack(),
-        context: ['check-flip'],
-      },
+      CONFIRM: proceedToBackSide,
+      GO_BACK: () => navigation.getParent()?.goBack(),
+      CANCEL: () => navigation.getParent()?.goBack(),
     },
-    { context: 'check-flip' }
+    { context: 'CheckFlip' }
   );
 
   return (
@@ -77,18 +73,14 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
           <Ionicons
             name="checkmark-circle"
             size={100}
-            color={COLORS.GREEN_600}
+            color={DARK_COLORS.GREEN}
             accessible
             accessibilityLabel="Success"
           />
         </View>
 
         {/* Title */}
-        <Text
-          style={styles.title}
-          accessible
-          accessibilityRole="header"
-        >
+        <Text style={styles.title} accessible accessibilityRole="header">
           Front Captured Successfully
         </Text>
 
@@ -113,14 +105,18 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
           </View>
         )}
 
-        {/* Flip animation hint (text-based for accessibility) */}
+        {/* Flip animation hint */}
         <View style={styles.flipHint}>
           <Text style={styles.flipText}>↻ Flip Check Over</Text>
         </View>
       </View>
 
-      {/* Ready button */}
+      {/* Footer */}
       <View style={styles.footer}>
+        <VoiceBanner
+          state={voiceState}
+          listeningText="Say 'ready' when the back side is facing the camera."
+        />
         <AccessibleButton
           label="Ready"
           onPress={proceedToBackSide}
@@ -134,7 +130,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   content: {
     flex: 1,
     paddingHorizontal: 24,
@@ -148,13 +144,13 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     textAlign: 'center',
     lineHeight: 36,
   },
   instruction: {
     fontSize: 18,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     lineHeight: 26,
     paddingHorizontal: 16,
@@ -166,7 +162,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginTop: 16,
     borderWidth: 2,
-    borderColor: COLORS.GREEN_600,
+    borderColor: DARK_COLORS.GREEN,
   },
   thumbnail: {
     width: '100%',
@@ -176,13 +172,13 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 8,
     right: 8,
-    backgroundColor: COLORS.GREEN_600,
+    backgroundColor: DARK_COLORS.GREEN,
     paddingHorizontal: 12,
     paddingVertical: 4,
     borderRadius: 6,
   },
   thumbnailLabel: {
-    color: COLORS.WHITE,
+    color: '#000',
     fontSize: 12,
     fontWeight: '700',
     letterSpacing: 1,
@@ -192,18 +188,19 @@ const styles = StyleSheet.create({
     paddingVertical: 20,
     paddingHorizontal: 40,
     borderRadius: 16,
-    backgroundColor: COLORS.BLUE_50,
+    backgroundColor: DARK_COLORS.BLUE_DIM,
   },
   flipText: {
     fontSize: 24,
     fontWeight: '700',
-    color: COLORS.BLUE_600,
+    color: DARK_COLORS.BLUE,
     textAlign: 'center',
   },
   footer: {
     paddingHorizontal: 24,
     paddingBottom: 24,
     paddingTop: 16,
+    gap: 12,
   },
   readyButton: {
     width: '100%',

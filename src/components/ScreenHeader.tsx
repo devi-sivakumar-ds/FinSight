@@ -12,13 +12,15 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useHaptics } from '@hooks/useHaptics';
-import { COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { COLORS, DARK_COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
 
 interface ScreenHeaderProps {
   title?: string;
   showClose?: boolean;
   onClose?: () => void;
   accessibilityLabel?: string;
+  /** Use dark color scheme for screens with dark backgrounds */
+  dark?: boolean;
 }
 
 export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
@@ -26,6 +28,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   showClose = false,
   onClose,
   accessibilityLabel,
+  dark = false,
 }) => {
   const { selection } = useHaptics();
 
@@ -38,12 +41,12 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
 
   return (
     <View
-      style={styles.container}
+      style={[styles.container, dark && styles.containerDark]}
       accessible={false} // Let children handle accessibility
     >
       {title && (
         <Text
-          style={styles.title}
+          style={[styles.title, dark && styles.titleDark]}
           accessible={true}
           accessibilityRole="header"
           accessibilityLabel={accessibilityLabel || title}
@@ -61,10 +64,14 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
           onPress={handleClose}
           style={({ pressed }) => [
             styles.closeButton,
-            pressed && styles.closeButtonPressed,
+            pressed && (dark ? styles.closeButtonPressedDark : styles.closeButtonPressed),
           ]}
         >
-          <Ionicons name="close" size={24} color={COLORS.GRAY_900} />
+          <Ionicons
+            name="close"
+            size={24}
+            color={dark ? DARK_COLORS.TEXT_PRIMARY : COLORS.GRAY_900}
+          />
         </Pressable>
       )}
     </View>
@@ -82,11 +89,18 @@ const styles = StyleSheet.create({
     borderBottomColor: COLORS.GRAY_200,
     backgroundColor: COLORS.WHITE,
   },
+  containerDark: {
+    borderBottomColor: DARK_COLORS.BORDER,
+    backgroundColor: DARK_COLORS.BG,
+  },
   title: {
     fontSize: 20,
     fontWeight: 'bold',
     color: COLORS.GRAY_900,
     flex: 1,
+  },
+  titleDark: {
+    color: DARK_COLORS.TEXT_PRIMARY,
   },
   closeButton: {
     width: MIN_TOUCH_TARGET_SIZE,
@@ -97,5 +111,8 @@ const styles = StyleSheet.create({
   },
   closeButtonPressed: {
     backgroundColor: COLORS.GRAY_200,
+  },
+  closeButtonPressedDark: {
+    backgroundColor: DARK_COLORS.SURFACE_2,
   },
 });

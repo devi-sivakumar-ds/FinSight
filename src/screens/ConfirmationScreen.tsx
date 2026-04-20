@@ -16,11 +16,13 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
+import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import mockBankingAPI from '@services/mockBankingAPI';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
-import { COLORS } from '@utils/constants';
+import { DARK_COLORS } from '@utils/constants';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'Confirmation'>;
@@ -32,6 +34,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const { voiceState } = useAlwaysOnVoice();
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
 
@@ -62,7 +65,6 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
     speakMedium('Submitting deposit...');
 
     try {
-      // Convert images to Base64 (simplified for mock)
       const deposit = await mockBankingAPI.submitDeposit(
         accountId,
         amount,
@@ -73,7 +75,6 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         ocrData?.accountNumber
       );
 
-      // Navigate to success screen
       navigation.replace('Success', { deposit });
     } catch (error) {
       console.error('Deposit submission error:', error);
@@ -102,31 +103,14 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
     navigation.getParent()?.goBack();
   }, [navigation]);
 
-  // Voice commands
+  // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
-      'confirm-deposit': {
-        phrases: ['confirm', 'submit', 'yes', 'looks good', 'correct'],
-        action: handleSubmit,
-        context: ['confirmation'],
-      },
-      'edit-amount': {
-        phrases: ['wrong amount', 'change amount', 'edit amount'],
-        action: handleEditAmount,
-        context: ['confirmation'],
-      },
-      'edit-account': {
-        phrases: ['wrong account', 'change account'],
-        action: handleEditAccount,
-        context: ['confirmation'],
-      },
-      'cancel': {
-        phrases: ['cancel', 'no', 'go back'],
-        action: handleCancel,
-        context: ['confirmation'],
-      },
+      CONFIRM: handleSubmit,
+      GO_BACK: handleEditAmount,
+      CANCEL: handleCancel,
     },
-    { context: 'confirmation' }
+    { context: 'Confirmation' }
   );
 
   return (
@@ -135,11 +119,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         accessibilityLabel="Deposit confirmation details"
       >
-        <Text
-          style={styles.title}
-          accessible
-          accessibilityRole="header"
-        >
+        <Text style={styles.title} accessible accessibilityRole="header">
           Confirm Deposit
         </Text>
 
@@ -201,9 +181,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
           {/* Deposit to account */}
           <View style={styles.detailRow}>
             <Text style={styles.detailLabel}>Deposit To</Text>
-            <Text style={styles.detailValue}>
-              {accountLabel} Account
-            </Text>
+            <Text style={styles.detailValue}>{accountLabel} Account</Text>
           </View>
         </View>
 
@@ -232,46 +210,52 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
-      {/* Footer buttons */}
+      {/* Footer */}
       <View style={styles.footer}>
-        <AccessibleButton
-          label="Cancel"
-          onPress={handleCancel}
-          disabled={isSubmitting}
-          variant="outline"
-          size="large"
-          style={styles.cancelButton}
-          accessibilityHint="Cancel deposit and return to main screen"
+        <VoiceBanner
+          state={voiceState}
+          listeningText="Say 'confirm' to submit or 'cancel' to go back."
         />
-        <AccessibleButton
-          label={isSubmitting ? 'Submitting...' : 'Confirm Deposit'}
-          onPress={handleSubmit}
-          disabled={isSubmitting}
-          size="large"
-          style={styles.confirmButton}
-          accessibilityHint="Submit check deposit for processing"
-          icon={isSubmitting ? <ActivityIndicator color={COLORS.WHITE} /> : undefined}
-        />
+        <View style={styles.footerButtons}>
+          <AccessibleButton
+            label="Cancel"
+            onPress={handleCancel}
+            disabled={isSubmitting}
+            variant="outline"
+            size="large"
+            style={styles.cancelButton}
+            accessibilityHint="Cancel deposit and return to main screen"
+          />
+          <AccessibleButton
+            label={isSubmitting ? 'Submitting...' : 'Confirm Deposit'}
+            onPress={handleSubmit}
+            disabled={isSubmitting}
+            size="large"
+            style={styles.confirmButton}
+            accessibilityHint="Submit check deposit for processing"
+            icon={isSubmitting ? <ActivityIndicator color="#fff" /> : undefined}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   scrollContent: { padding: 24, gap: 24 },
   title: {
     fontSize: 32,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     marginBottom: 8,
   },
   card: {
-    backgroundColor: COLORS.WHITE,
+    backgroundColor: DARK_COLORS.SURFACE,
     borderRadius: 16,
     padding: 20,
     borderWidth: 2,
-    borderColor: COLORS.GRAY_200,
+    borderColor: DARK_COLORS.BORDER,
     gap: 16,
   },
   detailRow: {
@@ -281,42 +265,45 @@ const styles = StyleSheet.create({
   },
   detailLabel: {
     fontSize: 16,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     fontWeight: '500',
   },
   detailValue: {
     fontSize: 18,
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     fontWeight: '600',
   },
   detailValueLarge: {
     fontSize: 28,
-    color: COLORS.BLUE_600,
+    color: DARK_COLORS.BLUE,
     fontWeight: 'bold',
   },
   divider: {
     height: 1,
-    backgroundColor: COLORS.GRAY_200,
+    backgroundColor: DARK_COLORS.BORDER,
   },
   editLinks: {
     paddingHorizontal: 4,
   },
   editText: {
     fontSize: 14,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     lineHeight: 20,
   },
   editLink: {
-    color: COLORS.BLUE_600,
+    color: DARK_COLORS.BLUE,
     fontWeight: '600',
     textDecorationLine: 'underline',
   },
   footer: {
-    flexDirection: 'row',
     paddingHorizontal: 24,
     paddingBottom: 24,
     paddingTop: 12,
+    gap: 12,
+  },
+  footerButtons: {
+    flexDirection: 'row',
     gap: 12,
   },
   cancelButton: { flex: 1 },

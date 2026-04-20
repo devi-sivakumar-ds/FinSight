@@ -1,6 +1,6 @@
 // ============================================================================
 // MainScreen Component
-// Main screen with 4 task cards matching Figma design
+// Main screen with 4 task cards — always-on voice, no mic button
 // ============================================================================
 
 import React, { useEffect } from 'react';
@@ -15,10 +15,11 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { VoiceButton } from '@components';
+import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { RootStackParamList } from '@/types/index';
 import { COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
 
@@ -72,19 +73,14 @@ const TaskCard: React.FC<TaskCardProps> = ({
 export const MainScreen: React.FC = () => {
   const { speakMedium } = useTTS();
   const navigation = useNavigation<MainNavProp>();
-  const [isListening, setIsListening] = React.useState(false);
+  const { voiceState } = useAlwaysOnVoice();
 
   useEffect(() => {
-    speakMedium('Welcome to FinSight. Turn on FinSight mode to start.');
+    speakMedium('Welcome to FinSight. I am listening. Say deposit a check, check balance, send money, or transfer money.');
   }, []);
 
   const handleDepositCheck = () => {
     navigation.navigate('DepositFlow');
-  };
-
-  const handleVoicePress = () => {
-    setIsListening(prev => !prev);
-    speakMedium(isListening ? 'Stopped listening' : 'Listening for commands');
   };
 
   const handleSendMoney = () => {
@@ -99,32 +95,15 @@ export const MainScreen: React.FC = () => {
     speakMedium('Transfer money is coming soon.');
   };
 
-  // Voice commands on main screen
+  // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
-      'deposit-check': {
-        phrases: ['deposit a check', 'deposit check', 'check deposit'],
-        action: handleDepositCheck,
-        context: ['main'],
-        confirmation: 'Opening check deposit.',
-      },
-      'send-money': {
-        phrases: ['send money', 'send'],
-        action: handleSendMoney,
-        context: ['main'],
-      },
-      'check-balance': {
-        phrases: ['check balance', 'balance', 'my balance'],
-        action: handleCheckBalance,
-        context: ['main'],
-      },
-      'transfer-money': {
-        phrases: ['transfer money', 'transfer'],
-        action: handleTransferMoney,
-        context: ['main'],
-      },
+      DEPOSIT_CHECK: handleDepositCheck,
+      SEND_MONEY: handleSendMoney,
+      CHECK_BALANCE: handleCheckBalance,
+      TRANSFER_MONEY: handleTransferMoney,
     },
-    { context: 'main' }
+    { context: 'MainScreen' }
   );
 
   return (
@@ -143,7 +122,7 @@ export const MainScreen: React.FC = () => {
             Welcome to FinSight
           </Text>
           <Text style={styles.subtitle}>
-            Turn on FinSight mode to start
+            Always listening — just speak a command
           </Text>
         </View>
 
@@ -189,14 +168,11 @@ export const MainScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Voice Button - Floating */}
-      <View style={styles.voiceButtonContainer}>
-        <VoiceButton
-          isListening={isListening}
-          onPress={handleVoicePress}
-          size={100}
-          accessibilityLabel="FinSight Mode"
-          accessibilityHint="Tap to start or stop voice commands"
+      {/* Always-on voice status strip */}
+      <View style={styles.voiceBannerContainer}>
+        <VoiceBanner
+          state={voiceState}
+          listeningText="Say a command — deposit, balance, send, or transfer."
         />
       </View>
     </SafeAreaView>
@@ -211,7 +187,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
     paddingTop: 62,
-    paddingBottom: 120, // Space for voice button
+    paddingBottom: 100, // Space for voice banner
   },
   header: {
     paddingHorizontal: 21,
@@ -248,7 +224,7 @@ const styles = StyleSheet.create({
     gap: 20,
   },
   taskCard: {
-    width: '47%', // Two columns with gap
+    width: '47%',
     height: 146,
     borderRadius: 20,
     padding: 20,
@@ -273,12 +249,12 @@ const styles = StyleSheet.create({
     lineHeight: 29,
     flex: 1,
   },
-  voiceButtonContainer: {
-    position: 'absolute',
-    bottom: 25,
-    left: 0,
-    right: 0,
-    alignItems: 'center',
-    justifyContent: 'center',
+  voiceBannerContainer: {
+    paddingHorizontal: 21,
+    paddingBottom: 24,
+    paddingTop: 8,
+    backgroundColor: COLORS.WHITE,
+    borderTopWidth: 1,
+    borderTopColor: COLORS.GRAY_200,
   },
 });

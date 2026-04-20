@@ -100,6 +100,21 @@ export const COLORS = {
   GRAY_900: '#111827',
 } as const;
 
+// Dark Theme Colors (deposit flow — matches Figma design)
+export const DARK_COLORS = {
+  BG: '#0a0a0a',           // Screen background
+  SURFACE: '#1c1c1e',      // Cards, elevated surfaces
+  SURFACE_2: '#2c2c2e',    // Secondary surfaces, input fields
+  BORDER: '#3a3a3c',       // Subtle borders
+  TEXT_PRIMARY: '#ffffff',
+  TEXT_SECONDARY: '#aeaeb2',
+  TEXT_MUTED: '#6c6c70',
+  BLUE: '#3484e5',          // Primary accent (mic active, buttons)
+  BLUE_DIM: '#1a3a6b',      // Inactive blue tint
+  RED: '#ff453a',           // Error state
+  GREEN: '#30d158',         // Success accent
+} as const;
+
 // Font Families
 export const FONTS = {
   REGULAR: 'Inter_400Regular',

@@ -15,7 +15,7 @@ import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { useTTS } from '@hooks/useTTS';
-import { COLORS } from '@utils/constants';
+import { DARK_COLORS } from '@utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -61,7 +61,7 @@ export const ErrorScreen: React.FC<Props> = ({ navigation, route }) => {
           <Ionicons
             name="alert-circle"
             size={120}
-            color={COLORS.ORANGE_600}
+            color={DARK_COLORS.RED}
             accessible
             accessibilityLabel="Error"
           />
@@ -115,7 +115,7 @@ export const ErrorScreen: React.FC<Props> = ({ navigation, route }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   content: {
     flex: 1,
     paddingHorizontal: 24,
@@ -129,27 +129,27 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     textAlign: 'center',
     lineHeight: 36,
   },
   errorBox: {
     width: '100%',
-    backgroundColor: '#fff5f5',
+    backgroundColor: '#2a0a0a',
     borderLeftWidth: 4,
-    borderLeftColor: COLORS.ORANGE_600,
+    borderLeftColor: DARK_COLORS.RED,
     borderRadius: 12,
     padding: 20,
   },
   errorText: {
     fontSize: 16,
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     lineHeight: 24,
     textAlign: 'center',
   },
   helpText: {
     fontSize: 15,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     lineHeight: 22,
     paddingHorizontal: 16,

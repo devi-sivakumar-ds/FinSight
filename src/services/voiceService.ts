@@ -1,277 +1,292 @@
 // ============================================================================
 // Voice Recognition Service
-// Command registration, recognition, and fuzzy matching
+// Orchestrates STT (sttService) + NLU (intentService) + action dispatch.
+//
+// Two operating modes:
+//
+// 1. Legacy push-to-talk (startListening / stopListening)
+//    Kept for backward compatibility; not used in always-on mode.
+//
+// 2. Always-on continuous listening (startContinuousListening)
+//    • sttService.startSegment() runs a VAD loop.
+//    • TTS start → mic paused via onTTSStart().
+//    • TTS end   → mic resumed via onTTSEnd() (300ms delay).
+//    • UI state broadcasts to subscribed components via addStateListener().
 // ============================================================================
 
-import { VoiceCommand } from '@/types/index';
 import ttsService from './ttsService';
 import sttService from './sttService';
+import intentService from './intentService';
+import { AlwaysOnVoiceState } from '@/types/index';
 
 class VoiceService {
-  private commands: Map<string, VoiceCommand> = new Map();
-  private isListening: boolean = false;
+  // ── Action registry ────────────────────────────────────────────────────────
+  private actionHandlers: Map<string, () => void> = new Map();
   private currentContext: string = 'global';
+
+  // ── Legacy push-to-talk state ─────────────────────────────────────────────
+  private isListening: boolean = false;
   private onResultCallback: ((result: string) => void) | null = null;
 
+  // ── Always-on continuous listening state ──────────────────────────────────
+  private isContinuous: boolean = false;
+  private isMicPaused: boolean = false;
+
+  // Raw-transcript override: set by AmountInputScreen while focused so that
+  // captured speech is routed directly to amount parsing instead of the NLU.
+  private rawTranscriptCallback: ((transcript: string) => void) | null = null;
+
+  // Pub/sub state listeners — each subscribed component gets the latest
+  // AlwaysOnVoiceState whenever the mic or TTS state changes.
+  private stateListeners: Set<(state: AlwaysOnVoiceState) => void> = new Set();
+
   constructor() {
-    this.initialize();
+    console.log('[Voice] VoiceService ready — STT: Groq Whisper, NLU: Groq Llama');
   }
 
-  /**
-   * Initialize voice recognition
-   */
-  private initialize(): void {
-    // STT is handled by sttService (Groq Whisper via expo-av)
-    console.log('[Voice] VoiceService ready — STT: Groq Whisper, NLU: fuzzy match (Step 3)');
+  // --------------------------------------------------------------------------
+  // Action registration (called by useVoiceCommands on each screen)
+  // --------------------------------------------------------------------------
+
+  public registerActions(actions: Record<string, () => void>): void {
+    Object.entries(actions).forEach(([action, handler]) => {
+      this.actionHandlers.set(action, handler);
+    });
+    console.log('[Voice] Registered actions:', Object.keys(actions).join(', '));
   }
 
-  /**
-   * Register a voice command
-   * @param id - Unique identifier for the command
-   * @param command - VoiceCommand object
-   */
-  public registerCommand(id: string, command: VoiceCommand): void {
-    this.commands.set(id, command);
-    console.log('[Voice] Registered command:', id, command.phrases);
+  public unregisterActions(actionNames: string[]): void {
+    actionNames.forEach(name => this.actionHandlers.delete(name));
+    console.log('[Voice] Unregistered actions:', actionNames.join(', '));
   }
 
-  /**
-   * Unregister a voice command
-   * @param id - Command identifier to remove
-   */
-  public unregisterCommand(id: string): void {
-    this.commands.delete(id);
-    console.log('[Voice] Unregistered command:', id);
-  }
+  // --------------------------------------------------------------------------
+  // Context
+  // --------------------------------------------------------------------------
 
-  /**
-   * Clear all registered commands
-   */
-  public clearCommands(): void {
-    this.commands.clear();
-    console.log('[Voice] All commands cleared');
-  }
-
-  /**
-   * Set the current context (screen name)
-   * @param context - Context identifier
-   */
   public setContext(context: string): void {
     this.currentContext = context;
-    console.log('[Voice] Context set to:', context);
+    console.log('[Voice] Context:', context);
+  }
+
+  public getContext(): string {
+    return this.currentContext;
+  }
+
+  // --------------------------------------------------------------------------
+  // Always-on continuous listening
+  // --------------------------------------------------------------------------
+
+  /**
+   * Start the continuous listening loop. Called once on app mount
+   * (AppNavigator). Registers TTS callbacks so the mic pauses during speech.
+   */
+  public async startContinuousListening(): Promise<void> {
+    if (this.isContinuous) {
+      console.log('[Voice] Already in continuous mode');
+      return;
+    }
+    this.isContinuous = true;
+    this.isMicPaused = false;
+
+    // Wire TTS start/end → mic pause/resume
+    ttsService.setSpeakCallbacks(
+      () => this.onTTSStart(),
+      () => this.onTTSEnd()
+    );
+
+    console.log('[Voice] Continuous listening started');
+    await this.runNextSegment();
   }
 
   /**
-   * Start listening for voice input
-   * @param onResult - Optional callback for raw results
+   * Tear down continuous listening (called on app unmount).
    */
-  public async startListening(
-    onResult?: (result: string) => void
-  ): Promise<void> {
+  public stopContinuousListening(): void {
+    if (!this.isContinuous) return;
+    this.isContinuous = false;
+    this.isMicPaused = false;
+    sttService.cancelSegment();
+    console.log('[Voice] Continuous listening stopped');
+  }
+
+  /**
+   * Launch the next STT segment. The VAD loop inside sttService handles
+   * silence detection; once a transcript is ready it calls our callback,
+   * which dispatches the intent and then re-arms the next segment.
+   */
+  private async runNextSegment(): Promise<void> {
+    if (!this.isContinuous || this.isMicPaused) return;
+
+    this.notifyState('listening');
+
+    try {
+      await sttService.startSegment(async (transcript) => {
+        // sttService has already confirmed valid speech — move to processing
+        this.notifyState('processing');
+
+        await this.handleResult(transcript);
+
+        // Give TTS 150ms to start (if the action triggered speech).
+        // If TTS does start, onTTSStart() will re-arm the mic once it finishes.
+        // If no TTS, restart the segment immediately.
+        setTimeout(() => {
+          if (this.isContinuous && !this.isMicPaused && !ttsService.getIsSpeaking()) {
+            this.runNextSegment();
+          }
+        }, 150);
+      });
+    } catch (error) {
+      console.error('[Voice] Segment error:', error);
+      this.notifyState('error');
+      if (this.isContinuous) {
+        setTimeout(() => this.runNextSegment(), 2000);
+      }
+    }
+  }
+
+  /** Called by ttsService when an utterance starts. Mutes the mic. */
+  private onTTSStart(): void {
+    this.isMicPaused = true;
+    this.notifyState('paused');
+    sttService.cancelSegment();
+    console.log('[Voice] TTS started — mic paused');
+  }
+
+  /** Called by ttsService when an utterance finishes. Re-arms the mic. */
+  private onTTSEnd(): void {
+    this.isMicPaused = false;
+    console.log('[Voice] TTS ended — resuming mic');
+    if (this.isContinuous) {
+      setTimeout(() => this.runNextSegment(), 300);
+    }
+  }
+
+  // --------------------------------------------------------------------------
+  // State pub/sub
+  // --------------------------------------------------------------------------
+
+  /**
+   * Subscribe to voice state changes. Returns an unsubscribe function.
+   * Used by useAlwaysOnVoice hook in each screen.
+   */
+  public addStateListener(cb: (state: AlwaysOnVoiceState) => void): () => void {
+    this.stateListeners.add(cb);
+    return () => this.stateListeners.delete(cb);
+  }
+
+  private notifyState(state: AlwaysOnVoiceState): void {
+    this.stateListeners.forEach(cb => cb(state));
+  }
+
+  // --------------------------------------------------------------------------
+  // Raw transcript override (AmountInputScreen)
+  // --------------------------------------------------------------------------
+
+  /**
+   * While set, all transcripts are forwarded here instead of the NLU pipeline.
+   * AmountInputScreen sets this via useFocusEffect so amount speech bypasses
+   * intent classification.
+   */
+  public setRawTranscriptCallback(cb: ((transcript: string) => void) | null): void {
+    this.rawTranscriptCallback = cb;
+    console.log('[Voice] Raw transcript callback:', cb ? 'set' : 'cleared');
+  }
+
+  // --------------------------------------------------------------------------
+  // Legacy push-to-talk (kept for backward compatibility)
+  // --------------------------------------------------------------------------
+
+  public async startListening(onResult?: (result: string) => void): Promise<void> {
     if (this.isListening) {
       console.log('[Voice] Already listening');
       return;
     }
 
     try {
-      this.onResultCallback = onResult || null;
+      this.onResultCallback = onResult ?? null;
+      await ttsService.reset();
       await sttService.start();
       this.isListening = true;
-      console.log('[Voice] Started listening (Groq Whisper)');
+      console.log('[Voice] Legacy listening started');
     } catch (error) {
       console.error('[Voice] Error starting recording:', error);
-      await ttsService.speakHigh(
-        'Unable to start voice input. Please check microphone permissions and try again.'
-      );
+      ttsService.speakHigh('Unable to start voice input. Please check microphone permissions.');
     }
   }
 
-  /**
-   * Stop listening
-   */
   public async stopListening(): Promise<void> {
-    if (!this.isListening) {
-      return;
-    }
-
+    if (!this.isListening) return;
     this.isListening = false;
 
     try {
       const transcript = await sttService.stop();
-      console.log('[Voice] Stopped listening. Transcript:', transcript);
-      this.handleResult(transcript);
+      console.log('[Voice] Legacy transcript:', transcript);
+      await this.handleResult(transcript);
     } catch (error) {
       console.error('[Voice] Error stopping / transcribing:', error);
-      await ttsService.speakHigh("Sorry, I couldn't hear that. Please try again.");
+      ttsService.speakHigh("Sorry, I couldn't hear that. Please try again.");
     } finally {
       this.onResultCallback = null;
     }
   }
 
-  /**
-   * Handle a transcription result — dispatch to callback and/or fuzzy-match commands.
-   * Called internally by stopListening() after Groq Whisper returns the transcript.
-   */
-  public handleResult(transcription: string): void {
-    console.log('[Voice] Received transcription:', transcription);
-
-    // Normalize transcription
-    const normalized = transcription.toLowerCase().trim();
-
-    // Call onResult callback if set
-    if (this.onResultCallback) {
-      this.onResultCallback(normalized);
-    }
-
-    // Try to match with registered commands
-    const matchedCommand = this.matchCommand(normalized);
-
-    if (matchedCommand) {
-      console.log('[Voice] Matched command');
-
-      // Speak confirmation if provided
-      if (matchedCommand.confirmation) {
-        ttsService.speakMedium(matchedCommand.confirmation);
-      }
-
-      // Execute command action
-      matchedCommand.action();
-    } else {
-      console.log('[Voice] No command matched for:', normalized);
-      ttsService.speakMedium(
-        "I didn't understand that. Please try again or tap the screen to navigate manually."
-      );
-    }
-  }
-
-  /**
-   * Match transcription to a registered command
-   * Uses fuzzy matching to handle variations
-   */
-  private matchCommand(transcription: string): VoiceCommand | null {
-    let bestMatch: VoiceCommand | null = null;
-    let highestScore = 0;
-
-    for (const [id, command] of this.commands) {
-      // Skip commands not in current context
-      if (command.context && !command.context.includes(this.currentContext) && !command.context.includes('global')) {
-        continue;
-      }
-
-      // Check each phrase for this command
-      for (const phrase of command.phrases) {
-        const score = this.calculateMatchScore(transcription, phrase.toLowerCase());
-
-        if (score > highestScore) {
-          highestScore = score;
-          bestMatch = command;
-        }
-      }
-    }
-
-    // Only return match if score is above threshold (70%)
-    if (highestScore >= 0.7) {
-      console.log('[Voice] Match score:', highestScore);
-      return bestMatch;
-    }
-
-    return null;
-  }
-
-  /**
-   * Calculate fuzzy match score between two strings
-   * Returns 0-1 score (1 = exact match)
-   */
-  private calculateMatchScore(input: string, phrase: string): number {
-    // Exact match
-    if (input === phrase) {
-      return 1.0;
-    }
-
-    // Contains phrase
-    if (input.includes(phrase)) {
-      return 0.9;
-    }
-
-    // Phrase contains input
-    if (phrase.includes(input)) {
-      return 0.85;
-    }
-
-    // Word-by-word matching
-    const inputWords = input.split(' ');
-    const phraseWords = phrase.split(' ');
-
-    let matchedWords = 0;
-    for (const inputWord of inputWords) {
-      if (phraseWords.some(phraseWord =>
-        phraseWord.includes(inputWord) || inputWord.includes(phraseWord)
-      )) {
-        matchedWords++;
-      }
-    }
-
-    const wordScore = matchedWords / Math.max(inputWords.length, phraseWords.length);
-
-    // Levenshtein distance for similarity
-    const distanceScore = 1 - (this.levenshteinDistance(input, phrase) / Math.max(input.length, phrase.length));
-
-    // Weighted average
-    return (wordScore * 0.6) + (distanceScore * 0.4);
-  }
-
-  /**
-   * Calculate Levenshtein distance between two strings
-   */
-  private levenshteinDistance(str1: string, str2: string): number {
-    const matrix: number[][] = [];
-
-    for (let i = 0; i <= str2.length; i++) {
-      matrix[i] = [i];
-    }
-
-    for (let j = 0; j <= str1.length; j++) {
-      matrix[0][j] = j;
-    }
-
-    for (let i = 1; i <= str2.length; i++) {
-      for (let j = 1; j <= str1.length; j++) {
-        if (str2.charAt(i - 1) === str1.charAt(j - 1)) {
-          matrix[i][j] = matrix[i - 1][j - 1];
-        } else {
-          matrix[i][j] = Math.min(
-            matrix[i - 1][j - 1] + 1,
-            matrix[i][j - 1] + 1,
-            matrix[i - 1][j] + 1
-          );
-        }
-      }
-    }
-
-    return matrix[str2.length][str1.length];
-  }
-
-  /**
-   * Check if currently listening
-   */
   public getIsListening(): boolean {
     return this.isListening;
   }
 
-  /**
-   * Get current context
-   */
-  public getContext(): string {
-    return this.currentContext;
-  }
+  // --------------------------------------------------------------------------
+  // Dispatch
+  // --------------------------------------------------------------------------
 
   /**
-   * Get all registered commands (for debugging)
+   * Handle a transcript:
+   *   1. If rawTranscriptCallback is set (AmountInputScreen) → forward and return.
+   *   2. If legacy onResultCallback is set → forward and return.
+   *   3. Otherwise classify via intentService and dispatch to registered handler.
    */
-  public getCommands(): Map<string, VoiceCommand> {
-    return this.commands;
+  public async handleResult(transcript: string): Promise<void> {
+    const normalized = transcript.toLowerCase().trim();
+    console.log('[Voice] Handling transcript:', normalized);
+
+    // AmountInputScreen raw path
+    if (this.rawTranscriptCallback) {
+      this.rawTranscriptCallback(normalized);
+      return;
+    }
+
+    // Legacy raw path
+    if (this.onResultCallback) {
+      this.onResultCallback(normalized);
+      return;
+    }
+
+    // Intent path — classify then dispatch
+    const availableActions = Array.from(this.actionHandlers.keys());
+
+    try {
+      const intent = await intentService.classify(normalized, this.currentContext, availableActions);
+
+      if (intent.action === 'UNKNOWN') {
+        ttsService.speakMedium("I didn't catch that. Please try again or use the buttons.");
+        return;
+      }
+
+      const handler = this.actionHandlers.get(intent.action);
+      if (handler) {
+        console.log(
+          `[Voice] Executing: ${intent.action} (${intent.source}, conf ${intent.confidence.toFixed(2)})`
+        );
+        handler();
+      } else {
+        console.log('[Voice] No handler for action:', intent.action);
+        ttsService.speakMedium("I'm not sure how to help with that right now.");
+      }
+    } catch (error) {
+      console.error('[Voice] Intent classification error:', error);
+      ttsService.speakMedium('Something went wrong. Please try again.');
+    }
   }
 }
 
-// Export singleton instance
 export default new VoiceService();

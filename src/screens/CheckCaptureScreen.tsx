@@ -19,7 +19,7 @@ import { DepositStackParamList, GuidanceState, HapticPattern } from '@/types/ind
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { COLORS, GUIDANCE_MESSAGES } from '@utils/constants';
+import { COLORS, DARK_COLORS, GUIDANCE_MESSAGES } from '@utils/constants';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -185,21 +185,14 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     handleAutoCapture();
   }, [handleAutoCapture]);
 
-  // ── Voice commands ──────────────────────────────────────────────────────
+  // ── Voice commands — LLM maps natural speech to these action keys ────────
   useVoiceCommands(
     {
-      'manual-capture': {
-        phrases: ['capture', 'take photo', 'snap', 'take picture'],
-        action: handleManualCapture,
-        context: ['check-capture'],
-      },
-      'cancel': {
-        phrases: ['cancel', 'go back', 'stop'],
-        action: () => navigation.getParent()?.goBack(),
-        context: ['check-capture'],
-      },
+      CONFIRM: handleManualCapture,
+      CANCEL: () => navigation.getParent()?.goBack(),
+      GO_BACK: () => navigation.getParent()?.goBack(),
     },
-    { context: 'check-capture' }
+    { context: 'CheckCapture' }
   );
 
   // ── Permission denied screen ────────────────────────────────────────────
@@ -403,17 +396,17 @@ const styles = StyleSheet.create({
   permissionTitle: {
     fontSize: 24,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     textAlign: 'center',
   },
   permissionText: {
     fontSize: 16,
-    color: COLORS.GRAY_700,
+    color: DARK_COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     lineHeight: 24,
   },
   permissionButton: {
-    backgroundColor: COLORS.BLUE_600,
+    backgroundColor: DARK_COLORS.BLUE,
     paddingHorizontal: 32,
     paddingVertical: 16,
     borderRadius: 12,

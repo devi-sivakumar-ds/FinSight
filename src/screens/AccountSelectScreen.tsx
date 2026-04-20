@@ -17,12 +17,14 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DepositStackParamList, Account } from '@/types/index';
 import { ScreenHeader } from '@components/ScreenHeader';
 import { AccessibleButton } from '@components/AccessibleButton';
+import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import mockBankingAPI from '@services/mockBankingAPI';
-import { formatCurrencyForSpeech, formatAccountNumberForSpeech } from '@utils/accessibility';
-import { COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { formatCurrencyForSpeech } from '@utils/accessibility';
+import { DARK_COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'AccountSelect'>;
@@ -30,10 +32,11 @@ type Props = {
 
 export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
   const { speakMedium, speakHigh } = useTTS();
-  const { selection, trigger } = useHaptics();
+  const { selection } = useHaptics();
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const { voiceState } = useAlwaysOnVoice();
 
   // Load accounts and announce
   useEffect(() => {
@@ -44,7 +47,6 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
       setAccounts(data);
       setLoading(false);
 
-      // Announce after short delay so screen is rendered
       setTimeout(() => {
         speakMedium('Which account do you want to deposit to?');
         setTimeout(() => {
@@ -87,39 +89,22 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
     navigation.getParent()?.goBack();
   }, [navigation]);
 
-  // Voice commands
+  // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
-      'select-checking': {
-        phrases: ['checking', 'checking account', 'first', 'first one', 'first account'],
-        action: () => {
-          const acc = accounts.find(a => a.type === 'checking');
-          if (acc) handleSelect(acc);
-        },
-        context: ['account-select'],
-        confirmation: 'Checking account selected',
+      SELECT_CHECKING: () => {
+        const acc = accounts.find(a => a.type === 'checking');
+        if (acc) handleSelect(acc);
       },
-      'select-savings': {
-        phrases: ['savings', 'savings account', 'second', 'second one', 'second account'],
-        action: () => {
-          const acc = accounts.find(a => a.type === 'savings');
-          if (acc) handleSelect(acc);
-        },
-        context: ['account-select'],
-        confirmation: 'Savings account selected',
+      SELECT_SAVINGS: () => {
+        const acc = accounts.find(a => a.type === 'savings');
+        if (acc) handleSelect(acc);
       },
-      'continue': {
-        phrases: ['continue', 'next', 'confirm', 'proceed'],
-        action: handleContinue,
-        context: ['account-select'],
-      },
-      'cancel': {
-        phrases: ['cancel', 'go back', 'exit'],
-        action: handleClose,
-        context: ['account-select'],
-      },
+      CONFIRM: handleContinue,
+      GO_BACK: handleClose,
+      CANCEL: handleClose,
     },
-    { context: 'account-select' }
+    { context: 'AccountSelect' }
   );
 
   const renderAccount = ({ item, index }: { item: Account; index: number }) => {
@@ -163,26 +148,21 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
   return (
     <SafeAreaView style={styles.container}>
       <ScreenHeader
+        dark
         showClose
         onClose={handleClose}
         accessibilityLabel="Close deposit flow"
       />
 
       <View style={styles.content}>
-        {/* Title */}
-        <Text
-          style={styles.title}
-          accessible
-          accessibilityRole="header"
-        >
+        <Text style={styles.title} accessible accessibilityRole="header">
           Which account do you want to deposit to?
         </Text>
 
-        {/* Account list */}
         {loading ? (
           <ActivityIndicator
             size="large"
-            color={COLORS.BLUE_600}
+            color={DARK_COLORS.BLUE}
             accessibilityLabel="Loading accounts"
           />
         ) : (
@@ -202,8 +182,12 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
         )}
       </View>
 
-      {/* Continue button */}
+      {/* Footer */}
       <View style={styles.footer}>
+        <VoiceBanner
+          state={voiceState}
+          listeningText="Which account — Checking or Savings?"
+        />
         <AccessibleButton
           label="Continue"
           onPress={handleContinue}
@@ -218,12 +202,12 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: COLORS.WHITE },
+  container: { flex: 1, backgroundColor: DARK_COLORS.BG },
   content: { flex: 1, paddingHorizontal: 21, paddingTop: 24, gap: 24 },
   title: {
     fontSize: 28,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
+    color: DARK_COLORS.TEXT_PRIMARY,
     lineHeight: 36,
   },
   accountRow: {
@@ -233,13 +217,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 16,
     borderWidth: 2,
-    borderColor: COLORS.GRAY_200,
+    borderColor: DARK_COLORS.BORDER,
     gap: 16,
     minHeight: MIN_TOUCH_TARGET_SIZE * 2,
   },
   accountRowSelected: {
-    borderColor: COLORS.BLUE_600,
-    backgroundColor: COLORS.BLUE_50,
+    borderColor: DARK_COLORS.BLUE,
+    backgroundColor: DARK_COLORS.BLUE_DIM,
   },
   accountRowPressed: { opacity: 0.8 },
   radio: {
@@ -247,21 +231,21 @@ const styles = StyleSheet.create({
     height: 28,
     borderRadius: 14,
     borderWidth: 2,
-    borderColor: COLORS.GRAY_400,
+    borderColor: DARK_COLORS.TEXT_MUTED,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  radioSelected: { borderColor: COLORS.BLUE_600 },
+  radioSelected: { borderColor: DARK_COLORS.BLUE },
   radioInner: {
     width: 14,
     height: 14,
     borderRadius: 7,
-    backgroundColor: COLORS.BLUE_600,
+    backgroundColor: DARK_COLORS.BLUE,
   },
   accountInfo: { flex: 1, gap: 4 },
-  accountName: { fontSize: 18, fontWeight: '600', color: COLORS.GRAY_900 },
-  accountBalance: { fontSize: 16, color: COLORS.GRAY_700 },
+  accountName: { fontSize: 18, fontWeight: '600', color: DARK_COLORS.TEXT_PRIMARY },
+  accountBalance: { fontSize: 16, color: DARK_COLORS.TEXT_SECONDARY },
   separator: { height: 12 },
-  footer: { paddingHorizontal: 21, paddingBottom: 24, paddingTop: 12 },
+  footer: { paddingHorizontal: 21, paddingBottom: 24, paddingTop: 12, gap: 12 },
   continueBtn: { width: '100%' },
 });

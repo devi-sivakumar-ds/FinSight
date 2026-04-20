@@ -2,12 +2,24 @@
 // Core Types for FinSight Accessible Banking App
 // ============================================================================
 
+// Always-On Voice State
+// Replaces the old VoiceBannerState ('off' removed — mic is never off)
+export type AlwaysOnVoiceState = 'listening' | 'processing' | 'paused' | 'error';
+
 // Voice Command System
 export interface VoiceCommand {
   phrases: string[];           // Trigger phrases
   action: () => void;          // Action to execute
   context?: string[];          // Screen contexts where active
   confirmation?: string;       // TTS confirmation message
+}
+
+// LLM Intent — returned by intentService (Step 4+)
+export interface VoiceIntent {
+  action: string;                      // e.g. SELECT_CHECKING, SET_AMOUNT, CONFIRM
+  entities: Record<string, unknown>;   // e.g. { amount: 150.00, accountType: 'savings' }
+  confidence: number;                  // 0.0 – 1.0
+  source: 'fast-path' | 'llm';        // how it was resolved
 }
 
 // Text-to-Speech System
