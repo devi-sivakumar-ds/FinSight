@@ -21,15 +21,37 @@ const scales: Record<string, number> = {
 };
 
 /**
- * Parse a spoken words-only sub-string into an integer.
+ * Parse a spoken (or STT-normalised) sub-string into an integer.
+ * Handles both word form ("two hundred fifty") and digit strings ("100", "250")
+ * because Android STT often converts spoken numbers to digits.
+ *
  * e.g. "two hundred fifty three" → 253
+ *      "100 fifty"               → 150  (STT digit + word mix)
+ *      "100"                     → 100  (pure digit from STT)
  */
 function parseWordNumber(words: string[]): number {
   let total = 0;
   let current = 0;
 
   for (const word of words) {
-    if (ones[word] !== undefined) {
+    // ── Digit strings: STT often outputs "100" instead of "one hundred" ──────
+    if (/^\d+$/.test(word)) {
+      const digit = parseInt(word, 10);
+      if (digit >= 1000) {
+        // e.g. "2000" → flush as thousands
+        total += current + digit;
+        current = 0;
+      } else {
+        current += digit;
+      }
+      continue;
+    }
+
+    // ── Word numbers ──────────────────────────────────────────────────────────
+    if (word === 'a') {
+      // "a hundred" / "a thousand" — treat "a" as "one"
+      current += 1;
+    } else if (ones[word] !== undefined) {
       current += ones[word];
     } else if (tens[word] !== undefined) {
       current += tens[word];
@@ -39,7 +61,7 @@ function parseWordNumber(words: string[]): number {
       total += (current === 0 ? 1 : current) * 1000;
       current = 0;
     }
-    // skip unknown words like "and", "dollars", "cents"
+    // skip unknown words: "and", "dollars", "cents", etc.
   }
 
   return total + current;

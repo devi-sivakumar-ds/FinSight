@@ -27,6 +27,7 @@ import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import voiceService from '@services/voiceService';
+import ttsService from '@services/ttsService';
 import {
   parseVoiceAmount,
   formatAmountForSpeech,
@@ -58,6 +59,9 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null);
   const [mode, setMode] = useState<InputMode>('idle');
   const pendingAmount = useRef<number | null>(null);
+  // Refs so callbacks registered once (via useFocusEffect) always see current values
+  const modeRef = useRef<InputMode>('idle');
+  const proceedToCameraRef = useRef<() => void>(() => {});
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
 
@@ -73,6 +77,9 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
       }, 1000);
     }, 400);
   }, []);
+
+  // Keep refs in sync with state so stale-closure callbacks see current values
+  useEffect(() => { modeRef.current = mode; }, [mode]);
 
   // ── Numpad logic ────────────────────────────────────────────────────────
   const handleNumpadPress = useCallback((key: string) => {
@@ -110,6 +117,24 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   // Receives raw transcript from the always-on VAD (bypasses NLU intent pipeline).
   // Registered via voiceService.setRawTranscriptCallback in useFocusEffect below.
   const handleVoiceResult = useCallback((transcript: string) => {
+    const lower = transcript.toLowerCase().trim();
+
+    // When waiting for yes/no confirmation, intercept before amount parsing
+    if (modeRef.current === 'confirming') {
+      if (/\b(yes|yeah|yep|correct|continue|proceed|confirm)\b/.test(lower)) {
+        proceedToCameraRef.current();
+        return;
+      }
+      if (/\b(no|nope|cancel|try again|change|different|again)\b/.test(lower)) {
+        setMode('idle');
+        setDisplayValue('0');
+        pendingAmount.current = null;
+        speakMedium('Okay, how much are you depositing?');
+        return;
+      }
+      // Unrecognised word in confirming mode — treat as a new amount attempt
+    }
+
     const amount = parseVoiceAmount(transcript);
 
     if (amount === null) {
@@ -137,7 +162,10 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   useFocusEffect(
     useCallback(() => {
       voiceService.setRawTranscriptCallback(handleVoiceResult);
-      return () => voiceService.setRawTranscriptCallback(null);
+      return () => {
+        voiceService.setRawTranscriptCallback(null);
+        ttsService.reset(); // drain any queued TTS when leaving this screen
+      };
     }, [handleVoiceResult])
   );
 
@@ -166,6 +194,8 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
       side: 'front',
     });
   }, [confirmedAmount, numericAmount, accountId, accountType, navigation]);
+
+  useEffect(() => { proceedToCameraRef.current = proceedToCamera; }, [proceedToCamera]);
 
   // ── Voice commands — LLM maps natural speech to these action keys ────────
   useVoiceCommands(

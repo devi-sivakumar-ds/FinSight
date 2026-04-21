@@ -71,6 +71,9 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
     const typeLabel = account.type === 'checking' ? 'Checking' : 'Savings';
     const digits = account.displayNumber.split('').join(' ');
     speakMedium(`${typeLabel} ending in ${digits} selected.`);
+    setTimeout(() => {
+      speakMedium('Say continue to proceed, or select a different account.');
+    }, 1200);
   }, []);
 
   const handleContinue = useCallback(() => {

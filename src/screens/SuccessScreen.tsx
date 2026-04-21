@@ -13,10 +13,11 @@ import {
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
-import { DepositStackParamList } from '@/types/index';
+import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
+import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
@@ -31,12 +32,18 @@ type Props = {
 export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { deposit } = route.params;
   const { speakMedium, speakHigh } = useTTS();
+  const { trigger } = useHaptics();
 
   const [countdown, setCountdown] = useState(10);
   const { voiceState } = useAlwaysOnVoice();
 
-  // Announce success on mount
+  // Announce success on mount — haptic burst first, then voice
   useEffect(() => {
+    // Immediate haptic celebration: three quick pulses
+    trigger(HapticPattern.SUCCESS);
+    setTimeout(() => trigger(HapticPattern.SUCCESS), 250);
+    setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
+
     setTimeout(() => {
       speakHigh('Deposit submitted successfully.');
       setTimeout(() => {
@@ -48,6 +55,10 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
             speakMedium(`Confirmation number: ${digits}.`);
           }, 2500);
         }
+        // Always tell the user how to exit — after all detail messages clear
+        setTimeout(() => {
+          speakMedium("Say 'done' or 'go home' to return to the main screen.");
+        }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
   }, []);
@@ -69,7 +80,9 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   const handleDone = () => {
-    navigation.getParent()?.getParent()?.navigate('TabNavigator');
+    // DepositFlow is a modal on RootStack — one goBack() dismisses it entirely
+    // and returns to TabNavigator (MainScreen).
+    navigation.getParent()?.goBack();
   };
 
   // Voice commands — LLM maps natural speech to these action keys

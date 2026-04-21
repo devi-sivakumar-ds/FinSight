@@ -3,7 +3,7 @@
 // Transition screen — instructs user to flip check
 // ============================================================================
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,7 +12,8 @@ import {
   Image,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { RouteProp } from '@react-navigation/native';
+import { RouteProp, useFocusEffect } from '@react-navigation/native';
+import ttsService from '@services/ttsService';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { VoiceBanner } from '@components/VoiceBanner';
@@ -31,6 +32,13 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
   const { frontImageUri, accountId, accountType, amount } = route.params;
   const { speakMedium } = useTTS();
   const { voiceState } = useAlwaysOnVoice();
+
+  // Stop any lingering TTS when leaving this screen (e.g. user says "ready" quickly)
+  useFocusEffect(
+    useCallback(() => {
+      return () => { ttsService.reset(); };
+    }, [])
+  );
 
   // Announce instructions on mount
   useEffect(() => {

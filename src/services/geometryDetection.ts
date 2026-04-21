@@ -19,8 +19,10 @@
 import type { Frame } from 'react-native-vision-camera';
 
 const SKIP = 16;                // Sample every 16th pixel (row and col)
-const BRIGHT_THRESHOLD = 190;   // Luminance threshold (0-255). Checks are white/cream.
-const MIN_BRIGHT_RATIO = 0.04;  // <4% bright pixels → no check visible
+const BRIGHT_THRESHOLD = 170;   // Luminance threshold (0-255). Lowered 190→170 to catch
+                                 // cream/beige checks and off-white paper under warm lighting.
+const MIN_BRIGHT_RATIO = 0.07;  // Raised 0.04→0.07: require ≥7% bright pixels before
+                                 // treating the region as a check (fewer table/floor false-positives).
 const ASPECT_MIN = 1.2;         // Minimum width:height ratio for a check
 const ASPECT_MAX = 6.5;         // Maximum width:height ratio
 
@@ -43,8 +45,15 @@ export function analyzeCheckInFrame(frame: Frame): string {
   const bytesPerRow = frame.bytesPerRow;
   const isYUV = frame.pixelFormat === 'yuv';
 
-  // Copy frame pixels to a typed array (GPU → CPU copy)
-  const buffer = new Uint8Array(frame.toArrayBuffer());
+  // Copy frame pixels to a typed array (GPU → CPU copy).
+  // toArrayBuffer() requires Android API 26+. On older devices or in some
+  // pixel formats it can throw — return a sentinel so the caller can fall back.
+  let buffer: Uint8Array;
+  try {
+    buffer = new Uint8Array(frame.toArrayBuffer());
+  } catch (_e) {
+    return 'detect_failed';
+  }
 
   let minX = width;
   let maxX = 0;
@@ -101,8 +110,8 @@ export function analyzeCheckInFrame(frame: Frame): string {
   const frameArea = width * height;
   const coverage = (regionW * regionH) / frameArea;
 
-  if (coverage < 0.18) return 'too_far';
-  if (coverage > 0.87) return 'too_close';
+  if (coverage < 0.14) return 'too_far';   // was 0.18 — less aggressive "move closer" prompt
+  if (coverage > 0.92) return 'too_close'; // was 0.87 — allows check to fill more of frame
 
   // ── Centering: offset of bright-region center from frame center ───────────
   const regionCenterX = (minX + maxX) / 2;
@@ -127,7 +136,9 @@ export function analyzeCheckInFrame(frame: Frame): string {
   }
 
   // ── Perfect: good coverage, well-centered ─────────────────────────────────
-  if (coverage >= 0.38 && coverage <= 0.78 && absOffsetX < 0.07 && absOffsetY < 0.07) {
+  // Widened range 0.38-0.78 → 0.30-0.82 and centering 0.07 → 0.09
+  // to give BLV users a more reachable "sweet spot".
+  if (coverage >= 0.30 && coverage <= 0.82 && absOffsetX < 0.09 && absOffsetY < 0.09) {
     return 'perfect';
   }
 
