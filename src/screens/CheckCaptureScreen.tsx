@@ -59,8 +59,9 @@ const CHECK_ASPECT = 2.2;
 // Milliseconds between snapshot analysis runs
 const SNAPSHOT_INTERVAL_MS = 1500;
 
-// How many consecutive 'perfect' readings before auto-capture fires
-const CONSECUTIVE_PERFECT_NEEDED = 2;
+// How many 'perfect' readings (with 'good' allowed in between) before auto-capture
+// Option B: 'good' does not reset the counter, only directional states do.
+const CONSECUTIVE_PERFECT_NEEDED = 3;
 
 // Minimum ms between TTS guidance announcements (same-state repeat suppression)
 const MIN_TTS_INTERVAL_MS = 2500;
@@ -73,10 +74,14 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
 
-  // ── Guide box — portrait-primary, landscape-shaped ────────────────────────
+  // ── Guide box — portrait-shaped (taller than wide) ───────────────────────
+  // User holds phone in landscape. The check's long 6" side runs vertically
+  // in the rotated camera view, so height is the dominant dimension.
+  // useWindowDimensions returns landscape values (winW > winH) automatically
+  // when the phone is rotated — no orientation lock needed.
   const { width: winW, height: winH } = useWindowDimensions();
-  const guideWidth  = Math.min(winW * 0.88, winH * 0.70 * CHECK_ASPECT);
-  const guideHeight = guideWidth / CHECK_ASPECT;
+  const guideHeight = Math.min(winH * 0.85, winW * 0.70 * CHECK_ASPECT);
+  const guideWidth  = guideHeight / CHECK_ASPECT;
 
   // ── Camera ────────────────────────────────────────────────────────────────
   const device = useCameraDevice('back');
@@ -169,7 +174,10 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 
     setCurrentGuidance(guidance);
 
-    // Consecutive-perfect accumulator → auto-capture
+    // Consecutive-perfect accumulator → auto-capture (Option B)
+    // 'perfect' increments the counter.
+    // 'good'    leaves it unchanged — oscillation between good/perfect won't block capture.
+    // Anything else (directional correction) resets it — user needs to reposition.
     if (guidance === 'perfect') {
       consecutivePerfectRef.current += 1;
       if (consecutivePerfectRef.current >= CONSECUTIVE_PERFECT_NEEDED) {
@@ -177,7 +185,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
         handleAutoCaptureRef.current();
         return;
       }
-    } else {
+    } else if (guidance !== 'good') {
       consecutivePerfectRef.current = 0;
     }
 

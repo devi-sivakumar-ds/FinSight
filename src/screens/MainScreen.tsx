@@ -98,6 +98,10 @@ export const MainScreen: React.FC = () => {
     speakMedium(v(verbosity, ttsStrings.main.featureComingSoon('Transfer money')));
   };
 
+  const handleOpenSettings = () => {
+    navigation.navigate('Settings' as any);
+  };
+
   // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
@@ -105,6 +109,7 @@ export const MainScreen: React.FC = () => {
       SEND_MONEY: handleSendMoney,
       CHECK_BALANCE: handleCheckBalance,
       TRANSFER_MONEY: handleTransferMoney,
+      OPEN_SETTINGS: handleOpenSettings,
     },
     { context: 'MainScreen' }
   );

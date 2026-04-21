@@ -44,6 +44,8 @@ const FAST_PATH: Record<string, string> = {
   stop: 'CANCEL',
   // Navigation
   back: 'GO_BACK',
+  home: 'GO_HOME',
+  settings: 'OPEN_SETTINGS',
   // Help
   help: 'HELP',
   // Repeat
@@ -59,6 +61,26 @@ const FAST_PATH_PHRASES: Array<{ phrase: string; action: string }> = [
   { phrase: 'that is wrong', action: 'GO_BACK' },
   { phrase: 'say again', action: 'REPEAT' },
   { phrase: 'start over', action: 'CANCEL' },
+  // Navigation
+  { phrase: 'open settings', action: 'OPEN_SETTINGS' },
+  { phrase: 'go to settings', action: 'OPEN_SETTINGS' },
+  { phrase: 'go home', action: 'GO_HOME' },
+  { phrase: 'go to home', action: 'GO_HOME' },
+  { phrase: 'go back home', action: 'GO_HOME' },
+  // Verbosity
+  { phrase: 'set verbosity low', action: 'SET_VERBOSITY_LOW' },
+  { phrase: 'verbosity low', action: 'SET_VERBOSITY_LOW' },
+  { phrase: 'set verbosity medium', action: 'SET_VERBOSITY_MEDIUM' },
+  { phrase: 'verbosity medium', action: 'SET_VERBOSITY_MEDIUM' },
+  { phrase: 'set verbosity high', action: 'SET_VERBOSITY_HIGH' },
+  { phrase: 'verbosity high', action: 'SET_VERBOSITY_HIGH' },
+  // Pacing
+  { phrase: 'set pace slow', action: 'SET_PACE_SLOW' },
+  { phrase: 'slow pace', action: 'SET_PACE_SLOW' },
+  { phrase: 'set pace normal', action: 'SET_PACE_NORMAL' },
+  { phrase: 'normal pace', action: 'SET_PACE_NORMAL' },
+  { phrase: 'set pace fast', action: 'SET_PACE_FAST' },
+  { phrase: 'fast pace', action: 'SET_PACE_FAST' },
 ];
 
 // --------------------------------------------------------------------------

@@ -25,11 +25,21 @@ export const ttsStrings = {
 
   // ── Settings ───────────────────────────────────────────────────────────────
   settings: {
-    screenAnnounce: {
-      low:    'Settings.',
-      medium: 'Settings screen.',
-      high:   'Settings screen. You can adjust verbosity and speech pace here.',
-    } as VStr,
+    screenAnnounce: (currentVerbosity: string, currentPace: number): VStr => ({
+      low:    `Settings. Verbosity: ${currentVerbosity}. Pace: ${currentPace}x. Say a command to change.`,
+      medium: `Settings. Verbosity is ${currentVerbosity}. Pace is ${currentPace}x. Say 'set verbosity low, medium, or high', or 'set pace slow, normal, or fast'.`,
+      high:   `Settings screen. Your verbosity is ${currentVerbosity} and your speech pace is ${currentPace}x. To change verbosity, say 'set verbosity low', 'medium', or 'high'. To change speech pace, say 'set pace slow', 'normal', or 'fast'. To return home, say 'go home'.`,
+    }),
+    verbosityChanged: (label: string): VStr => ({
+      low:    `${label}.`,
+      medium: `Verbosity set to ${label}.`,
+      high:   `Verbosity updated to ${label}. The app will now speak with ${label} detail.`,
+    }),
+    paceChanged: (pace: number): VStr => ({
+      low:    `${pace}x.`,
+      medium: `Speech pace set to ${pace}x.`,
+      high:   `Speech pace updated to ${pace}x. The app will now speak ${pace < 1 ? 'slower' : pace > 1 ? 'faster' : 'at normal speed'}.`,
+    }),
   },
 
   // ── Main screen ────────────────────────────────────────────────────────────

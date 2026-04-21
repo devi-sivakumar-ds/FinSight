@@ -1,9 +1,9 @@
 // ============================================================================
 // SettingsScreen
-// Voice settings — verbosity and speech pace
+// Voice settings — verbosity and speech pace, fully voice-navigable
 // ============================================================================
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -12,9 +12,11 @@ import {
   Pressable,
   ScrollView,
 } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { VoiceBanner } from '@components/VoiceBanner';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
@@ -37,22 +39,43 @@ export const SettingsScreen: React.FC = () => {
   const { speakMedium } = useTTS();
   const { verbosity, pace, setVerbosity, setPace } = useVoiceSettings();
   const { voiceState } = useAlwaysOnVoice();
+  const navigation = useNavigation();
 
+  // Announce current settings + voice options on mount
   useEffect(() => {
-    const str = v(verbosity, ttsStrings.settings.screenAnnounce);
-    if (str) speakMedium(str);
+    const str = v(verbosity, ttsStrings.settings.screenAnnounce(verbosity, pace));
+    speakMedium(str);
   }, []);
 
-  const handleVerbositySelect = (val: Verbosity) => {
+  const handleGoHome = useCallback(() => {
+    (navigation as any).navigate('Tasks');
+  }, [navigation]);
+
+  const handleSetVerbosity = useCallback((val: Verbosity) => {
     setVerbosity(val);
     const label = VERBOSITY_OPTIONS.find(o => o.value === val)?.label ?? val;
-    speakMedium(`Verbosity set to ${label}.`);
-  };
+    speakMedium(v(val, ttsStrings.settings.verbosityChanged(label)));
+  }, [setVerbosity]);
 
-  const handlePaceSelect = (val: Pace) => {
+  const handleSetPace = useCallback((val: Pace) => {
     setPace(val);
-    speakMedium(`Speech pace set to ${val}x.`);
-  };
+    speakMedium(v(verbosity, ttsStrings.settings.paceChanged(val)));
+  }, [setPace, verbosity]);
+
+  // Voice commands — LLM routes speech to these action keys
+  useVoiceCommands(
+    {
+      SET_VERBOSITY_LOW:    () => handleSetVerbosity('low'),
+      SET_VERBOSITY_MEDIUM: () => handleSetVerbosity('medium'),
+      SET_VERBOSITY_HIGH:   () => handleSetVerbosity('high'),
+      SET_PACE_SLOW:        () => handleSetPace(0.5),
+      SET_PACE_NORMAL:      () => handleSetPace(1.0),
+      SET_PACE_FAST:        () => handleSetPace(1.5),
+      GO_HOME:              handleGoHome,
+      GO_BACK:              handleGoHome,
+    },
+    { context: 'Settings' }
+  );
 
   return (
     <SafeAreaView style={styles.container}>
@@ -68,7 +91,7 @@ export const SettingsScreen: React.FC = () => {
           <Text style={styles.sectionDesc}>
             Select how much detail you want for the guidance.
           </Text>
-          <View style={styles.optionRow}>
+          <View style={styles.optionRow} accessibilityRole="radiogroup">
             {VERBOSITY_OPTIONS.map(({ label, value }) => {
               const selected = verbosity === value;
               return (
@@ -78,7 +101,7 @@ export const SettingsScreen: React.FC = () => {
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
                   accessibilityLabel={`Verbosity ${label}`}
-                  onPress={() => handleVerbositySelect(value)}
+                  onPress={() => handleSetVerbosity(value)}
                   style={[styles.optionBtn, selected && styles.optionBtnSelected]}
                 >
                   <Text style={[styles.optionBtnText, selected && styles.optionBtnTextSelected]}>
@@ -93,7 +116,10 @@ export const SettingsScreen: React.FC = () => {
         {/* Pacing section */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Pacing</Text>
-          <View style={styles.optionRow}>
+          <Text style={styles.sectionDesc}>
+            Select how fast the app speaks to you.
+          </Text>
+          <View style={styles.optionRow} accessibilityRole="radiogroup">
             {PACE_OPTIONS.map(({ label, value }) => {
               const selected = pace === value;
               return (
@@ -103,7 +129,7 @@ export const SettingsScreen: React.FC = () => {
                   accessibilityRole="radio"
                   accessibilityState={{ selected }}
                   accessibilityLabel={`Speech pace ${label}`}
-                  onPress={() => handlePaceSelect(value)}
+                  onPress={() => handleSetPace(value)}
                   style={[styles.optionBtn, selected && styles.optionBtnSelected]}
                 >
                   <Text style={[styles.optionBtnText, selected && styles.optionBtnTextSelected]}>
@@ -120,7 +146,7 @@ export const SettingsScreen: React.FC = () => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say 'low', 'medium', or 'high' to change verbosity."
+          listeningText="Say 'set verbosity low/medium/high' or 'set pace slow/normal/fast'."
         />
       </View>
     </SafeAreaView>
