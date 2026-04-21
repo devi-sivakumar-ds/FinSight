@@ -3,7 +3,7 @@
 // Step 6 — Review check details before submitting
 // ============================================================================
 
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -11,6 +11,8 @@ import {
   SafeAreaView,
   ScrollView,
   ActivityIndicator,
+  Animated,
+  Easing,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -37,19 +39,37 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { verbosity } = useVoiceSettings();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [countdown, setCountdown] = useState(10);
   const { voiceState } = useAlwaysOnVoice();
+
+  // Countdown refs
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const hasSubmittedRef = useRef(false);
+  const progressAnim = useRef(new Animated.Value(0)).current;
+
+  const stopCountdown = useCallback(() => {
+    if (countdownIntervalRef.current) {
+      clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = null;
+    }
+  }, []);
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
 
-  // Announce details on mount
+  // Announce details on mount, then start countdown
   useEffect(() => {
+    // Estimate TTS chain duration so countdown starts right after
+    const hasCkNum = !!ocrData?.checkNumber;
+    // Rough duration: intro(400+1000) + amount(1200) + [ckNum(1200)] + account(1200) + prompt(1200)
+    const ttsDuration = hasCkNum ? 7500 : 6300;
+
     setTimeout(() => {
       speakMedium(v(verbosity, ttsStrings.confirmation.intro));
       setTimeout(() => {
         speakMedium(v(verbosity, ttsStrings.confirmation.depositAmount(formatAmountForSpeech(amount))));
-        if (ocrData?.checkNumber) {
+        if (hasCkNum) {
           setTimeout(() => {
-            const digits = ocrData.checkNumber.split('').join(' ');
+            const digits = ocrData!.checkNumber.split('').join(' ');
             const ckStr = v(verbosity, ttsStrings.confirmation.checkNumber(digits));
             if (ckStr) speakMedium(ckStr);
           }, 1200);
@@ -59,12 +79,43 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
           setTimeout(() => {
             speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
           }, 1200);
-        }, ocrData?.checkNumber ? 2400 : 1200);
+        }, hasCkNum ? 2400 : 1200);
       }, 1000);
     }, 400);
-  }, []);
+
+    // Start countdown after TTS chain ends
+    const countdownStart = setTimeout(() => {
+      // Animate progress bar over 10 seconds
+      Animated.timing(progressAnim, {
+        toValue: 1,
+        duration: 10000,
+        easing: Easing.linear,
+        useNativeDriver: false,
+      }).start();
+
+      // Tick every second
+      let remaining = 10;
+      countdownIntervalRef.current = setInterval(() => {
+        remaining -= 1;
+        setCountdown(remaining);
+        if (remaining <= 0) {
+          stopCountdown();
+          if (!hasSubmittedRef.current) {
+            hasSubmittedRef.current = true;
+            handleSubmit();
+          }
+        }
+      }, 1000);
+    }, ttsDuration);
+
+    return () => {
+      clearTimeout(countdownStart);
+      stopCountdown();
+    };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleSubmit = useCallback(async () => {
+    stopCountdown();
     setIsSubmitting(true);
     speakMedium(v(verbosity, ttsStrings.confirmation.submitting));
 
@@ -91,7 +142,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         });
       }, 2000);
     }
-  }, [accountId, amount, frontImageUri, backImageUri, ocrData, navigation]);
+  }, [accountId, amount, frontImageUri, backImageUri, ocrData, navigation, stopCountdown]);
 
   const handleEditAmount = useCallback(() => {
     speakMedium(v(verbosity, ttsStrings.confirmation.editAmount));
@@ -104,8 +155,9 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [navigation]);
 
   const handleCancel = useCallback(() => {
+    stopCountdown();
     navigation.getParent()?.goBack();
-  }, [navigation]);
+  }, [navigation, stopCountdown]);
 
   // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
@@ -214,32 +266,68 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
       </ScrollView>
 
-      {/* Footer */}
+      {/* Footer — countdown auto-submit */}
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say 'confirm' to submit or 'cancel' to go back."
+          listeningText="Say 'confirm' to submit now, or 'cancel' to stop."
         />
-        <View style={styles.footerButtons}>
-          <AccessibleButton
-            label="Cancel"
-            onPress={handleCancel}
-            disabled={isSubmitting}
-            variant="outline"
-            size="large"
-            style={styles.cancelButton}
-            accessibilityHint="Cancel deposit and return to main screen"
-          />
-          <AccessibleButton
-            label={isSubmitting ? 'Submitting...' : 'Confirm Deposit'}
-            onPress={handleSubmit}
-            disabled={isSubmitting}
-            size="large"
-            style={styles.confirmButton}
-            accessibilityHint="Submit check deposit for processing"
-            icon={isSubmitting ? <ActivityIndicator color="#fff" /> : undefined}
-          />
+
+        {/* Countdown card */}
+        <View
+          style={styles.countdownCard}
+          accessible
+          accessibilityLabel={
+            isSubmitting
+              ? 'Submitting your deposit'
+              : `Submitting in ${countdown} seconds`
+          }
+        >
+          <Text style={styles.countdownLabel}>
+            {isSubmitting ? 'Submitting…' : 'Submitting in'}
+          </Text>
+          {!isSubmitting && (
+            <Text style={styles.countdownNumber}>{countdown}</Text>
+          )}
+          {isSubmitting && (
+            <ActivityIndicator
+              size="large"
+              color={DARK_COLORS.BLUE}
+              style={{ marginVertical: 8 }}
+            />
+          )}
+          {!isSubmitting && (
+            <Text style={styles.countdownUnit}>seconds</Text>
+          )}
+
+          {/* Progress bar */}
+          <View style={styles.progressTrack}>
+            <Animated.View
+              style={[
+                styles.progressFill,
+                {
+                  width: progressAnim.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: ['0%', '100%'],
+                  }),
+                },
+              ]}
+            />
+          </View>
+
+          <Text style={styles.countdownNote}>
+            You can cancel during this countdown.
+          </Text>
         </View>
+
+        <AccessibleButton
+          label="Cancel"
+          onPress={handleCancel}
+          disabled={isSubmitting}
+          variant="outline"
+          size="large"
+          accessibilityHint="Cancel deposit and return to main screen"
+        />
       </View>
     </SafeAreaView>
   );
@@ -306,10 +394,51 @@ const styles = StyleSheet.create({
     paddingTop: 12,
     gap: 12,
   },
-  footerButtons: {
-    flexDirection: 'row',
-    gap: 12,
+  countdownCard: {
+    backgroundColor: DARK_COLORS.SURFACE,
+    borderRadius: 16,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: DARK_COLORS.BLUE,
+    alignItems: 'center',
+    gap: 6,
   },
-  cancelButton: { flex: 1 },
-  confirmButton: { flex: 2 },
+  countdownLabel: {
+    fontSize: 14,
+    color: DARK_COLORS.TEXT_SECONDARY,
+    fontWeight: '500',
+    letterSpacing: 0.5,
+    textTransform: 'uppercase',
+  },
+  countdownNumber: {
+    fontSize: 64,
+    fontWeight: 'bold',
+    color: DARK_COLORS.BLUE,
+    lineHeight: 72,
+  },
+  countdownUnit: {
+    fontSize: 16,
+    color: DARK_COLORS.TEXT_SECONDARY,
+    fontWeight: '500',
+    marginBottom: 8,
+  },
+  progressTrack: {
+    width: '100%',
+    height: 6,
+    backgroundColor: DARK_COLORS.BORDER,
+    borderRadius: 3,
+    overflow: 'hidden',
+    marginTop: 4,
+  },
+  progressFill: {
+    height: '100%',
+    backgroundColor: DARK_COLORS.BLUE,
+    borderRadius: 3,
+  },
+  countdownNote: {
+    fontSize: 12,
+    color: DARK_COLORS.TEXT_SECONDARY,
+    marginTop: 8,
+    textAlign: 'center',
+  },
 });

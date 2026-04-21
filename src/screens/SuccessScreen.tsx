@@ -3,7 +3,7 @@
 // Final step — Deposit submitted successfully
 // ============================================================================
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   View,
   Text,
@@ -37,7 +37,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
 
-  const [countdown, setCountdown] = useState(10);
   const { voiceState } = useAlwaysOnVoice();
 
   // Announce success on mount — haptic burst first, then voice
@@ -65,22 +64,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
-  }, []);
-
-  // Auto-return countdown
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          handleDone();
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-
-    return () => clearInterval(timer);
   }, []);
 
   const handleDone = () => {
@@ -171,10 +154,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
           </Text>
         </View>
 
-        {/* Auto-return countdown */}
-        <Text style={styles.countdown} accessibilityLiveRegion="polite">
-          Returning to home in {countdown} seconds...
-        </Text>
       </View>
 
       {/* Footer */}
@@ -263,11 +242,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: DARK_COLORS.TEXT_SECONDARY,
     lineHeight: 20,
-  },
-  countdown: {
-    fontSize: 14,
-    color: DARK_COLORS.TEXT_MUTED,
-    marginTop: 8,
   },
   footer: {
     paddingHorizontal: 24,
