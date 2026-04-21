@@ -20,8 +20,10 @@ import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { RootStackParamList } from '@/types/index';
 import { COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 
 type MainNavProp = StackNavigationProp<RootStackParamList>;
 
@@ -74,9 +76,10 @@ export const MainScreen: React.FC = () => {
   const { speakMedium } = useTTS();
   const navigation = useNavigation<MainNavProp>();
   const { voiceState } = useAlwaysOnVoice();
+  const { verbosity } = useVoiceSettings();
 
   useEffect(() => {
-    speakMedium('Welcome to FinSight. I am listening. Say deposit a check, check balance, send money, or transfer money.');
+    speakMedium(v(verbosity, ttsStrings.main.welcome));
   }, []);
 
   const handleDepositCheck = () => {
@@ -84,15 +87,15 @@ export const MainScreen: React.FC = () => {
   };
 
   const handleSendMoney = () => {
-    speakMedium('Send money is coming soon.');
+    speakMedium(v(verbosity, ttsStrings.main.featureComingSoon('Send money')));
   };
 
   const handleCheckBalance = () => {
-    speakMedium('Check balance is coming soon.');
+    speakMedium(v(verbosity, ttsStrings.main.featureComingSoon('Check balance')));
   };
 
   const handleTransferMoney = () => {
-    speakMedium('Transfer money is coming soon.');
+    speakMedium(v(verbosity, ttsStrings.main.featureComingSoon('Transfer money')));
   };
 
   // Voice commands — LLM maps natural speech to these action keys

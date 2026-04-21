@@ -26,6 +26,7 @@ import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import voiceService from '@services/voiceService';
 import ttsService from '@services/ttsService';
 import {
@@ -34,6 +35,7 @@ import {
   formatAmountDisplay,
 } from '@utils/amountParser';
 import { DARK_COLORS, DEPOSIT_LIMITS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'AmountInput'>;
@@ -54,6 +56,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
   const { selection } = useHaptics();
   const { voiceState } = useAlwaysOnVoice();
+  const { verbosity } = useVoiceSettings();
 
   const [displayValue, setDisplayValue] = useState('0');
   const [confirmedAmount, setConfirmedAmount] = useState<number | null>(null);
@@ -68,11 +71,13 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   // ── On mount: announce context ──────────────────────────────────────────
   useEffect(() => {
     setTimeout(() => {
-      speakMedium(`You're depositing to ${accountLabel} account.`);
+      const ctxStr = v(verbosity, ttsStrings.amountInput.context(accountLabel));
+      if (ctxStr) speakMedium(ctxStr);
       setTimeout(() => {
-        speakMedium('How much are you depositing?');
+        speakMedium(v(verbosity, ttsStrings.amountInput.prompt));
         setTimeout(() => {
-          speakMedium(`Daily limit: ${formatAmountForSpeech(DEPOSIT_LIMITS.DAILY_LIMIT)}.`);
+          const limitStr = v(verbosity, ttsStrings.amountInput.dailyLimit(formatAmountForSpeech(DEPOSIT_LIMITS.DAILY_LIMIT)));
+          if (limitStr) speakMedium(limitStr);
         }, 1500);
       }, 1000);
     }, 400);
@@ -129,7 +134,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
         setMode('idle');
         setDisplayValue('0');
         pendingAmount.current = null;
-        speakMedium('Okay, how much are you depositing?');
+        speakMedium(v(verbosity, ttsStrings.amountInput.retryPrompt));
         return;
       }
       // Unrecognised word in confirming mode — treat as a new amount attempt
@@ -138,7 +143,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
     const amount = parseVoiceAmount(transcript);
 
     if (amount === null) {
-      speakHigh("Sorry, I didn't catch that. Please say an amount like 'one hundred fifty dollars'.");
+      speakHigh(v(verbosity, ttsStrings.amountInput.didntCatch));
       setMode('error');
       return;
     }
@@ -154,7 +159,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
     setDisplayValue(amount.toFixed(2));
     setMode('confirming');
     setTimeout(() => {
-      speakMedium(`I heard ${formatAmountForSpeech(amount)}. Is that correct? Say yes to continue or no to try again.`);
+      speakMedium(v(verbosity, ttsStrings.amountInput.voiceConfirm(formatAmountForSpeech(amount))));
     }, 300);
   }, [validateAmount]);
 
@@ -178,7 +183,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
     }
     setConfirmedAmount(numericAmount);
     setMode('confirming');
-    speakMedium(`${formatAmountForSpeech(numericAmount)}. Is that correct? Say yes to continue or no to change it.`);
+    speakMedium(v(verbosity, ttsStrings.amountInput.typedConfirm(formatAmountForSpeech(numericAmount))));
   }, [numericAmount, validateAmount]);
 
   // ── Navigate to camera ──────────────────────────────────────────────────
@@ -205,7 +210,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
         setMode('idle');
         setDisplayValue('0');
         pendingAmount.current = null;
-        speakMedium('Okay, how much are you depositing?');
+        speakMedium(v(verbosity, ttsStrings.amountInput.retryPrompt));
       },
       GO_BACK: () => navigation.goBack(),
     },

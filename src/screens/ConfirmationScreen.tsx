@@ -20,9 +20,11 @@ import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'Confirmation'>;
@@ -32,6 +34,7 @@ type Props = {
 export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType, amount, frontImageUri, backImageUri, ocrData } = route.params;
   const { speakMedium, speakHigh } = useTTS();
+  const { verbosity } = useVoiceSettings();
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const { voiceState } = useAlwaysOnVoice();
@@ -41,19 +44,20 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   // Announce details on mount
   useEffect(() => {
     setTimeout(() => {
-      speakMedium('Your check has been captured. Let me read the details.');
+      speakMedium(v(verbosity, ttsStrings.confirmation.intro));
       setTimeout(() => {
-        speakMedium(`Depositing ${formatAmountForSpeech(amount)}.`);
+        speakMedium(v(verbosity, ttsStrings.confirmation.depositAmount(formatAmountForSpeech(amount))));
         if (ocrData?.checkNumber) {
           setTimeout(() => {
             const digits = ocrData.checkNumber.split('').join(' ');
-            speakMedium(`Check number: ${digits}.`);
+            const ckStr = v(verbosity, ttsStrings.confirmation.checkNumber(digits));
+            if (ckStr) speakMedium(ckStr);
           }, 1200);
         }
         setTimeout(() => {
-          speakMedium(`To your ${accountLabel} account.`);
+          speakMedium(v(verbosity, ttsStrings.confirmation.toAccount(accountLabel)));
           setTimeout(() => {
-            speakMedium("Say 'confirm' to complete the deposit, or 'cancel' to start over.");
+            speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
           }, 1200);
         }, ocrData?.checkNumber ? 2400 : 1200);
       }, 1000);
@@ -62,7 +66,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleSubmit = useCallback(async () => {
     setIsSubmitting(true);
-    speakMedium('Submitting deposit...');
+    speakMedium(v(verbosity, ttsStrings.confirmation.submitting));
 
     try {
       const deposit = await mockBankingAPI.submitDeposit(
@@ -78,7 +82,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
       navigation.replace('Success', { deposit });
     } catch (error) {
       console.error('Deposit submission error:', error);
-      speakHigh('There was a problem submitting your deposit. Please try again.');
+      speakHigh(v(verbosity, ttsStrings.confirmation.submitError));
       setIsSubmitting(false);
       setTimeout(() => {
         navigation.navigate('Error', {
@@ -90,12 +94,12 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [accountId, amount, frontImageUri, backImageUri, ocrData, navigation]);
 
   const handleEditAmount = useCallback(() => {
-    speakMedium('Returning to amount entry.');
+    speakMedium(v(verbosity, ttsStrings.confirmation.editAmount));
     navigation.navigate('AmountInput', { accountId, accountType });
   }, [accountId, accountType, navigation]);
 
   const handleEditAccount = useCallback(() => {
-    speakMedium('Returning to account selection.');
+    speakMedium(v(verbosity, ttsStrings.confirmation.editAccount));
     navigation.navigate('AccountSelect');
   }, [navigation]);
 

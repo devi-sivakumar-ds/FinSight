@@ -42,7 +42,9 @@ import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { COLORS, DARK_COLORS } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -69,6 +71,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType, amount, side } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
+  const { verbosity } = useVoiceSettings();
 
   // ── Guide box — portrait-primary, landscape-shaped ────────────────────────
   const { width: winW, height: winH } = useWindowDimensions();
@@ -124,7 +127,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     }
 
     setPhase('capturing');
-    speakMedium('Capturing now!');
+    speakMedium(v(verbosity, ttsStrings.checkCapture.capturingNow));
     trigger(HapticPattern.SUCCESS);
     setTimeout(() => trigger(HapticPattern.SUCCESS), 200);
 
@@ -151,7 +154,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       console.error('[CheckCapture] takePhoto error:', err);
       isCapturingRef.current = false;
       setPhase('analyzing');
-      speakHigh('Failed to capture. Please try again.');
+      speakHigh(v(verbosity, ttsStrings.checkCapture.captureFailed));
       // Restart snapshot loop after failure (use ref to avoid stale closure)
       snapshotTimerRef.current = setTimeout(() => runSnapshotLoopRef.current(), SNAPSHOT_INTERVAL_MS);
     }
@@ -237,7 +240,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     lastGuidanceRef.current = null;
     lastTTSTimeRef.current  = 0;
 
-    speakMedium('Now slowly lift your phone straight up. I\'ll guide you in real time.');
+    speakMedium(v(verbosity, ttsStrings.checkCapture.setupInstruction));
 
     // Give the TTS ~800 ms before first snapshot (phone still moving up)
     snapshotTimerRef.current = setTimeout(() => {

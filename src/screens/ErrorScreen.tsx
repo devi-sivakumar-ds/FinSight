@@ -15,7 +15,9 @@ import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { useTTS } from '@hooks/useTTS';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { DARK_COLORS } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -26,14 +28,15 @@ type Props = {
 export const ErrorScreen: React.FC<Props> = ({ navigation, route }) => {
   const { error, canRetry, retryScreen } = route.params;
   const { speakHigh } = useTTS();
+  const { verbosity } = useVoiceSettings();
 
   // Announce error on mount
   useEffect(() => {
     setTimeout(() => {
-      speakHigh(`Error: ${error}`);
+      speakHigh(v(verbosity, ttsStrings.error.announcement(error)));
       if (canRetry) {
         setTimeout(() => {
-          speakHigh('You can try again or return to the main screen.');
+          speakHigh(v(verbosity, ttsStrings.error.retryOption));
         }, 1500);
       }
     }, 400);

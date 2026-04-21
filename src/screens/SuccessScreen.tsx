@@ -20,8 +20,10 @@ import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -33,6 +35,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { deposit } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
+  const { verbosity } = useVoiceSettings();
 
   const [countdown, setCountdown] = useState(10);
   const { voiceState } = useAlwaysOnVoice();
@@ -45,19 +48,20 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
 
     setTimeout(() => {
-      speakHigh('Deposit submitted successfully.');
+      speakHigh(v(verbosity, ttsStrings.success.submitted));
       setTimeout(() => {
-        speakMedium('Your check will be reviewed and funds will be available within 1 to 2 business days.');
+        const availStr = v(verbosity, ttsStrings.success.availability);
+        if (availStr) speakMedium(availStr);
         const confirmNum = deposit.confirmationNumber;
         if (confirmNum) {
           setTimeout(() => {
             const digits = confirmNum.split('').join(' ');
-            speakMedium(`Confirmation number: ${digits}.`);
+            speakMedium(v(verbosity, ttsStrings.success.confirmationNumber(digits)));
           }, 2500);
         }
-        // Always tell the user how to exit — after all detail messages clear
         setTimeout(() => {
-          speakMedium("Say 'done' or 'go home' to return to the main screen.");
+          const exitStr = v(verbosity, ttsStrings.success.exitPrompt);
+          if (exitStr) speakMedium(exitStr);
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);

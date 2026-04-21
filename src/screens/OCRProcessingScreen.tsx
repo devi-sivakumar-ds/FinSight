@@ -18,8 +18,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { useTTS } from '@hooks/useTTS';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import ttsService from '@services/ttsService';
 import { DARK_COLORS } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -30,12 +32,13 @@ type Props = {
 export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
   const { frontImageUri, backImageUri, accountId, accountType, amount } = route.params;
   const { speakMedium } = useTTS();
+  const { verbosity } = useVoiceSettings();
 
   useEffect(() => {
     // Stop any lingering TTS from the camera screen immediately
     ttsService.reset();
 
-    speakMedium('Check captured. Preparing your deposit details.');
+    speakMedium(v(verbosity, ttsStrings.ocrProcessing.processing));
 
     // ── Phase 1: bypass OCR — go straight to Confirmation ─────────────────
     // The amount the user spoke/typed before scanning is used as-is.

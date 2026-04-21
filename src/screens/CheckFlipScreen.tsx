@@ -20,7 +20,9 @@ import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { DARK_COLORS } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
 
 type Props = {
@@ -32,6 +34,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
   const { frontImageUri, accountId, accountType, amount } = route.params;
   const { speakMedium } = useTTS();
   const { voiceState } = useAlwaysOnVoice();
+  const { verbosity } = useVoiceSettings();
 
   // Stop any lingering TTS when leaving this screen (e.g. user says "ready" quickly)
   useFocusEffect(
@@ -43,11 +46,11 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
   // Announce instructions on mount
   useEffect(() => {
     setTimeout(() => {
-      speakMedium('Front captured successfully.');
+      speakMedium(v(verbosity, ttsStrings.checkFlip.frontCaptured));
       setTimeout(() => {
-        speakMedium('Now flip the check to show the back, where you would sign it.');
+        speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction));
         setTimeout(() => {
-          speakMedium('Tap the screen when ready.');
+          speakMedium(v(verbosity, ttsStrings.checkFlip.tapReady));
         }, 2000);
       }, 1200);
     }, 400);

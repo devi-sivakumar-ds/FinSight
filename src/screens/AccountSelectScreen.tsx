@@ -22,9 +22,11 @@ import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
+import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import { formatCurrencyForSpeech } from '@utils/accessibility';
 import { DARK_COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { ttsStrings, v } from '@utils/ttsStrings';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'AccountSelect'>;
@@ -37,6 +39,7 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { voiceState } = useAlwaysOnVoice();
+  const { verbosity } = useVoiceSettings();
 
   // Load accounts and announce
   useEffect(() => {
@@ -48,15 +51,16 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
       setLoading(false);
 
       setTimeout(() => {
-        speakMedium('Which account do you want to deposit to?');
+        speakMedium(v(verbosity, ttsStrings.accountSelect.prompt));
         setTimeout(() => {
-          speakMedium(`You have ${data.length} accounts.`);
+          const countStr = v(verbosity, ttsStrings.accountSelect.accountCount(data.length));
+          if (countStr) speakMedium(countStr);
           data.forEach((acc, i) => {
             setTimeout(() => {
               const typeLabel = acc.type === 'checking' ? 'Checking' : 'Savings';
               const digits = acc.displayNumber.split('').join(' ');
               const balance = formatCurrencyForSpeech(acc.balance);
-              speakMedium(`${typeLabel} ending in ${digits}, balance ${balance}`);
+              speakMedium(v(verbosity, ttsStrings.accountSelect.accountDetail(typeLabel, digits, balance)));
             }, (i + 1) * 1800);
           });
         }, 1200);
@@ -70,16 +74,17 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
     selection();
     const typeLabel = account.type === 'checking' ? 'Checking' : 'Savings';
     const digits = account.displayNumber.split('').join(' ');
-    speakMedium(`${typeLabel} ending in ${digits} selected.`);
+    speakMedium(v(verbosity, ttsStrings.accountSelect.accountSelected(typeLabel, digits)));
     setTimeout(() => {
-      speakMedium('Say continue to proceed, or select a different account.');
+      const continueStr = v(verbosity, ttsStrings.accountSelect.continuePrompt);
+      if (continueStr) speakMedium(continueStr);
     }, 1200);
-  }, []);
+  }, [verbosity]);
 
   const handleContinue = useCallback(() => {
     const account = accounts.find(a => a.id === selectedId);
     if (!account) {
-      speakHigh('Please select an account first.');
+      speakHigh(v(verbosity, ttsStrings.accountSelect.noAccount));
       return;
     }
     navigation.navigate('AmountInput', {
