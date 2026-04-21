@@ -25,6 +25,7 @@ module.exports = function(api) {
           allowUndefined: false,
         },
       ],
+      ['react-native-worklets-core/plugin'],
     ],
   };
 };

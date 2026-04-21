@@ -1,6 +1,13 @@
 // ============================================================================
 // CheckCaptureScreen
-// Step 3/4 — Camera with mock positioning guidance
+// Step 3/4 — Real-time check positioning via on-device geometry + auto-capture
+//
+// Frame processor loop (~2fps via throttle gate):
+//   Camera frame → analyzeCheckInFrame (native thread worklet)
+//   → GuidanceState → JS thread → TTS + haptic if state changed
+//   → auto-capture after 3 consecutive 'perfect' frames (~1.5s)
+//
+// No API calls during positioning. react-native-vision-camera v4 required.
 // ============================================================================
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
@@ -11,8 +18,15 @@ import {
   SafeAreaView,
   Pressable,
   Dimensions,
+  ActivityIndicator,
 } from 'react-native';
-import { CameraView, CameraType, useCameraPermissions } from 'expo-camera';
+import {
+  Camera,
+  useCameraDevice,
+  useCameraPermission,
+  useFrameProcessor,
+} from 'react-native-vision-camera';
+import { useSharedValue, useRunOnJS } from 'react-native-worklets-core';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList, GuidanceState, HapticPattern } from '@/types/index';
@@ -21,192 +35,232 @@ import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { COLORS, DARK_COLORS, GUIDANCE_MESSAGES } from '@utils/constants';
 import { Ionicons } from '@expo/vector-icons';
+import { analyzeCheckInFrame } from '@services/geometryDetection';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'CheckCapture'>;
   route: RouteProp<DepositStackParamList, 'CheckCapture'>;
 };
 
-const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
-// Mock state machine for Phase 2
-const MOCK_STATES: Array<{ state: GuidanceState; duration: number }> = [
-  { state: 'no_check' as GuidanceState, duration: 2000 },
-  { state: 'too_far' as GuidanceState, duration: 2000 },
-  { state: 'too_left' as GuidanceState, duration: 2000 },
-  { state: 'good' as GuidanceState, duration: 2000 },
-  { state: 'perfect' as GuidanceState, duration: 1500 }, // Hold for auto-capture
-  { state: 'capturing' as GuidanceState, duration: 500 },
-];
+// Number of consecutive 'perfect' analyses (~500ms each) before auto-capture
+const CONSECUTIVE_PERFECT_NEEDED = 3; // ≈1.5 s
 
 export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType, amount, side } = route.params;
-  const { speakMedium, speakHigh, stop } = useTTS();
+  const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
 
-  const [permission, requestPermission] = useCameraPermissions();
-  const [currentState, setCurrentState] = useState<GuidanceState>('no_check' as GuidanceState);
-  const [stateIndex, setStateIndex] = useState(0);
-  const [perfectHoldTime, setPerfectHoldTime] = useState(0);
-  const [capturedUri, setCapturedUri] = useState<string | null>(null);
+  // ── Camera setup ──────────────────────────────────────────────────────────
+  const device = useCameraDevice('back');
+  const { hasPermission, requestPermission } = useCameraPermission();
+  const cameraRef = useRef<Camera>(null);
 
-  const cameraRef = useRef<any>(null);
-  const stateTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const perfectTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const [currentState, setCurrentState] = useState<GuidanceState>(GuidanceState.NO_CHECK_DETECTED);
   const lastAnnouncedState = useRef<GuidanceState | null>(null);
 
   const sideLabel = side === 'front' ? 'front' : 'back';
 
-  // ── Camera permission ───────────────────────────────────────────────────
-  useEffect(() => {
-    if (!permission) return;
-    if (!permission.granted) {
-      requestPermission();
-    }
-  }, [permission]);
+  // ── Capture guards ────────────────────────────────────────────────────────
+  // consecutivePerfectRef: counted in JS thread each time onFrameAnalyzed fires
+  const consecutivePerfectRef = useRef(0);
+  // isCapturingRef: prevents double-capture or frame analysis after capture starts
+  const isCapturingRef = useRef(false);
 
-  // ── Initial announcement ────────────────────────────────────────────────
-  useEffect(() => {
-    if (permission?.granted) {
-      setTimeout(() => {
-        const msg =
-          side === 'front'
-            ? "Now, we'll auto-capture your check. Position the front of the check in front of the camera. I'll guide you."
-            : "Position the back of the check in front of the camera. I'll guide you.";
-        speakMedium(msg);
-      }, 500);
-    }
-  }, [permission?.granted, side]);
+  // ── Frame processor throttle (SharedValue: accessible from worklet + JS) ──
+  // Starts false — enabled after the initial announcement plays.
+  const shouldAnalyze = useSharedValue(false);
 
-  // ── Mock state machine (cycles through states) ──────────────────────────
-  useEffect(() => {
-    if (!permission?.granted) return;
-
-    const runStateMachine = () => {
-      const { state, duration } = MOCK_STATES[stateIndex];
-      setCurrentState(state);
-
-      // Auto-advance to next state after duration
-      stateTimerRef.current = setTimeout(() => {
-        if (state === 'capturing') {
-          // After capturing, trigger actual capture
-          handleAutoCapture();
-        } else {
-          setStateIndex((prev) => (prev + 1) % MOCK_STATES.length);
-        }
-      }, duration);
-    };
-
-    runStateMachine();
-
-    return () => {
-      if (stateTimerRef.current) clearTimeout(stateTimerRef.current);
-    };
-  }, [stateIndex, permission?.granted]);
-
-  // ── TTS + Haptic coordination ───────────────────────────────────────────
-  useEffect(() => {
-    if (currentState === lastAnnouncedState.current) return;
-    lastAnnouncedState.current = currentState;
-
-    const message = GUIDANCE_MESSAGES[currentState];
-    if (message) {
-      speakMedium(message);
-    }
-
-    // Trigger haptics
-    switch (currentState) {
-      case 'too_left':
-        trigger(HapticPattern.MOVE_LEFT);
-        break;
-      case 'too_right':
-        trigger(HapticPattern.MOVE_RIGHT);
-        break;
-      case 'too_high':
-      case 'too_low':
-      case 'too_far':
-      case 'too_close':
-        trigger(HapticPattern.EDGE_DETECTED);
-        break;
-      case 'good':
-        trigger(HapticPattern.EDGE_DETECTED);
-        break;
-      case 'perfect':
-        trigger(HapticPattern.ALIGNED);
-        setTimeout(() => trigger(HapticPattern.HOLD_STEADY), 200);
-        break;
-      case 'capturing':
-        trigger(HapticPattern.SUCCESS);
-        break;
-    }
-  }, [currentState]);
-
-  // ── Auto-capture when "perfect" held for 1.5s ───────────────────────────
+  // ── Auto-capture ──────────────────────────────────────────────────────────
   const handleAutoCapture = useCallback(async () => {
     if (!cameraRef.current) return;
 
     try {
+      setCurrentState(GuidanceState.CAPTURING);
       speakMedium('Capturing now!');
-      const photo = await cameraRef.current.takePictureAsync({
-        quality: 0.8,
-        base64: false,
+
+      const photo = await cameraRef.current.takePhoto({
+        flash: 'off',
+        enableShutterSound: false,
       });
 
-      setCapturedUri(photo.uri);
+      // vision-camera returns a file path, not a URI — prefix with file://
+      const photoUri = `file://${photo.path}`;
 
-      // Navigate to next screen
       if (side === 'front') {
         navigation.navigate('CheckFlip', {
-          frontImageUri: photo.uri,
+          frontImageUri: photoUri,
           accountId,
           accountType,
           amount,
         });
       } else {
-        // Back side captured - go to OCR processing
-        const frontUri = route.params.frontImageUri || '';
+        const frontUri = route.params.frontImageUri ?? '';
         navigation.navigate('OCRProcessing', {
           frontImageUri: frontUri,
-          backImageUri: photo.uri,
+          backImageUri: photoUri,
           accountId,
           accountType,
           amount,
         });
       }
     } catch (error) {
-      console.error('Capture error:', error);
+      console.error('[CheckCapture] Capture error:', error);
+      // Reset guards so user can try again
+      isCapturingRef.current = false;
+      shouldAnalyze.value = true;
       speakHigh('Failed to capture image. Please try again.');
     }
-  }, [side, accountId, accountType, amount, navigation]);
+  }, [side, accountId, accountType, amount, navigation, route.params.frontImageUri, speakMedium, speakHigh, shouldAnalyze]);
 
-  // ── Manual capture ──────────────────────────────────────────────────────
-  const handleManualCapture = useCallback(() => {
-    speakMedium('Manually capturing.');
-    handleAutoCapture();
+  // Stable ref so the frame processor callback always invokes the latest
+  // handleAutoCapture without causing onFrameAnalyzed to be recreated every render.
+  const handleAutoCaptureRef = useRef(handleAutoCapture);
+  useEffect(() => {
+    handleAutoCaptureRef.current = handleAutoCapture;
   }, [handleAutoCapture]);
 
-  // ── Voice commands — LLM maps natural speech to these action keys ────────
+  // ── JS-thread callback invoked from the frame processor worklet ───────────
+  const onFrameAnalyzed = useRunOnJS((state: string) => {
+    // Guard: if a capture is in progress, ignore further analysis results
+    if (isCapturingRef.current) return;
+
+    const guidanceState = state as GuidanceState;
+    setCurrentState(guidanceState);
+
+    if (guidanceState === GuidanceState.PERFECT) {
+      consecutivePerfectRef.current += 1;
+      if (consecutivePerfectRef.current >= CONSECUTIVE_PERFECT_NEEDED) {
+        consecutivePerfectRef.current = 0;
+        isCapturingRef.current = true;
+        // Kick off the high-quality capture; do NOT re-enable shouldAnalyze
+        handleAutoCaptureRef.current();
+        return;
+      }
+    } else {
+      consecutivePerfectRef.current = 0;
+    }
+
+    // Re-enable analysis after 500 ms → effective rate ~2 fps
+    setTimeout(() => {
+      shouldAnalyze.value = true;
+    }, 500);
+  }, [shouldAnalyze]);
+
+  // ── Frame processor (runs on native/background thread) ────────────────────
+  const frameProcessor = useFrameProcessor((frame) => {
+    'worklet';
+    if (!shouldAnalyze.value) return;
+    shouldAnalyze.value = false; // throttle gate: prevent concurrent analyses
+
+    const state = analyzeCheckInFrame(frame);
+    onFrameAnalyzed(state);
+  }, [shouldAnalyze, onFrameAnalyzed]);
+
+  // ── Permission request ────────────────────────────────────────────────────
+  useEffect(() => {
+    if (!hasPermission) {
+      requestPermission();
+    }
+  }, [hasPermission]);
+
+  // ── Initial announcement + enable frame analysis ──────────────────────────
+  useEffect(() => {
+    if (!hasPermission) return;
+
+    const announcementMsg =
+      side === 'front'
+        ? "Now, we'll auto-capture your check. Position the front of the check in front of the camera. I'll guide you."
+        : "Position the back of the check in front of the camera. I'll guide you.";
+
+    const announcementTimer = setTimeout(() => {
+      speakMedium(announcementMsg);
+    }, 500);
+
+    // Enable frame analysis after announcement settles
+    const startTimer = setTimeout(() => {
+      consecutivePerfectRef.current = 0;
+      isCapturingRef.current = false;
+      shouldAnalyze.value = true;
+    }, 1500);
+
+    return () => {
+      clearTimeout(announcementTimer);
+      clearTimeout(startTimer);
+      shouldAnalyze.value = false; // stop analysis on unmount
+    };
+  }, [hasPermission, side]);
+
+  // ── TTS + Haptic coordination (unchanged from original) ───────────────────
+  useEffect(() => {
+    if (currentState === lastAnnouncedState.current) return;
+    lastAnnouncedState.current = currentState;
+
+    const message = GUIDANCE_MESSAGES[currentState];
+    if (message) speakMedium(message);
+
+    switch (currentState) {
+      case GuidanceState.TOO_LEFT:
+        trigger(HapticPattern.MOVE_LEFT);
+        break;
+      case GuidanceState.TOO_RIGHT:
+        trigger(HapticPattern.MOVE_RIGHT);
+        break;
+      case GuidanceState.TOO_HIGH:
+      case GuidanceState.TOO_LOW:
+      case GuidanceState.TOO_FAR:
+      case GuidanceState.TOO_CLOSE:
+        trigger(HapticPattern.EDGE_DETECTED);
+        break;
+      case GuidanceState.GOOD:
+        trigger(HapticPattern.EDGE_DETECTED);
+        break;
+      case GuidanceState.PERFECT:
+        trigger(HapticPattern.ALIGNED);
+        setTimeout(() => trigger(HapticPattern.HOLD_STEADY), 200);
+        break;
+      case GuidanceState.CAPTURING:
+        trigger(HapticPattern.SUCCESS);
+        break;
+    }
+  }, [currentState]);
+
+  // ── Manual capture ────────────────────────────────────────────────────────
+  const handleManualCapture = useCallback(() => {
+    if (isCapturingRef.current) return;
+    isCapturingRef.current = true;
+    shouldAnalyze.value = false;
+    handleAutoCapture();
+  }, [handleAutoCapture, shouldAnalyze]);
+
+  // ── Voice commands ────────────────────────────────────────────────────────
   useVoiceCommands(
     {
       CONFIRM: handleManualCapture,
-      CANCEL: () => navigation.getParent()?.goBack(),
-      GO_BACK: () => navigation.getParent()?.goBack(),
+      CANCEL: () => {
+        shouldAnalyze.value = false;
+        navigation.getParent()?.goBack();
+      },
+      GO_BACK: () => {
+        shouldAnalyze.value = false;
+        navigation.getParent()?.goBack();
+      },
     },
     { context: 'CheckCapture' }
   );
 
-  // ── Permission denied screen ────────────────────────────────────────────
-  if (!permission) {
-    return (
-      <SafeAreaView style={styles.container}>
-        <View style={styles.permissionContainer}>
-          <Text style={styles.permissionText}>Loading camera...</Text>
-        </View>
-      </SafeAreaView>
-    );
-  }
+  // ── Border color based on state ───────────────────────────────────────────
+  const getBorderColor = () => {
+    if (currentState === GuidanceState.PERFECT || currentState === GuidanceState.CAPTURING) {
+      return COLORS.GREEN_600;
+    }
+    if (currentState === GuidanceState.GOOD) return '#FFD700';
+    return '#FF4444';
+  };
 
-  if (!permission.granted) {
+  // ── Permission loading ────────────────────────────────────────────────────
+  if (!hasPermission) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.permissionContainer}>
@@ -229,20 +283,29 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // ── Border color based on state ─────────────────────────────────────────
-  const getBorderColor = () => {
-    if (currentState === 'perfect' || currentState === 'capturing') return COLORS.GREEN_600;
-    if (currentState === 'good') return '#FFD700'; // Yellow
-    return '#FF4444'; // Red
-  };
+  // ── No back camera device ─────────────────────────────────────────────────
+  if (!device) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <View style={styles.permissionContainer}>
+          <ActivityIndicator size="large" color={COLORS.BLUE_600} />
+          <Text style={styles.permissionText}>Initializing camera…</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
 
+  // ── Main camera UI ────────────────────────────────────────────────────────
   return (
     <View style={styles.container}>
-      {/* Camera preview */}
-      <CameraView
+      <Camera
         ref={cameraRef}
         style={styles.camera}
-        facing="back"
+        device={device}
+        isActive={true}
+        frameProcessor={frameProcessor}
+        pixelFormat="yuv"
+        photo={true}
       >
         {/* Semi-transparent overlay with cutout */}
         <View style={styles.overlay}>
@@ -295,12 +358,15 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
           accessible
           accessibilityRole="button"
           accessibilityLabel="Cancel"
-          onPress={() => navigation.getParent()?.goBack()}
+          onPress={() => {
+            shouldAnalyze.value = false;
+            navigation.getParent()?.goBack();
+          }}
           style={styles.closeButton}
         >
           <Ionicons name="close" size={32} color={COLORS.WHITE} />
         </Pressable>
-      </CameraView>
+      </Camera>
     </View>
   );
 };
@@ -385,7 +451,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Permission screen
+  // Permission / loading screen
   permissionContainer: {
     flex: 1,
     justifyContent: 'center',
