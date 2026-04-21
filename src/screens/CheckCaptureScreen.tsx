@@ -1,19 +1,17 @@
 // ============================================================================
 // CheckCaptureScreen
-// Step 3/4 — Voice-guided check positioning with countdown auto-capture
+// Step 3/4 — BLV-optimised check capture with snapshot-based real-time guidance
 //
-// Key design decisions:
-//   1. Screen stays in PORTRAIT. Guide overlay is landscape-shaped (2.2:1 ratio)
-//      matching real check dimensions, sized via useWindowDimensions.
-//      Overlay / controls are SIBLINGS of <Camera> — on Android, vision-camera
-//      renders a native SurfaceView; children render behind it and are invisible.
-//   2. Option A — no frame processor: real-time pixel analysis (toArrayBuffer)
-//      was unreliable across Android devices. Replaced with a guided countdown:
-//        - Voice instructions tell user how to position the check
-//        - 5-second countdown then auto-captures
-//        - Haptic pulse on each countdown tick
-//        - Manual "Capture" button + voice command available anytime
-//   3. TTS queue drained via useFocusEffect cleanup on screen leave.
+// Three phases:
+//   1. setup     — voice instructions, user places phone on check
+//   2. analyzing — snapshot loop every 1.5 s, pixel analysis → voice guidance
+//   3. capturing — takePhoto() for final high-quality image → navigate
+//
+// Snapshot pipeline (Option C — no frame processor):
+//   takeSnapshot (low quality) → expo-image-manipulator resize 160×120
+//   → jpeg-js RGBA decode → brightness / region math → SnapshotGuidance
+//
+// See src/services/snapshotAnalysis.ts for the pixel math.
 // ============================================================================
 
 import React, { useEffect, useState, useRef, useCallback } from 'react';
@@ -34,6 +32,12 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import ttsService from '@services/ttsService';
+import {
+  analyzeSnapshotUri,
+  SNAPSHOT_GUIDANCE_TTS,
+  SNAPSHOT_GUIDANCE_LABEL,
+  type SnapshotGuidance,
+} from '@services/snapshotAnalysis';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
@@ -46,44 +50,60 @@ type Props = {
   route: RouteProp<DepositStackParamList, 'CheckCapture'>;
 };
 
+// ── Constants ─────────────────────────────────────────────────────────────────
 // Actual check aspect ratio (6" × 2.75" ≈ 2.18:1). Sizes the guide box.
 const CHECK_ASPECT = 2.2;
 
-// Seconds before auto-capture fires (after instructions finish)
-const COUNTDOWN_START = 5;
+// Milliseconds between snapshot analysis runs
+const SNAPSHOT_INTERVAL_MS = 1500;
 
-// Time to allow instructions to play before countdown begins
-const INSTRUCTIONS_DURATION_MS = 4200;
+// How many consecutive 'perfect' readings before auto-capture fires
+const CONSECUTIVE_PERFECT_NEEDED = 2;
+
+// Minimum ms between TTS guidance announcements (same-state repeat suppression)
+const MIN_TTS_INTERVAL_MS = 2500;
+
+type CapturePhase = 'setup' | 'analyzing' | 'capturing';
 
 export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType, amount, side } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
 
-  // ── Guide dimensions — portrait-primary ──────────────────────────────────
-  // Landscape-shaped guide box (2.2:1) inside a portrait camera view.
+  // ── Guide box — portrait-primary, landscape-shaped ────────────────────────
   const { width: winW, height: winH } = useWindowDimensions();
   const guideWidth  = Math.min(winW * 0.88, winH * 0.70 * CHECK_ASPECT);
   const guideHeight = guideWidth / CHECK_ASPECT;
 
-  // ── Camera setup ──────────────────────────────────────────────────────────
+  // ── Camera ────────────────────────────────────────────────────────────────
   const device = useCameraDevice('back');
   const { hasPermission, requestPermission } = useCameraPermission();
   const cameraRef = useRef<Camera>(null);
 
-  // Prevents double-capture (manual tap racing countdown)
-  const isCapturingRef = useRef(false);
+  // ── Phase and guidance state ──────────────────────────────────────────────
+  const [phase, setPhase]                   = useState<CapturePhase>('setup');
+  const [currentGuidance, setCurrentGuidance] = useState<SnapshotGuidance>('no_check');
+
+  // ── Refs (avoid stale closures in async loops) ─────────────────────────────
+  const phaseRef              = useRef<CapturePhase>('setup');
+  const isCapturingRef        = useRef(false);
+  const consecutivePerfectRef = useRef(0);
+  const lastTTSTimeRef        = useRef(0);
+  const lastGuidanceRef       = useRef<SnapshotGuidance | null>(null);
+  const snapshotTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Keep phaseRef in sync
+  useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   const sideLabel = side === 'front' ? 'front' : 'back';
-
-  // ── Countdown state ───────────────────────────────────────────────────────
-  // null = instructions phase, N = counting down, 0 = fire capture
-  const [countdown, setCountdown] = useState<number | null>(null);
 
   // ── TTS drain on screen leave ─────────────────────────────────────────────
   useFocusEffect(
     useCallback(() => {
-      return () => { ttsService.reset(); };
+      return () => {
+        ttsService.reset();
+        if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
+      };
     }, [])
   );
 
@@ -92,16 +112,23 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     if (!hasPermission) requestPermission();
   }, [hasPermission]);
 
-  // ── Auto-capture ──────────────────────────────────────────────────────────
+  // ── Final photo capture (high quality) ────────────────────────────────────
   const handleAutoCapture = useCallback(async () => {
     if (!cameraRef.current || isCapturingRef.current) return;
     isCapturingRef.current = true;
 
-    try {
-      speakMedium('Capturing now!');
-      trigger(HapticPattern.SUCCESS);
-      setTimeout(() => trigger(HapticPattern.SUCCESS), 180);
+    // Stop snapshot loop
+    if (snapshotTimerRef.current) {
+      clearTimeout(snapshotTimerRef.current);
+      snapshotTimerRef.current = null;
+    }
 
+    setPhase('capturing');
+    speakMedium('Capturing now!');
+    trigger(HapticPattern.SUCCESS);
+    setTimeout(() => trigger(HapticPattern.SUCCESS), 200);
+
+    try {
       const photo = await cameraRef.current.takePhoto({
         flash: 'off',
         enableShutterSound: false,
@@ -109,12 +136,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       const photoUri = `file://${photo.path}`;
 
       if (side === 'front') {
-        navigation.navigate('CheckFlip', {
-          frontImageUri: photoUri,
-          accountId,
-          accountType,
-          amount,
-        });
+        navigation.navigate('CheckFlip', { frontImageUri: photoUri, accountId, accountType, amount });
       } else {
         const frontUri = route.params.frontImageUri ?? '';
         navigation.navigate('OCRProcessing', {
@@ -125,87 +147,152 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
           amount,
         });
       }
-    } catch (error) {
-      console.error('[CheckCapture] Capture error:', error);
+    } catch (err) {
+      console.error('[CheckCapture] takePhoto error:', err);
       isCapturingRef.current = false;
+      setPhase('analyzing');
       speakHigh('Failed to capture. Please try again.');
-      // Restart countdown after failure
-      setCountdown(COUNTDOWN_START);
+      // Restart snapshot loop after failure (use ref to avoid stale closure)
+      snapshotTimerRef.current = setTimeout(() => runSnapshotLoopRef.current(), SNAPSHOT_INTERVAL_MS);
     }
   }, [side, accountId, accountType, amount, navigation, route.params.frontImageUri]);
 
-  // Keep a ref so the countdown useEffect never captures a stale version
   const handleAutoCaptureRef = useRef(handleAutoCapture);
   useEffect(() => { handleAutoCaptureRef.current = handleAutoCapture; }, [handleAutoCapture]);
 
-  // ── Countdown ticker ──────────────────────────────────────────────────────
-  // Each tick: announce number + haptic, then decrement after 1 s.
-  // At 0: fire auto-capture.
-  useEffect(() => {
-    if (countdown === null) return;
+  // ── Guidance handler — TTS rate-limit + haptics + perfect tracking ─────────
+  const handleGuidance = useCallback((guidance: SnapshotGuidance) => {
+    if (guidance === 'analysis_failed') return; // silent retry
 
-    if (countdown === 0) {
-      handleAutoCaptureRef.current();
-      return;
+    setCurrentGuidance(guidance);
+
+    // Consecutive-perfect accumulator → auto-capture
+    if (guidance === 'perfect') {
+      consecutivePerfectRef.current += 1;
+      if (consecutivePerfectRef.current >= CONSECUTIVE_PERFECT_NEEDED) {
+        consecutivePerfectRef.current = 0;
+        handleAutoCaptureRef.current();
+        return;
+      }
+    } else {
+      consecutivePerfectRef.current = 0;
     }
 
-    // Announce the number and give a gentle haptic pulse
-    speakMedium(String(countdown));
-    trigger(HapticPattern.EDGE_DETECTED);
+    // TTS: speak immediately on state change; repeat same state only after 2.5 s
+    const now = Date.now();
+    const isSame = guidance === lastGuidanceRef.current;
+    if (!isSame || now - lastTTSTimeRef.current > MIN_TTS_INTERVAL_MS) {
+      const msg = SNAPSHOT_GUIDANCE_TTS[guidance];
+      if (msg) {
+        speakMedium(msg);
+        lastTTSTimeRef.current = now;
+        lastGuidanceRef.current = guidance;
+      }
+    }
 
-    const t = setTimeout(() => setCountdown(c => (c ?? 1) - 1), 1000);
-    return () => clearTimeout(t);
-  }, [countdown]);
+    // Haptics per guidance type
+    switch (guidance) {
+      case 'too_left':  trigger(HapticPattern.MOVE_LEFT);    break;
+      case 'too_right': trigger(HapticPattern.MOVE_RIGHT);   break;
+      case 'perfect':
+        trigger(HapticPattern.ALIGNED);
+        setTimeout(() => trigger(HapticPattern.HOLD_STEADY), 200);
+        break;
+      case 'good':
+      case 'too_far':
+      case 'too_close':
+      case 'too_high':
+      case 'too_low':   trigger(HapticPattern.EDGE_DETECTED); break;
+      default: break;
+    }
+  }, []);
 
-  // ── Instructions → start countdown ────────────────────────────────────────
+  // ── Snapshot loop (recursive setTimeout, runs every ~1.5 s) ───────────────
+  // Uses refs so the closure is never stale.
+  const runSnapshotLoop = useCallback(async () => {
+    if (isCapturingRef.current || phaseRef.current !== 'analyzing') return;
+
+    try {
+      const snapshot = await cameraRef.current!.takeSnapshot({ quality: 40 });
+      const guidance = await analyzeSnapshotUri(snapshot.path);
+      handleGuidance(guidance);
+    } catch (e) {
+      console.warn('[CheckCapture] snapshot error:', e);
+    }
+
+    // Schedule next run if still in analyzing phase
+    if (!isCapturingRef.current && phaseRef.current === 'analyzing') {
+      snapshotTimerRef.current = setTimeout(runSnapshotLoop, SNAPSHOT_INTERVAL_MS);
+    }
+  }, [handleGuidance]);
+
+  const runSnapshotLoopRef = useRef(runSnapshotLoop);
+  useEffect(() => { runSnapshotLoopRef.current = runSnapshotLoop; }, [runSnapshotLoop]);
+
+  // ── Transition: setup → analyzing ────────────────────────────────────────
+  const handleReady = useCallback(() => {
+    setPhase('analyzing');
+    phaseRef.current = 'analyzing';
+    consecutivePerfectRef.current = 0;
+    lastGuidanceRef.current = null;
+    lastTTSTimeRef.current  = 0;
+
+    speakMedium('Now slowly lift your phone straight up. I\'ll guide you in real time.');
+
+    // Give the TTS ~800 ms before first snapshot (phone still moving up)
+    snapshotTimerRef.current = setTimeout(() => {
+      runSnapshotLoopRef.current();
+    }, 800);
+  }, []);
+
+  // ── Setup phase: mount instructions ──────────────────────────────────────
   useEffect(() => {
     if (!hasPermission) return;
 
     const instruction =
       side === 'front'
-        ? 'Position the front of your check in the guide box. Hold the phone flat, 8 to 10 inches above the check.'
-        : 'Position the back of your check in the guide box. Make sure you can see the endorsement area.';
+        ? 'Hold the phone flat and place it directly on top of the front of the check. Say \'ready\' or tap Ready when set.'
+        : 'Hold the phone flat and place it on the back of the check where you signed. Say \'ready\' or tap Ready when set.';
 
     const t1 = setTimeout(() => speakMedium(instruction), 600);
-    const t2 = setTimeout(() => {
-      speakMedium("Auto-capture will begin in 5 seconds. Tap Capture anytime if you're ready sooner.");
-    }, 2500);
-    const t3 = setTimeout(() => setCountdown(COUNTDOWN_START), INSTRUCTIONS_DURATION_MS);
 
     return () => {
       clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-      setCountdown(null);
+      if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
     };
   }, [hasPermission, side]);
-
-  // ── Manual capture ────────────────────────────────────────────────────────
-  const handleManualCapture = useCallback(() => {
-    setCountdown(null); // cancel auto-countdown so it doesn't double-fire
-    handleAutoCaptureRef.current();
-  }, []);
 
   // ── Voice commands ────────────────────────────────────────────────────────
   useVoiceCommands(
     {
-      CONFIRM:  handleManualCapture,
-      CANCEL:   () => navigation.getParent()?.goBack(),
-      GO_BACK:  () => navigation.getParent()?.goBack(),
+      CONFIRM: () => {
+        if (phaseRef.current === 'setup')    { handleReady(); return; }
+        if (phaseRef.current === 'analyzing') { handleAutoCaptureRef.current(); }
+      },
+      CANCEL:  () => navigation.getParent()?.goBack(),
+      GO_BACK: () => navigation.getParent()?.goBack(),
     },
     { context: 'CheckCapture' }
   );
 
   // ── Derived UI values ─────────────────────────────────────────────────────
-  const guideText =
-    countdown !== null && countdown > 0
-      ? `Auto-capture in ${countdown}...`
-      : countdown === 0
-      ? 'Capturing!'
-      : 'Position check in frame, then tap Capture';
+  const guideLabel = (() => {
+    if (phase === 'setup')     return 'Place phone on check, then tap Ready';
+    if (phase === 'capturing') return 'Capturing!';
+    return SNAPSHOT_GUIDANCE_LABEL[currentGuidance] ?? '';
+  })();
 
-  // Border: green during active countdown (user is in position), blue otherwise
-  const borderColor = countdown !== null ? COLORS.GREEN_600 : COLORS.BLUE_600;
+  const borderColor = (() => {
+    if (phase === 'setup')     return COLORS.BLUE_600;
+    if (phase === 'capturing') return COLORS.GREEN_600;
+    switch (currentGuidance) {
+      case 'perfect': return COLORS.GREEN_600;
+      case 'good':    return '#FFD700';
+      case 'no_check':
+      case 'analysis_failed': return '#FF4444';
+      default: return '#FF6600'; // correction needed
+    }
+  })();
 
   // ── Permission denied ─────────────────────────────────────────────────────
   if (!hasPermission) {
@@ -231,7 +318,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // ── No back camera device ─────────────────────────────────────────────────
+  // ── No camera device ──────────────────────────────────────────────────────
   if (!device) {
     return (
       <SafeAreaView style={styles.container}>
@@ -243,10 +330,10 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     );
   }
 
-  // ── Main camera UI ────────────────────────────────────────────────────────
+  // ── Main UI ───────────────────────────────────────────────────────────────
   // IMPORTANT: Overlay and controls are SIBLINGS of <Camera>, not children.
   // On Android, vision-camera renders a native SurfaceView; React children
-  // placed inside <Camera> render behind it and become invisible.
+  // placed inside <Camera> render behind it and are invisible.
   return (
     <View style={styles.container}>
 
@@ -260,14 +347,10 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       />
 
       {/* ── Darkening overlay with landscape check-guide cutout ── */}
-      {/* pointerEvents="none" lets taps pass through to the controls below */}
       <View style={StyleSheet.absoluteFill} pointerEvents="none">
-        {/* Top dark band */}
         <View style={styles.overlayTop} />
-        {/* Middle row: left dark | guide window | right dark */}
         <View style={[styles.overlayMiddle, { height: guideHeight }]}>
           <View style={styles.overlaySide} />
-          {/* The check guide — transparent window with coloured border */}
           <View
             style={[
               styles.checkGuide,
@@ -277,47 +360,61 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
             <Text
               style={styles.guideText}
               accessibilityLiveRegion="polite"
-              accessibilityLabel={guideText}
+              accessibilityLabel={guideLabel}
             >
-              {guideText}
+              {guideLabel}
             </Text>
           </View>
           <View style={styles.overlaySide} />
         </View>
-        {/* Bottom dark band */}
         <View style={styles.overlayBottom} />
       </View>
 
-      {/* ── Side label (FRONT/BACK) — top-left ── */}
+      {/* ── Side label top-left ── */}
       <View style={styles.sideLabelContainer} pointerEvents="none">
         <Text style={styles.sideLabel}>{sideLabel.toUpperCase()} SIDE</Text>
       </View>
 
-      {/* ── Countdown ring — shown above capture button during countdown ── */}
-      {countdown !== null && countdown > 0 && (
-        <View style={styles.countdownContainer} pointerEvents="none">
-          <Text style={styles.countdownNumber}>{countdown}</Text>
+      {/* ── Phase indicator top-center ── */}
+      <View style={styles.phaseContainer} pointerEvents="none">
+        <Text style={styles.phaseText}>
+          {phase === 'setup'     ? 'Step 1: Place phone on check'  : ''}
+          {phase === 'analyzing' ? 'Analyzing…'                     : ''}
+          {phase === 'capturing' ? 'Capturing!'                     : ''}
+        </Text>
+      </View>
+
+      {/* ── Primary action button — bottom-center ── */}
+      {/* setup → "Ready"  |  analyzing → "Capture Now"  |  capturing → hidden */}
+      {phase !== 'capturing' && (
+        <View style={styles.controls}>
+          {phase === 'setup' ? (
+            <Pressable
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Ready — start scanning"
+              accessibilityHint="Tap when your phone is placed on the check"
+              onPress={handleReady}
+              style={({ pressed }) => [styles.readyButton, pressed && styles.buttonPressed]}
+            >
+              <Text style={styles.readyButtonText}>Ready</Text>
+            </Pressable>
+          ) : (
+            <Pressable
+              accessible
+              accessibilityRole="button"
+              accessibilityLabel="Capture check now"
+              accessibilityHint="Tap to capture immediately without waiting"
+              onPress={() => handleAutoCaptureRef.current()}
+              style={({ pressed }) => [styles.captureButton, pressed && styles.buttonPressed]}
+            >
+              <View style={styles.captureButtonInner} />
+            </Pressable>
+          )}
         </View>
       )}
 
-      {/* ── Manual capture button — bottom-center ── */}
-      <View style={styles.controls}>
-        <Pressable
-          accessible
-          accessibilityRole="button"
-          accessibilityLabel="Capture check"
-          accessibilityHint="Tap to capture image now"
-          onPress={handleManualCapture}
-          style={({ pressed }) => [
-            styles.captureButton,
-            pressed && styles.captureButtonPressed,
-          ]}
-        >
-          <View style={styles.captureButtonInner} />
-        </Pressable>
-      </View>
-
-      {/* ── Close button — top-right ── */}
+      {/* ── Close button top-right ── */}
       <Pressable
         accessible
         accessibilityRole="button"
@@ -335,7 +432,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
 
-  // ── Overlay rows ──────────────────────────────────────────────────────────
+  // ── Overlay ───────────────────────────────────────────────────────────────
   overlayTop:    { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
   overlayMiddle: { flexDirection: 'row' },
   overlaySide:   { flex: 1, backgroundColor: 'rgba(0,0,0,0.6)' },
@@ -378,31 +475,50 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
   },
 
-  // ── Countdown number (above capture button) ───────────────────────────────
-  countdownContainer: {
+  // ── Phase indicator (top-center) ──────────────────────────────────────────
+  phaseContainer: {
     position: 'absolute',
-    bottom: 108,
+    top: 16,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
-  countdownNumber: {
-    fontSize: 52,
-    fontWeight: '900',
-    color: COLORS.WHITE,
-    textShadowColor: 'rgba(0,0,0,0.8)',
-    textShadowOffset: { width: 0, height: 2 },
-    textShadowRadius: 6,
+  phaseText: {
+    color: 'rgba(255,255,255,0.75)',
+    fontSize: 13,
+    fontWeight: '600',
+    backgroundColor: 'rgba(0,0,0,0.35)',
+    paddingHorizontal: 12,
+    paddingVertical: 4,
+    borderRadius: 6,
   },
 
-  // ── Capture button (absolute bottom-center) ───────────────────────────────
+  // ── Controls row (bottom-center) ──────────────────────────────────────────
   controls: {
     position: 'absolute',
-    bottom: 24,
+    bottom: 32,
     left: 0,
     right: 0,
     alignItems: 'center',
   },
+
+  // Setup phase: prominent "Ready" pill button
+  readyButton: {
+    backgroundColor: COLORS.BLUE_600,
+    paddingHorizontal: 48,
+    paddingVertical: 18,
+    borderRadius: 40,
+    minWidth: 180,
+    alignItems: 'center',
+  },
+  readyButtonText: {
+    color: COLORS.WHITE,
+    fontSize: 22,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+  },
+
+  // Analyzing phase: shutter circle button
   captureButton: {
     width: 72,
     height: 72,
@@ -413,7 +529,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-  captureButtonPressed: { opacity: 0.7 },
   captureButtonInner: {
     width: 56,
     height: 56,
@@ -421,7 +536,9 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.BLUE_600,
   },
 
-  // ── Close button (absolute top-right) ─────────────────────────────────────
+  buttonPressed: { opacity: 0.65 },
+
+  // ── Close button (top-right) ──────────────────────────────────────────────
   closeButton: {
     position: 'absolute',
     top: 12,
