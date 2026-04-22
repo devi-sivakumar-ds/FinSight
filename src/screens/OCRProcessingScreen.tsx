@@ -1,18 +1,24 @@
 // ============================================================================
 // OCRProcessingScreen
-// Phase 1 stub — skips OCR and navigates directly to Confirmation using the
-// amount the user entered before capturing the check.
+// Sends the captured check image to Groq Vision for MICR + amount extraction.
 //
-// Phase 2 will replace the setTimeout below with a real Groq Vision API call.
+// Flow:
+//   1. Stop any lingering TTS, announce "Analyzing your check"
+//   2. Call extractCheckData(frontImageUri) — Groq Vision API
+//   3a. Success: navigate to Confirmation with ocrData
+//   3b. Soft failure (bad image / parse error): navigate to Confirmation
+//       without ocrData — user-entered amount still used
+//   3c. Hard failure (network / auth): navigate to Error screen with retry
 // ============================================================================
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   SafeAreaView,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
@@ -20,6 +26,7 @@ import { DepositStackParamList } from '@/types/index';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import ttsService from '@services/ttsService';
+import { extractCheckData } from '@services/ocrService';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
@@ -29,33 +36,110 @@ type Props = {
   route: RouteProp<DepositStackParamList, 'OCRProcessing'>;
 };
 
+// Hard errors that should surface an Error screen (with retry).
+// Soft errors (bad image quality, parse failures) just skip OCR and continue.
+const HARD_ERROR_PATTERNS = ['API key', 'Invalid Groq', 'Network error'];
+
+function isHardError(errors: string[]): boolean {
+  return errors.some(e => HARD_ERROR_PATTERNS.some(p => e.includes(p)));
+}
+
 export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
   const { frontImageUri, backImageUri, accountId, accountType, amount } = route.params;
   const { speakMedium } = useTTS();
   const { verbosity } = useVoiceSettings();
+  const [statusText, setStatusText] = useState('Analyzing your check…');
 
   useEffect(() => {
+    let cancelled = false;
+
     // Stop any lingering TTS from the camera screen immediately
     ttsService.reset();
-
     speakMedium(v(verbosity, ttsStrings.ocrProcessing.processing));
 
-    // ── Phase 1: bypass OCR — go straight to Confirmation ─────────────────
-    // The amount the user spoke/typed before scanning is used as-is.
-    // Phase 2 will read frontImageUri + backImageUri via Groq Vision here.
-    const timer = setTimeout(() => {
-      navigation.replace('Confirmation', {
-        accountId,
-        accountType,
-        amount,           // pre-entered amount — no OCR needed yet
-        frontImageUri,
-        backImageUri,
-        ocrData: undefined, // no check number / routing / account data yet
-      });
-    }, 1500);
+    async function runOCR() {
+      try {
+        setStatusText('Reading check details…');
+        const result = await extractCheckData(frontImageUri);
 
-    return () => clearTimeout(timer);
-  }, []);
+        if (cancelled) return;
+
+        if (result.success && result.data) {
+          // OCR succeeded — pass data to Confirmation
+          const { routingNumber, accountNumber, checkNumber } = result.data;
+          const hasData = routingNumber || accountNumber || checkNumber;
+
+          if (hasData) {
+            setStatusText('Check details extracted!');
+            speakMedium('Check details found. Reviewing now.');
+          } else {
+            // Groq returned nulls for all fields — soft failure
+            setStatusText('Proceeding with entered amount.');
+            speakMedium('Could not read all check details. Using your entered amount.');
+          }
+
+          setTimeout(() => {
+            if (cancelled) return;
+            navigation.replace('Confirmation', {
+              accountId,
+              accountType,
+              amount,
+              frontImageUri,
+              backImageUri,
+              ocrData: hasData ? result.data : undefined,
+            });
+          }, 1200);
+
+        } else {
+          // OCR failed
+          const errors = result.errors ?? [];
+
+          if (isHardError(errors)) {
+            // Surface to ErrorScreen so user can retry
+            speakMedium('Could not connect to check reading service. Please try again.');
+            setTimeout(() => {
+              if (cancelled) return;
+              navigation.navigate('Error', {
+                error: errors[0] ?? 'OCR service unavailable',
+                canRetry: true,
+              });
+            }, 2000);
+          } else {
+            // Soft failure — skip OCR, continue with user-entered amount
+            setStatusText('Proceeding with entered amount.');
+            speakMedium('Could not read check. Using your entered amount.');
+            setTimeout(() => {
+              if (cancelled) return;
+              navigation.replace('Confirmation', {
+                accountId,
+                accountType,
+                amount,
+                frontImageUri,
+                backImageUri,
+                ocrData: undefined,
+              });
+            }, 1500);
+          }
+        }
+      } catch (e) {
+        if (cancelled) return;
+        console.error('[OCRProcessingScreen] unexpected error:', e);
+        // Unexpected crash — graceful degradation
+        navigation.replace('Confirmation', {
+          accountId,
+          accountType,
+          amount,
+          frontImageUri,
+          backImageUri,
+          ocrData: undefined,
+        });
+      }
+    }
+
+    runOCR();
+
+    return () => { cancelled = true; };
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   return (
     <SafeAreaView style={styles.container}>
@@ -67,7 +151,7 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
             size={100}
             color={DARK_COLORS.BLUE}
             accessible
-            accessibilityLabel="Processing check"
+            accessibilityLabel="Analyzing check"
           />
           <ActivityIndicator
             size="large"
@@ -78,10 +162,22 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
         </View>
 
         <Text style={styles.title} accessible accessibilityRole="header">
-          Check Captured
+          Analyzing Check
         </Text>
 
-        <Text style={styles.subtitle}>Preparing deposit details…</Text>
+        <Text style={styles.subtitle}>{statusText}</Text>
+
+        {!!backImageUri && (
+          <View style={styles.previewContainer}>
+            <Image
+              source={{ uri: backImageUri }}
+              style={styles.previewImage}
+              resizeMode="contain"
+              accessible
+              accessibilityLabel="Captured check image preview"
+            />
+          </View>
+        )}
       </View>
     </SafeAreaView>
   );
@@ -117,5 +213,20 @@ const styles = StyleSheet.create({
     color: DARK_COLORS.TEXT_SECONDARY,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  previewContainer: {
+    width: '100%',
+    maxWidth: 320,
+    aspectRatio: 1.8,
+    borderRadius: 14,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: DARK_COLORS.BORDER,
+    backgroundColor: DARK_COLORS.SURFACE,
+    marginTop: 8,
+  },
+  previewImage: {
+    width: '100%',
+    height: '100%',
   },
 });

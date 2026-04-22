@@ -22,8 +22,10 @@ import {
   SafeAreaView,
   Pressable,
   ActivityIndicator,
+  Image,
   useWindowDimensions,
 } from 'react-native';
+import * as ImageManipulator from 'expo-image-manipulator';
 import {
   Camera,
   useCameraDevice,
@@ -36,9 +38,11 @@ import {
   analyzeSnapshotUri,
   SNAPSHOT_GUIDANCE_TTS,
   SNAPSHOT_GUIDANCE_LABEL,
+  type SnapshotAnalysisResult,
+  type SnapshotGuideRoi,
   type SnapshotGuidance,
 } from '@services/snapshotAnalysis';
-import { DepositStackParamList, HapticPattern } from '@/types/index';
+import { DepositStackParamList, HapticPattern, TTSPriority } from '@/types/index';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
@@ -57,16 +61,29 @@ type Props = {
 const CHECK_ASPECT = 2.2;
 
 // Milliseconds between snapshot analysis runs
-const SNAPSHOT_INTERVAL_MS = 1500;
-
-// How many 'perfect' readings (with 'good' allowed in between) before auto-capture
-// Option B: 'good' does not reset the counter, only directional states do.
-const CONSECUTIVE_PERFECT_NEEDED = 3;
+const SNAPSHOT_INTERVAL_MS = 900;
 
 // Minimum ms between TTS guidance announcements (same-state repeat suppression)
 const MIN_TTS_INTERVAL_MS = 2500;
 
+// Auto-capture once the detector stays confident and aligned for this long
+const STABLE_HOLD_MS = 650;
+
+const DEBUG_CAPTURE = __DEV__;
+
 type CapturePhase = 'setup' | 'analyzing' | 'capturing';
+type GuidanceCue =
+  | 'setup'
+  | 'searching'
+  | 'check_found'
+  | 'move_left'
+  | 'move_right'
+  | 'move_up'
+  | 'move_down'
+  | 'raise_phone'
+  | 'lower_phone'
+  | 'hold'
+  | 'capturing';
 
 export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType, amount, side } = route.params;
@@ -82,6 +99,12 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { width: winW, height: winH } = useWindowDimensions();
   const guideHeight = Math.min(winH * 0.85, winW * 0.70 * CHECK_ASPECT);
   const guideWidth  = guideHeight / CHECK_ASPECT;
+  const guideRoi: SnapshotGuideRoi = {
+    centerX: 0.5,
+    centerY: 0.5,
+    width: Math.min((guideWidth / Math.max(winW, 1)) * 1.12, 0.96),
+    height: Math.min((guideHeight / Math.max(winH, 1)) * 1.04, 0.96),
+  };
 
   // ── Camera ────────────────────────────────────────────────────────────────
   const device = useCameraDevice('back');
@@ -91,14 +114,17 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   // ── Phase and guidance state ──────────────────────────────────────────────
   const [phase, setPhase]                   = useState<CapturePhase>('setup');
   const [currentGuidance, setCurrentGuidance] = useState<SnapshotGuidance>('no_check');
+  const [analysisResult, setAnalysisResult] = useState<SnapshotAnalysisResult | null>(null);
 
   // ── Refs (avoid stale closures in async loops) ─────────────────────────────
   const phaseRef              = useRef<CapturePhase>('setup');
   const isCapturingRef        = useRef(false);
-  const consecutivePerfectRef = useRef(0);
   const lastTTSTimeRef        = useRef(0);
   const lastGuidanceRef       = useRef<SnapshotGuidance | null>(null);
   const snapshotTimerRef      = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const stableSinceRef        = useRef<number | null>(null);
+  const lastConfidenceRef     = useRef(0);
+  const lastCueRef            = useRef<GuidanceCue | null>(null);
 
   // Keep phaseRef in sync
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -142,14 +168,15 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
         enableShutterSound: false,
       });
       const photoUri = `file://${photo.path}`;
+      const normalizedPhotoUri = await normalizeImageToLandscape(photoUri);
 
       if (side === 'front') {
-        navigation.navigate('CheckFlip', { frontImageUri: photoUri, accountId, accountType, amount });
+        navigation.navigate('CheckFlip', { frontImageUri: normalizedPhotoUri, accountId, accountType, amount });
       } else {
         const frontUri = route.params.frontImageUri ?? '';
         navigation.navigate('OCRProcessing', {
           frontImageUri: frontUri,
-          backImageUri: photoUri,
+          backImageUri: normalizedPhotoUri,
           accountId,
           accountType,
           amount,
@@ -169,54 +196,89 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   useEffect(() => { handleAutoCaptureRef.current = handleAutoCapture; }, [handleAutoCapture]);
 
   // ── Guidance handler — TTS rate-limit + haptics + perfect tracking ─────────
-  const handleGuidance = useCallback((guidance: SnapshotGuidance) => {
+  const handleGuidance = useCallback((result: SnapshotAnalysisResult) => {
+    const guidance = result.guidance;
     if (guidance === 'analysis_failed') return; // silent retry
 
+    setAnalysisResult(result);
     setCurrentGuidance(guidance);
 
-    // Consecutive-perfect accumulator → auto-capture (Option B)
-    // 'perfect' increments the counter.
-    // 'good'    leaves it unchanged — oscillation between good/perfect won't block capture.
-    // Anything else (directional correction) resets it — user needs to reposition.
-    if (guidance === 'perfect') {
-      consecutivePerfectRef.current += 1;
-      if (consecutivePerfectRef.current >= CONSECUTIVE_PERFECT_NEEDED) {
-        consecutivePerfectRef.current = 0;
+    const confidence = result.confidence;
+    const isStableCandidate =
+      guidance !== 'no_check' &&
+      guidance !== 'too_far' &&
+      guidance !== 'too_close' &&
+      confidence >= 0.52 &&
+      result.metrics.roiOverlap >= 0.45 &&
+      Math.abs(result.metrics.offsetX) < 0.12 &&
+      Math.abs(result.metrics.offsetY) < 0.12;
+
+    if (isStableCandidate) {
+      const now = Date.now();
+      if (!stableSinceRef.current) stableSinceRef.current = now;
+      if (now - stableSinceRef.current >= STABLE_HOLD_MS) {
+        stableSinceRef.current = null;
         handleAutoCaptureRef.current();
         return;
       }
     } else if (guidance !== 'good') {
-      consecutivePerfectRef.current = 0;
+      stableSinceRef.current = null;
     }
 
-    // TTS: speak immediately on state change; repeat same state only after 2.5 s
+    const cue = getGuidanceCue(result);
+    const cueText = getCueText(cue, side);
+
+    if (DEBUG_CAPTURE) {
+      console.log(
+        '[CheckCapture] guidance',
+        JSON.stringify({
+          guidance,
+          cue,
+          reason: result.reason,
+          confidence: roundMetric(confidence),
+          coverage: roundMetric(result.metrics.coverage),
+          roiOverlap: roundMetric(result.metrics.roiOverlap),
+          offsetX: roundMetric(result.metrics.offsetX),
+          offsetY: roundMetric(result.metrics.offsetY),
+          mode: result.metrics.detectionMode,
+          candidates: result.metrics.candidateCount,
+        })
+      );
+    }
+
+    // TTS: speak immediately on cue change; repeat same cue only after a pause.
     const now = Date.now();
-    const isSame = guidance === lastGuidanceRef.current;
-    if (!isSame || now - lastTTSTimeRef.current > MIN_TTS_INTERVAL_MS) {
-      const msg = SNAPSHOT_GUIDANCE_TTS[guidance];
-      if (msg) {
-        speakMedium(msg);
+    const isSameCue = cue === lastCueRef.current;
+    if (!isSameCue || now - lastTTSTimeRef.current > MIN_TTS_INTERVAL_MS) {
+      if (cueText) {
+        ttsService.speak(cueText, TTSPriority.LOW, !isSameCue);
         lastTTSTimeRef.current = now;
         lastGuidanceRef.current = guidance;
+        lastCueRef.current = cue;
       }
     }
+
+    lastConfidenceRef.current = confidence;
 
     // Haptics per guidance type
     switch (guidance) {
       case 'too_left':  trigger(HapticPattern.MOVE_LEFT);    break;
       case 'too_right': trigger(HapticPattern.MOVE_RIGHT);   break;
+      case 'too_high':  trigger(HapticPattern.MOVE_UP);      break;
+      case 'too_low':   trigger(HapticPattern.MOVE_DOWN);    break;
       case 'perfect':
         trigger(HapticPattern.ALIGNED);
         setTimeout(() => trigger(HapticPattern.HOLD_STEADY), 200);
         break;
       case 'good':
+      case 'blurry':
       case 'too_far':
       case 'too_close':
-      case 'too_high':
-      case 'too_low':   trigger(HapticPattern.EDGE_DETECTED); break;
+        trigger(HapticPattern.EDGE_DETECTED);
+        break;
       default: break;
     }
-  }, []);
+  }, [side, trigger]);
 
   // ── Snapshot loop (recursive setTimeout, runs every ~1.5 s) ───────────────
   // Uses refs so the closure is never stale.
@@ -225,8 +287,8 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 
     try {
       const snapshot = await cameraRef.current!.takeSnapshot({ quality: 40 });
-      const guidance = await analyzeSnapshotUri(snapshot.path);
-      handleGuidance(guidance);
+      const result = await analyzeSnapshotUri(snapshot.path, guideRoi);
+      handleGuidance(result);
     } catch (e) {
       console.warn('[CheckCapture] snapshot error:', e);
     }
@@ -235,7 +297,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     if (!isCapturingRef.current && phaseRef.current === 'analyzing') {
       snapshotTimerRef.current = setTimeout(runSnapshotLoop, SNAPSHOT_INTERVAL_MS);
     }
-  }, [handleGuidance]);
+  }, [guideRoi, handleGuidance]);
 
   const runSnapshotLoopRef = useRef(runSnapshotLoop);
   useEffect(() => { runSnapshotLoopRef.current = runSnapshotLoop; }, [runSnapshotLoop]);
@@ -244,11 +306,18 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleReady = useCallback(() => {
     setPhase('analyzing');
     phaseRef.current = 'analyzing';
-    consecutivePerfectRef.current = 0;
     lastGuidanceRef.current = null;
     lastTTSTimeRef.current  = 0;
+    stableSinceRef.current = null;
+    lastConfidenceRef.current = 0;
+    lastCueRef.current = null;
+    setAnalysisResult(null);
 
-    speakMedium(v(verbosity, ttsStrings.checkCapture.setupInstruction));
+    speakMedium(
+      side === 'front'
+        ? 'Lift the phone straight up slowly. Keep the check under the middle of the phone. I will say left, right, up, down, raise, lower, or hold steady.'
+        : 'Lift the phone straight up slowly from the back of the check. Keep the check under the middle of the phone. I will say left, right, up, down, raise, lower, or hold steady.'
+    );
 
     // Give the TTS ~800 ms before first snapshot (phone still moving up)
     snapshotTimerRef.current = setTimeout(() => {
@@ -262,8 +331,8 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 
     const instruction =
       side === 'front'
-        ? 'Hold the phone flat and place it directly on top of the front of the check. Say \'ready\' or tap Ready when set.'
-        : 'Hold the phone flat and place it on the back of the check where you signed. Say \'ready\' or tap Ready when set.';
+        ? 'Place the phone flat on top of the front of the check. Center it by touch, then say ready.'
+        : 'Place the phone flat on the back of the check where you signed. Center it by touch, then say ready.';
 
     const t1 = setTimeout(() => speakMedium(instruction), 600);
 
@@ -290,7 +359,17 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const guideLabel = (() => {
     if (phase === 'setup')     return 'Place phone on check, then tap Ready';
     if (phase === 'capturing') return 'Capturing!';
+    if (analysisResult) return getCueLabel(getGuidanceCue(analysisResult));
     return SNAPSHOT_GUIDANCE_LABEL[currentGuidance] ?? '';
+  })();
+
+  const phaseLabel = (() => {
+    if (phase === 'setup') return 'Step 1: Place phone on check';
+    if (phase === 'capturing') return 'Capturing!';
+    if (analysisResult && analysisResult.confidence > 0) {
+      return `Analyzing… ${Math.round(analysisResult.confidence * 100)}%`;
+    }
+    return 'Analyzing…';
   })();
 
   const borderColor = (() => {
@@ -304,6 +383,14 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       default: return '#FF6600'; // correction needed
     }
   })();
+
+  const debugText = analysisResult
+    ? [
+        `cue=${getGuidanceCue(analysisResult)} guidance=${analysisResult.guidance} reason=${analysisResult.reason}`,
+        `conf=${roundMetric(analysisResult.confidence)} cov=${roundMetric(analysisResult.metrics.coverage)} roi=${roundMetric(analysisResult.metrics.roiOverlap)} mode=${analysisResult.metrics.detectionMode}`,
+        `off=(${roundMetric(analysisResult.metrics.offsetX)}, ${roundMetric(analysisResult.metrics.offsetY)}) candidates=${analysisResult.metrics.candidateCount}`,
+      ].join('\n')
+    : 'No analysis yet';
 
   // ── Permission denied ─────────────────────────────────────────────────────
   if (!hasPermission) {
@@ -388,11 +475,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* ── Phase indicator top-center ── */}
       <View style={styles.phaseContainer} pointerEvents="none">
-        <Text style={styles.phaseText}>
-          {phase === 'setup'     ? 'Step 1: Place phone on check'  : ''}
-          {phase === 'analyzing' ? 'Analyzing…'                     : ''}
-          {phase === 'capturing' ? 'Capturing!'                     : ''}
-        </Text>
+        <Text style={styles.phaseText}>{phaseLabel}</Text>
       </View>
 
       {/* ── Primary action button — bottom-center ── */}
@@ -436,9 +519,125 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
         <Ionicons name="close" size={28} color={COLORS.WHITE} />
       </Pressable>
 
+      {DEBUG_CAPTURE && (
+        <View style={styles.debugPanel} pointerEvents="none">
+          <Text style={styles.debugText}>{debugText}</Text>
+        </View>
+      )}
+
     </View>
   );
 };
+
+function getGuidanceCue(result: SnapshotAnalysisResult): GuidanceCue {
+  switch (result.guidance) {
+    case 'no_check':
+      return result.metrics.candidateCount > 0 || result.confidence > 0.18 ? 'check_found' : 'searching';
+    case 'too_left':
+      return 'move_right';
+    case 'too_right':
+      return 'move_left';
+    case 'too_high':
+      return 'move_down';
+    case 'too_low':
+      return 'move_up';
+    case 'too_far':
+      return 'lower_phone';
+    case 'too_close':
+      return 'raise_phone';
+    case 'blurry':
+    case 'good':
+    case 'perfect':
+      return 'hold';
+    default:
+      return 'searching';
+  }
+}
+
+function getCueText(cue: GuidanceCue, side: 'front' | 'back'): string {
+  switch (cue) {
+    case 'searching':
+      return 'Move the phone over the check.';
+    case 'check_found':
+      return 'Check found. Keep moving slowly.';
+    case 'move_left':
+      return 'Move left.';
+    case 'move_right':
+      return 'Move right.';
+    case 'move_up':
+      return 'Move up.';
+    case 'move_down':
+      return 'Move down.';
+    case 'raise_phone':
+      return 'Raise the phone slightly.';
+    case 'lower_phone':
+      return 'Lower the phone slightly.';
+    case 'hold':
+      return side === 'front' ? 'Hold steady. Capturing soon.' : 'Hold steady. Capturing soon.';
+    case 'capturing':
+      return 'Capturing now.';
+    case 'setup':
+      return 'Center the phone on the check and say ready.';
+    default:
+      return '';
+  }
+}
+
+function getCueLabel(cue: GuidanceCue): string {
+  switch (cue) {
+    case 'searching':
+      return 'Searching for check';
+    case 'check_found':
+      return 'Check found — move slowly';
+    case 'move_left':
+      return 'Move left';
+    case 'move_right':
+      return 'Move right';
+    case 'move_up':
+      return 'Move up';
+    case 'move_down':
+      return 'Move down';
+    case 'raise_phone':
+      return 'Raise phone slightly';
+    case 'lower_phone':
+      return 'Lower phone slightly';
+    case 'hold':
+      return 'Hold steady — capturing soon';
+    case 'capturing':
+      return 'Capturing';
+    case 'setup':
+      return 'Place phone on check';
+    default:
+      return 'Analyzing';
+  }
+}
+
+function roundMetric(value: number): number {
+  return Math.round(value * 100) / 100;
+}
+
+async function normalizeImageToLandscape(uri: string): Promise<string> {
+  const { width, height } = await getImageSize(uri);
+  if (width >= height) return uri;
+
+  const result = await ImageManipulator.manipulateAsync(
+    uri,
+    [{ rotate: 90 }],
+    { format: ImageManipulator.SaveFormat.JPEG, compress: 0.95 }
+  );
+
+  return result.uri;
+}
+
+function getImageSize(uri: string): Promise<{ width: number; height: number }> {
+  return new Promise((resolve, reject) => {
+    Image.getSize(
+      uri,
+      (width, height) => resolve({ width, height }),
+      reject
+    );
+  });
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
@@ -560,6 +759,21 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.5)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  debugPanel: {
+    position: 'absolute',
+    left: 12,
+    right: 12,
+    bottom: 120,
+    backgroundColor: 'rgba(0,0,0,0.72)',
+    borderRadius: 10,
+    padding: 10,
+  },
+  debugText: {
+    color: COLORS.WHITE,
+    fontSize: 11,
+    lineHeight: 16,
+    fontFamily: 'Courier',
   },
 
   // ── Permission / loading screens ──────────────────────────────────────────

@@ -106,7 +106,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
             <Image
               source={{ uri: frontImageUri }}
               style={styles.thumbnail}
-              resizeMode="cover"
+              resizeMode="contain"
               accessible
               accessibilityLabel="Captured front image preview"
             />
