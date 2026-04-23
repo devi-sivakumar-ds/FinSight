@@ -7,6 +7,8 @@ import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { DepositStackParamList } from '@/types/index';
 import { COLORS } from '@utils/constants';
+import { DepositOverviewScreen } from '@screens/DepositOverviewScreen';
+import { DepositPrivacyScreen } from '@screens/DepositPrivacyScreen';
 import { AccountSelectScreen } from '@screens/AccountSelectScreen';
 import { AmountInputScreen } from '@screens/AmountInputScreen';
 import { CheckCaptureScreen } from '@screens/CheckCaptureScreen';
@@ -28,6 +30,8 @@ export const DepositNavigator: React.FC = () => {
         gestureEnabled: false, // Disable swipe-back — use explicit close buttons
       }}
     >
+      <Stack.Screen name="DepositOverview" component={DepositOverviewScreen} />
+      <Stack.Screen name="DepositPrivacy" component={DepositPrivacyScreen} />
       <Stack.Screen name="AccountSelect" component={AccountSelectScreen} />
       <Stack.Screen name="AmountInput" component={AmountInputScreen} />
       <Stack.Screen name="CheckCapture" component={CheckCaptureScreen} />

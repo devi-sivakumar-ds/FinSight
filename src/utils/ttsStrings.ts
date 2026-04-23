@@ -57,6 +57,44 @@ export const ttsStrings = {
   },
 
   // ── Account select ─────────────────────────────────────────────────────────
+  depositOverview: {
+    intro: {
+      low:    'Deposit check.',
+      medium: 'You chose to deposit a check.',
+      high:   'You have chosen to deposit a check.',
+    } as VStr,
+    process: {
+      low:    'Three steps.',
+      medium: 'I will guide you through three steps: choose an account, enter the amount, and capture the front and back of the check.',
+      high:   'I will guide you through the process. First you will choose an account, then enter the check amount, and finally capture the front and back of the check.',
+    } as VStr,
+    continuePrompt: {
+      low:    'Say continue.',
+      medium: "Say continue when you're ready.",
+      high:   "When you're ready to begin, say continue.",
+    } as VStr,
+  },
+
+  // ── Deposit privacy ───────────────────────────────────────────────────────
+  depositPrivacy: {
+    intro: {
+      low:    'Privacy.',
+      medium: 'Your privacy matters.',
+      high:   'Before we begin, here is a quick privacy note.',
+    } as VStr,
+    details: {
+      low:    'Not saved in app.',
+      medium: "Your deposit information is used only for this flow and isn't stored in the app after this session.",
+      high:   "Your deposit information is used only to guide this deposit flow and is not stored in the app after this session.",
+    } as VStr,
+    continuePrompt: {
+      low:    'Continue.',
+      medium: 'Say continue to choose an account.',
+      high:   'Say continue to move on and choose the account for this deposit.',
+    } as VStr,
+  },
+
+  // ── Account select ─────────────────────────────────────────────────────────
   accountSelect: {
     prompt: {
       low:    'Which account?',

@@ -6,6 +6,8 @@ export { MainScreen } from './MainScreen';
 export { SettingsScreen } from './SettingsScreen';
 
 // Deposit flow screens
+export { DepositOverviewScreen } from './DepositOverviewScreen';
+export { DepositPrivacyScreen } from './DepositPrivacyScreen';
 export { AccountSelectScreen } from './AccountSelectScreen';
 export { AmountInputScreen } from './AmountInputScreen';
 export { CheckCaptureScreen } from './CheckCaptureScreen';

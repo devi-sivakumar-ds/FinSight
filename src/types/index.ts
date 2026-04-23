@@ -136,6 +136,8 @@ export interface CaptureScore {
 
 // Navigation Types
 export type DepositStackParamList = {
+  DepositOverview: undefined;
+  DepositPrivacy: undefined;
   AccountSelect: undefined;
   AmountInput: { accountId: string; accountType: 'checking' | 'savings' };
   CheckCapture: {
