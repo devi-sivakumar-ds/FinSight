@@ -18,6 +18,7 @@ import { RootStackParamList, TabParamList } from '@/types/index';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { isPureWozMode } from '@/config/studyMode';
 import wizardClient from '@services/wizardClient';
+import { executeWizardCommand } from '@services/wizardExecutor';
 import type { WizardAppState, WizardLogEvent } from '@/types/wizard';
 import type { WizardCommandContext } from '@utils/wizardCommands';
 import { COLORS } from '@utils/constants';
@@ -127,7 +128,7 @@ const TabNavigator: React.FC = () => {
 
 export const AppNavigator: React.FC = () => {
   const navigationRef = useNavigationContainerRef<RootStackParamList>();
-  const { verbosity, pace } = useVoiceSettings();
+  const { verbosity, pace, setVerbosity, setPace } = useVoiceSettings();
 
   const reportWizardState = useCallback((lastCommandId?: string) => {
     if (!isPureWozMode()) return;
@@ -210,7 +211,16 @@ export const AppNavigator: React.FC = () => {
       };
 
       wizardClient.sendLogEvent(event);
-      reportWizardState(command.id);
+      executeWizardCommand(command, {
+        navigationRef,
+        verbosity,
+        setVerbosity,
+        setPace,
+      });
+
+      setTimeout(() => {
+        reportWizardState(command.id);
+      }, 50);
     });
 
     return () => {
