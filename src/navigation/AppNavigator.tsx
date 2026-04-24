@@ -11,6 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { MainScreen, SettingsScreen } from '@screens';
 import { DepositNavigator } from './DepositNavigator';
 import { RootStackParamList, TabParamList } from '@/types/index';
+import { isPureWozMode } from '@/config/studyMode';
 import { COLORS } from '@utils/constants';
 import voiceService from '@services/voiceService';
 
@@ -73,6 +74,11 @@ export const AppNavigator: React.FC = () => {
   // Start always-on continuous listening once the app mounts.
   // A single VAD segment loop runs for the entire app lifetime — no mic button.
   useEffect(() => {
+    if (isPureWozMode()) {
+      console.log('[AppNavigator] pure_woz mode active — skipping always-on voice startup');
+      return;
+    }
+
     voiceService.startContinuousListening().catch(console.error);
     return () => voiceService.stopContinuousListening();
   }, []);
