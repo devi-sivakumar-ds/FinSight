@@ -6,6 +6,7 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import * as FileSystem from 'expo-file-system/legacy';
 import ttsService from '@services/ttsService';
+import { isPureWozMode } from '@/config/studyMode';
 import type { Verbosity } from '@utils/ttsStrings';
 
 export type Pace = 0.5 | 1.0 | 1.5;
@@ -35,6 +36,10 @@ export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   // Load persisted settings on mount
   useEffect(() => {
+    if (isPureWozMode()) {
+      return;
+    }
+
     (async () => {
       try {
         const info = await FileSystem.getInfoAsync(SETTINGS_FILE);
@@ -54,6 +59,9 @@ export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const persist = useCallback(async (settings: VoiceSettings) => {
+    if (isPureWozMode()) {
+      return;
+    }
     try {
       await FileSystem.writeAsStringAsync(SETTINGS_FILE, JSON.stringify(settings));
     } catch {

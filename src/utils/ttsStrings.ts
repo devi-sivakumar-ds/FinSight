@@ -8,6 +8,8 @@
 // An empty string means "skip speaking" for that verbosity level.
 // ============================================================================
 
+import { isPureWozMode } from '@/config/studyMode';
+
 export type Verbosity = 'low' | 'medium' | 'high';
 
 export interface VStr {
@@ -18,6 +20,9 @@ export interface VStr {
 
 /** Pick the verbosity-appropriate string from a VStr. */
 export function v(verbosity: Verbosity, strings: VStr): string {
+  if (isPureWozMode()) {
+    return strings.medium;
+  }
   return strings[verbosity];
 }
 
@@ -34,20 +39,80 @@ export const ttsStrings = {
 
   // ── Settings ───────────────────────────────────────────────────────────────
   settings: {
+    entry: {
+      low:    'Settings.',
+      medium: 'In Settings, you can adjust how much detail you hear in each prompt, and control the speed and timing of my voice. What do you want to adjust?',
+      high:   'In Settings, you can adjust how much detail you hear in each prompt, and control the speed and timing of my voice. What do you want to adjust?',
+    } as VStr,
     screenAnnounce: (currentVerbosity: string, currentPace: number): VStr => ({
       low:    `Settings. Verbosity: ${currentVerbosity}. Pace: ${currentPace}x. Say a command to change.`,
       medium: `Settings. Verbosity is ${currentVerbosity}. Pace is ${currentPace}x. Say 'set verbosity low, medium, or high', or 'set pace slow, normal, or fast'.`,
       high:   `Settings screen. Your verbosity is ${currentVerbosity} and your speech pace is ${currentPace}x. To change verbosity, say 'set verbosity low', 'medium', or 'high'. To change speech pace, say 'set pace slow', 'normal', or 'fast'. To return home, say 'go home'.`,
     }),
+    verbosityIntro: {
+      low:    'Verbosity settings.',
+      medium: "Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.",
+      high:   "Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.",
+    } as VStr,
+    verbosityExampleLow: {
+      low:    'Low example.',
+      medium: "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another example.",
+      high:   "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another example.",
+    } as VStr,
+    verbosityExampleMedium: {
+      low:    'Medium example.',
+      medium: "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.",
+      high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.",
+    } as VStr,
+    verbosityExampleHigh: {
+      low:    'High example.',
+      medium: "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.",
+      high:   "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.",
+    } as VStr,
     verbosityChanged: (label: string): VStr => ({
       low:    `${label}.`,
       medium: `Verbosity set to ${label}.`,
       high:   `Verbosity updated to ${label}. The app will now speak with ${label} detail.`,
     }),
+    verbositySelected: (label: string): VStr => ({
+      low:    `${label}.`,
+      medium: `Verbosity has been set to ${label}.`,
+      high:   `Verbosity has been set to ${label}.`,
+    }),
+    pacingOffer: {
+      low:    'Adjust pacing?',
+      medium: 'Do you want to adjust Pacing?',
+      high:   'Do you want to adjust Pacing?',
+    } as VStr,
+    pacingIntro: {
+      low:    'Pacing settings.',
+      medium: "Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.",
+      high:   "Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.",
+    } as VStr,
+    pacingExampleSlow: {
+      low:    'Slow example.',
+      medium: "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.",
+      high:   "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.",
+    } as VStr,
+    pacingExampleMedium: {
+      low:    'Medium pace example.',
+      medium: "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.",
+      high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.",
+    } as VStr,
+    pacingExampleHigh: {
+      low:    'High pace example.',
+      medium: "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.",
+      high:   "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.",
+    } as VStr,
     paceChanged: (pace: number): VStr => ({
       low:    `${pace}x.`,
       medium: `Speech pace set to ${pace}x.`,
       high:   `Speech pace updated to ${pace}x. The app will now speak ${pace < 1 ? 'slower' : pace > 1 ? 'faster' : 'at normal speed'}.`,
+    }),
+    pacingSelected: (label: string): VStr => ({
+      low:    `${label}.`,
+      medium: `Pacing has been set to ${label}.`,
+      high:   `Pacing has been set to ${label}.`,
     }),
   },
 
@@ -60,7 +125,7 @@ export const ttsStrings = {
     } as VStr,
     featureComingSoon: (feature: string): VStr => ({
       low:    'Coming soon.',
-      medium: `${feature} is coming soon.`,
+      medium: `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
       high:   `${feature} is not available yet. It will be added in a future update.`,
     }),
   },

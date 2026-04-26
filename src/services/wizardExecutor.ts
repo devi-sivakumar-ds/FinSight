@@ -140,6 +140,10 @@ export function executeWizardCommand(
 ): void {
   const { navigationRef, verbosity, setVerbosity, setPace } = deps;
 
+  const speakSettings = (entry: { low: string; medium: string; high: string }) => {
+    ttsService.speakMedium(v(verbosity, entry));
+  };
+
   switch (command.id) {
     case 'CONTINUE_FROM_ONBOARDING':
       navigationRef.resetRoot({
@@ -188,34 +192,76 @@ export function executeWizardCommand(
       ttsService.speakMedium(v(verbosity, ttsStrings.main.featureComingSoon('Transfer money')));
       return;
 
-    case 'SET_VERBOSITY_LOW':
+    case 'SETTINGS_ADJUST_VERBOSITY':
+      speakSettings(ttsStrings.settings.verbosityIntro);
+      return;
+
+    case 'SETTINGS_VERBOSITY_EXAMPLE_LOW':
+      speakSettings(ttsStrings.settings.verbosityExampleLow);
+      return;
+
+    case 'SETTINGS_VERBOSITY_EXAMPLE_MEDIUM':
+      speakSettings(ttsStrings.settings.verbosityExampleMedium);
+      return;
+
+    case 'SETTINGS_VERBOSITY_EXAMPLE_HIGH':
+      speakSettings(ttsStrings.settings.verbosityExampleHigh);
+      return;
+
+    case 'SETTINGS_CHOOSE_VERBOSITY_LOW':
       setVerbosity('low');
-      ttsService.speakMedium(v('low', ttsStrings.settings.verbosityChanged('Low')));
+      ttsService.speakMedium(
+        `${v('low', ttsStrings.settings.verbositySelected('Low'))} ${v('low', ttsStrings.settings.pacingOffer)}`
+      );
       return;
 
-    case 'SET_VERBOSITY_MEDIUM':
+    case 'SETTINGS_CHOOSE_VERBOSITY_MEDIUM':
       setVerbosity('medium');
-      ttsService.speakMedium(v('medium', ttsStrings.settings.verbosityChanged('Medium')));
+      ttsService.speakMedium(
+        `${v('medium', ttsStrings.settings.verbositySelected('Medium'))} ${v('medium', ttsStrings.settings.pacingOffer)}`
+      );
       return;
 
-    case 'SET_VERBOSITY_HIGH':
+    case 'SETTINGS_CHOOSE_VERBOSITY_HIGH':
       setVerbosity('high');
-      ttsService.speakMedium(v('high', ttsStrings.settings.verbosityChanged('High')));
+      ttsService.speakMedium(
+        `${v('high', ttsStrings.settings.verbositySelected('High'))} ${v('high', ttsStrings.settings.pacingOffer)}`
+      );
       return;
 
-    case 'SET_PACE_SLOW':
+    case 'SETTINGS_PROMPT_PACING':
+      speakSettings(ttsStrings.settings.pacingOffer);
+      return;
+
+    case 'SETTINGS_ADJUST_PACING':
+      speakSettings(ttsStrings.settings.pacingIntro);
+      return;
+
+    case 'SETTINGS_PACING_EXAMPLE_SLOW':
+      speakSettings(ttsStrings.settings.pacingExampleSlow);
+      return;
+
+    case 'SETTINGS_PACING_EXAMPLE_MEDIUM':
+      speakSettings(ttsStrings.settings.pacingExampleMedium);
+      return;
+
+    case 'SETTINGS_PACING_EXAMPLE_HIGH':
+      speakSettings(ttsStrings.settings.pacingExampleHigh);
+      return;
+
+    case 'SETTINGS_CHOOSE_PACING_SLOW':
       setPace(0.5);
-      ttsService.speakMedium(v(verbosity, ttsStrings.settings.paceChanged(0.5)));
+      ttsService.speakMedium(v(verbosity, ttsStrings.settings.pacingSelected('Slow')));
       return;
 
-    case 'SET_PACE_NORMAL':
+    case 'SETTINGS_CHOOSE_PACING_MEDIUM':
       setPace(1.0);
-      ttsService.speakMedium(v(verbosity, ttsStrings.settings.paceChanged(1.0)));
+      ttsService.speakMedium(v(verbosity, ttsStrings.settings.pacingSelected('Medium')));
       return;
 
-    case 'SET_PACE_FAST':
+    case 'SETTINGS_CHOOSE_PACING_HIGH':
       setPace(1.5);
-      ttsService.speakMedium(v(verbosity, ttsStrings.settings.paceChanged(1.5)));
+      ttsService.speakMedium(v(verbosity, ttsStrings.settings.pacingSelected('High')));
       return;
 
     case 'RETURN_HOME_FROM_SETTINGS':

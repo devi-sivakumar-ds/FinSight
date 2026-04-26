@@ -13,6 +13,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
+import { isPureWozMode } from '@/config/studyMode';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
@@ -38,40 +39,65 @@ export const SettingsScreen: React.FC = () => {
   const { speakMedium } = useTTS();
   const { verbosity, pace, setVerbosity, setPace } = useVoiceSettings();
   const navigation = useNavigation();
+  const pureWozMode = isPureWozMode();
+  const [visualVerbosity, setVisualVerbosity] = React.useState<Verbosity>(verbosity);
+  const [visualPace, setVisualPace] = React.useState<Pace>(pace);
+
+  useEffect(() => {
+    if (!pureWozMode) {
+      setVisualVerbosity(verbosity);
+      setVisualPace(pace);
+    }
+  }, [pace, pureWozMode, verbosity]);
 
   // Announce current settings + voice options on mount
   useEffect(() => {
-    const str = v(verbosity, ttsStrings.settings.screenAnnounce(verbosity, pace));
+    const str = pureWozMode
+      ? v(verbosity, ttsStrings.settings.entry)
+      : v(verbosity, ttsStrings.settings.screenAnnounce(verbosity, pace));
     speakMedium(str);
-  }, []);
+  }, [pace, pureWozMode, speakMedium, verbosity]);
 
   const handleGoHome = useCallback(() => {
     (navigation as any).navigate('Tasks');
   }, [navigation]);
 
   const handleSetVerbosity = useCallback((val: Verbosity) => {
+    if (pureWozMode) {
+      setVisualVerbosity(val);
+      return;
+    }
     setVerbosity(val);
     const label = VERBOSITY_OPTIONS.find(o => o.value === val)?.label ?? val;
     speakMedium(v(val, ttsStrings.settings.verbosityChanged(label)));
-  }, [setVerbosity]);
+  }, [pureWozMode, setVerbosity, speakMedium]);
 
   const handleSetPace = useCallback((val: Pace) => {
+    if (pureWozMode) {
+      setVisualPace(val);
+      return;
+    }
     setPace(val);
     speakMedium(v(verbosity, ttsStrings.settings.paceChanged(val)));
-  }, [setPace, verbosity]);
+  }, [pureWozMode, setPace, speakMedium, verbosity]);
 
   // Voice commands — LLM routes speech to these action keys
   useVoiceCommands(
-    {
-      SET_VERBOSITY_LOW:    () => handleSetVerbosity('low'),
-      SET_VERBOSITY_MEDIUM: () => handleSetVerbosity('medium'),
-      SET_VERBOSITY_HIGH:   () => handleSetVerbosity('high'),
-      SET_PACE_SLOW:        () => handleSetPace(0.5),
-      SET_PACE_NORMAL:      () => handleSetPace(1.0),
-      SET_PACE_FAST:        () => handleSetPace(1.5),
-      GO_HOME:              handleGoHome,
-      GO_BACK:              handleGoHome,
-    },
+    pureWozMode
+      ? {
+          GO_HOME: handleGoHome,
+          GO_BACK: handleGoHome,
+        }
+      : {
+          SET_VERBOSITY_LOW:    () => handleSetVerbosity('low'),
+          SET_VERBOSITY_MEDIUM: () => handleSetVerbosity('medium'),
+          SET_VERBOSITY_HIGH:   () => handleSetVerbosity('high'),
+          SET_PACE_SLOW:        () => handleSetPace(0.5),
+          SET_PACE_NORMAL:      () => handleSetPace(1.0),
+          SET_PACE_FAST:        () => handleSetPace(1.5),
+          GO_HOME:              handleGoHome,
+          GO_BACK:              handleGoHome,
+        },
     { context: 'Settings' }
   );
 
@@ -91,7 +117,7 @@ export const SettingsScreen: React.FC = () => {
           </Text>
           <View style={styles.optionRow} accessibilityRole="radiogroup">
             {VERBOSITY_OPTIONS.map(({ label, value }) => {
-              const selected = verbosity === value;
+              const selected = (pureWozMode ? visualVerbosity : verbosity) === value;
               return (
                 <Pressable
                   key={value}
@@ -119,7 +145,7 @@ export const SettingsScreen: React.FC = () => {
           </Text>
           <View style={styles.optionRow} accessibilityRole="radiogroup">
             {PACE_OPTIONS.map(({ label, value }) => {
-              const selected = pace === value;
+              const selected = (pureWozMode ? visualPace : pace) === value;
               return (
                 <Pressable
                   key={value}

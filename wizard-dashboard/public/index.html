@@ -39,8 +39,8 @@
               Separate screen: <code>Onboarding</code>
             </p>
             <button data-id="CONTINUE_FROM_ONBOARDING" data-context="Onboarding">
-              <span class="button-title">Say continue when you're ready to go to the home page.</span>
-              <span class="button-meta">Continue from onboarding</span>
+              <span class="button-title">Go to Home page</span>
+              <span class="button-meta">Go to Home page</span>
             </button>
           </div>
 
@@ -59,7 +59,7 @@
             </button>
             <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">
               <span class="button-title">Check balance is coming soon.</span>
-              <span class="button-meta">Trigger check balance placeholder</span>
+              <span class="button-meta">Trigger placeholder</span>
             </button>
           </div>
 
@@ -294,29 +294,68 @@
 
           <div class="group">
             <h3>Settings</h3>
-            <button data-id="SET_VERBOSITY_LOW" data-context="Settings">
-              <span class="button-title">Verbosity set to low.</span>
-              <span class="button-meta">Set verbosity low</span>
+            <p class="group-note">
+              Entry speech plays automatically when the settings screen opens.
+            </p>
+            <button data-id="SETTINGS_ADJUST_VERBOSITY" data-context="Settings">
+              <span class="button-title">Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.</span>
+              <span class="button-meta">Start verbosity flow</span>
             </button>
-            <button data-id="SET_VERBOSITY_MEDIUM" data-context="Settings">
-              <span class="button-title">Verbosity set to medium.</span>
-              <span class="button-meta">Set verbosity medium</span>
+            <button data-id="SETTINGS_VERBOSITY_EXAMPLE_LOW" data-context="Settings">
+              <span class="button-title">You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another example.</span>
+              <span class="button-meta">Play low example</span>
             </button>
-            <button data-id="SET_VERBOSITY_HIGH" data-context="Settings">
-              <span class="button-title">Verbosity set to high.</span>
-              <span class="button-meta">Set verbosity high</span>
+            <button data-id="SETTINGS_VERBOSITY_EXAMPLE_MEDIUM" data-context="Settings">
+              <span class="button-title">You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.</span>
+              <span class="button-meta">Play medium example</span>
             </button>
-            <button data-id="SET_PACE_SLOW" data-context="Settings">
-              <span class="button-title">Speech pace set to 0.5x.</span>
-              <span class="button-meta">Set pace slow</span>
+            <button data-id="SETTINGS_VERBOSITY_EXAMPLE_HIGH" data-context="Settings">
+              <span class="button-title">You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.</span>
+              <span class="button-meta">Play high example</span>
             </button>
-            <button data-id="SET_PACE_NORMAL" data-context="Settings">
-              <span class="button-title">Speech pace set to 1x.</span>
-              <span class="button-meta">Set pace normal</span>
+            <button data-id="SETTINGS_CHOOSE_VERBOSITY_LOW" data-context="Settings">
+              <span class="button-title">Verbosity has been set to Low. Do you want to adjust Pacing?</span>
+              <span class="button-meta">Choose low</span>
             </button>
-            <button data-id="SET_PACE_FAST" data-context="Settings">
-              <span class="button-title">Speech pace set to 1.5x.</span>
-              <span class="button-meta">Set pace fast</span>
+            <button data-id="SETTINGS_CHOOSE_VERBOSITY_MEDIUM" data-context="Settings">
+              <span class="button-title">Verbosity has been set to Medium. Do you want to adjust Pacing?</span>
+              <span class="button-meta">Choose medium</span>
+            </button>
+            <button data-id="SETTINGS_CHOOSE_VERBOSITY_HIGH" data-context="Settings">
+              <span class="button-title">Verbosity has been set to High. Do you want to adjust Pacing?</span>
+              <span class="button-meta">Choose high</span>
+            </button>
+            <button data-id="SETTINGS_PROMPT_PACING" data-context="Settings">
+              <span class="button-title">Do you want to adjust Pacing?</span>
+              <span class="button-meta">Replay pacing question</span>
+            </button>
+            <button data-id="SETTINGS_ADJUST_PACING" data-context="Settings">
+              <span class="button-title">Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.</span>
+              <span class="button-meta">Start pacing flow</span>
+            </button>
+            <button data-id="SETTINGS_PACING_EXAMPLE_SLOW" data-context="Settings">
+              <span class="button-title">You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.</span>
+              <span class="button-meta">Play slow example</span>
+            </button>
+            <button data-id="SETTINGS_PACING_EXAMPLE_MEDIUM" data-context="Settings">
+              <span class="button-title">You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.</span>
+              <span class="button-meta">Play medium pace example</span>
+            </button>
+            <button data-id="SETTINGS_PACING_EXAMPLE_HIGH" data-context="Settings">
+              <span class="button-title">You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.</span>
+              <span class="button-meta">Play high pace example</span>
+            </button>
+            <button data-id="SETTINGS_CHOOSE_PACING_SLOW" data-context="Settings">
+              <span class="button-title">Pacing has been set to Slow.</span>
+              <span class="button-meta">Choose slow pacing</span>
+            </button>
+            <button data-id="SETTINGS_CHOOSE_PACING_MEDIUM" data-context="Settings">
+              <span class="button-title">Pacing has been set to Medium.</span>
+              <span class="button-meta">Choose medium pacing</span>
+            </button>
+            <button data-id="SETTINGS_CHOOSE_PACING_HIGH" data-context="Settings">
+              <span class="button-title">Pacing has been set to High.</span>
+              <span class="button-meta">Choose high pacing</span>
             </button>
             <button data-id="RETURN_HOME_FROM_SETTINGS" data-context="Settings">
               <span class="button-title">Return to the home screen.</span>
