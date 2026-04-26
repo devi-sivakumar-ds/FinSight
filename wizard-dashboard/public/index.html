@@ -1,84 +1,49 @@
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>FinSight Wizard Dashboard</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <main class="page">
-      <header class="header">
-        <div>
-          <h1>FinSight Wizard Dashboard</h1>
-          <p>Android over USB + adb reverse</p>
-        </div>
-        <div class="status">
-          <span id="dashboard-status" class="pill">Dashboard connecting</span>
-          <span id="app-status" class="pill muted">App disconnected</span>
-        </div>
-      </header>
 
-      <section class="panel grid-two">
-        <div>
-          <h2>Session</h2>
-          <div id="session-info" class="kv"></div>
-        </div>
-        <div>
-          <h2>App State</h2>
-          <div id="app-state" class="kv"></div>
-        </div>
-      </section>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>FinSight Wizard Dashboard</title>
+  <link rel="stylesheet" href="/styles.css" />
+</head>
 
-      <section class="panel">
-        <h2>Flow Actions</h2>
-        <div class="groups">
-          <div class="group">
-            <h3>1. Onboarding</h3>
-            <p class="group-note">
-              Separate screen: <code>Onboarding</code>
-            </p>
-            <button data-id="CONTINUE_FROM_ONBOARDING" data-context="Onboarding">
-              <span class="button-title">Go to Home page</span>
-              <span class="button-meta">Go to Home page</span>
-            </button>
-          </div>
+<body>
+  <main class="page">
+    <header class="header">
+      <div>
+        <h1>FinSight Wizard Dashboard</h1>
+        <p>Android over USB + adb reverse</p>
+      </div>
+      <div class="status">
+        <span id="dashboard-status" class="pill">Dashboard connecting</span>
+        <span id="app-status" class="pill muted">App disconnected</span>
+      </div>
+    </header>
 
-          <div class="group">
-            <h3>2. Home Page</h3>
-            <p class="group-note">
-              Separate screen: <code>MainScreen</code>
-            </p>
-            <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">
-              <span class="button-title">Home page. You can say deposit a check.</span>
-              <span class="button-meta">Open deposit flow</span>
-            </button>
-            <button data-id="OPEN_SETTINGS" data-context="MainScreen">
-              <span class="button-title">Open settings.</span>
-              <span class="button-meta">Go to settings</span>
-            </button>
-            <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">
-              <span class="button-title">Check balance is coming soon.</span>
-              <span class="button-meta">Trigger placeholder</span>
-            </button>
-          </div>
+    <section class="panel grid-two">
+      <div>
+        <h2>Session</h2>
+        <div id="session-info" class="kv"></div>
+      </div>
+      <div>
+        <h2>App State</h2>
+        <div id="app-state" class="kv"></div>
+      </div>
+    </section>
 
-          <div class="group">
-            <h3>3. Deposit Overview</h3>
-            <p class="group-note">
-              Separate screen: <code>DepositOverview</code>
-            </p>
+    <section class="panel">
+      <h2>Flow Actions</h2>
+      <div class="groups">
+        <div class="group">
+          <h3>Check Deposit Flow</h3>
+
+          <div class="subgroup">
+            <h4>Overview and Privacy</h4>
             <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">
               <span class="button-title">Say continue when you're ready.</span>
               <span class="button-meta">Continue from deposit overview</span>
             </button>
-          </div>
-
-          <div class="group">
-            <h3>4. Privacy</h3>
-            <p class="group-note">
-              Separate screen: <code>DepositPrivacy</code>
-            </p>
             <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">
               <span class="button-title">Say continue to move on and choose the account for this deposit.</span>
               <span class="button-meta">Continue from privacy screen</span>
@@ -89,13 +54,11 @@
             </button>
           </div>
 
-          <div class="group">
-            <h3>5. Choose Account</h3>
-            <p class="group-note">
-              Separate screen: <code>AccountSelect</code>
-            </p>
+          <div class="subgroup">
+            <h4>Account</h4>
             <button data-id="SELECT_CHECKING" data-context="AccountSelect">
-              <span class="button-title">Please choose the account where you want to deposit this check: checking.</span>
+              <span class="button-title">Please choose the account where you want to deposit this check:
+                checking.</span>
               <span class="button-meta">Select checking account</span>
             </button>
             <button data-id="SELECT_SAVINGS" data-context="AccountSelect">
@@ -108,11 +71,8 @@
             </button>
           </div>
 
-          <div class="group">
-            <h3>6. Daily Limit</h3>
-            <p class="group-note">
-              Same screen as amount entry: <code>AmountInput</code>
-            </p>
+          <div class="subgroup">
+            <h4>Amount</h4>
             <label class="input-label">
               Amount
               <input id="amount-input" type="number" min="0" step="0.01" value="25.00" />
@@ -125,18 +85,9 @@
               <span class="button-title">Let us try that again. Please say the deposit amount.</span>
               <span class="button-meta">Replay amount prompt</span>
             </button>
-            <div class="flow-note">
-              <strong>Prompt on this same screen:</strong> The daily deposit limit is read automatically after the amount prompt.
-            </div>
-          </div>
-
-          <div class="group">
-            <h3>7. Confirm Amount</h3>
-            <p class="group-note">
-              Same screen as daily limit: <code>AmountInput</code>
-            </p>
             <button id="set-amount-confirm-btn">
-              <span class="button-title">The deposit amount is the value entered above. Is that correct? Say yes or no.</span>
+              <span class="button-title">The deposit amount is the value entered above. Is that correct? Say yes or
+                no.</span>
               <span class="button-meta">Use amount value above</span>
             </button>
             <button data-id="SET_CAPTURE_ORDER_FRONT_FIRST" data-context="AmountInput">
@@ -153,28 +104,12 @@
             </button>
           </div>
 
-          <div class="group">
-            <h3>8. Before Capture Overview</h3>
-            <p class="group-note">
-              Same screen as auto-capture: <code>CheckCapture</code>
-            </p>
+          <div class="subgroup">
+            <h4>Capture</h4>
             <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
               <span class="button-title">Place your phone on the check. Say continue when you are ready.</span>
               <span class="button-meta">Start capture guidance</span>
             </button>
-            <div class="flow-note">
-              This step advances <code>CheckCapture</code> from setup into live guidance.
-            </div>
-          </div>
-
-          <div class="group">
-            <h3>9. Auto-Capture</h3>
-            <p class="group-note">
-              Live guidance and capture on <code>CheckCapture</code>
-            </p>
-            <div class="flow-note">
-              Auto-guidance runs inside the app. The dashboard currently controls capture outcomes, not each live guidance cue.
-            </div>
             <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
               <span class="button-title">The front of your check has been captured successfully.</span>
               <span class="button-meta">Mark front captured</span>
@@ -191,27 +126,14 @@
               <span class="button-title">Failed to capture check image. Please try again.</span>
               <span class="button-meta">Open capture error screen</span>
             </button>
-          </div>
-
-          <div class="group">
-            <h3>10. Front to Back or Back to Front</h3>
-            <p class="group-note">
-              Transition screen: <code>CheckFlip</code>
-            </p>
             <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
               <span class="button-title">Say continue when you are ready.</span>
               <span class="button-meta">Continue from flip screen</span>
             </button>
-            <div class="flow-note">
-              Capture order is chosen earlier in step 7.
-            </div>
           </div>
 
-          <div class="group">
-            <h3>11. Review Amount and Details</h3>
-            <p class="group-note">
-              OCR review feeds into <code>Confirmation</code>
-            </p>
+          <div class="subgroup">
+            <h4>OCR and Confirmation</h4>
             <label class="input-label">
               Check Number
               <input id="ocr-check-number" type="text" value="1024" />
@@ -236,18 +158,9 @@
               <span class="button-title">Could not connect to the check reading service. Please try again.</span>
               <span class="button-meta">OCR fail</span>
             </button>
-            <div class="flow-note">
-              After OCR, the app shows the confirmation screen with amount and extracted details.
-            </div>
-          </div>
-
-          <div class="group">
-            <h3>12. Countdown</h3>
-            <p class="group-note">
-              Confirmation step: <code>Confirmation</code>
-            </p>
             <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">
-              <span class="button-title">Say confirm to proceed, or cancel to stop. You have 10 seconds to respond.</span>
+              <span class="button-title">Say confirm to proceed, or cancel to stop. You have 10 seconds to
+                respond.</span>
               <span class="button-meta">Submit deposit</span>
             </button>
             <button data-id="EDIT_AMOUNT" data-context="Confirmation">
@@ -258,139 +171,168 @@
               <span class="button-title">Returning to account selection.</span>
               <span class="button-meta">Edit account</span>
             </button>
-            <div class="flow-note">
-              In pure WoZ, the visible countdown is replaced by operator-controlled confirmation.
-            </div>
           </div>
 
-          <div class="group">
-            <h3>13. Complete and Summary</h3>
-            <p class="group-note">
-              Success screen: <code>Success</code>
-            </p>
+          <div class="subgroup">
+            <h4>Success</h4>
             <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">
               <span class="button-title">Your session is complete. Say done to return to the home screen.</span>
               <span class="button-meta">Finish success flow</span>
-            </button>
-            <div class="flow-note">
-              The summary details are spoken automatically on the success screen.
-            </div>
-          </div>
-
-          <div class="group">
-            <h3>14. Back to Home Page</h3>
-            <p class="group-note">
-              Available globally and after success
-            </p>
-            <button data-id="GO_HOME" data-context="global">
-              <span class="button-title">Return to the home screen.</span>
-              <span class="button-meta">Go home</span>
             </button>
             <button data-id="RETURN_HOME_FROM_SUCCESS" data-context="Success">
               <span class="button-title">Return to the home screen after the summary is complete.</span>
               <span class="button-meta">Return home from success</span>
             </button>
           </div>
+        </div>
 
-          <div class="group">
-            <h3>Settings</h3>
-            <p class="group-note">
-              Entry speech plays automatically when the settings screen opens.
-            </p>
-            <button data-id="SETTINGS_ADJUST_VERBOSITY" data-context="Settings">
-              <span class="button-title">Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.</span>
-              <span class="button-meta">Start verbosity flow</span>
+        <div class="group">
+          <h3>Settings Flow</h3>
+          <p class="group-note">
+            Entry speech plays automatically when the settings screen opens.
+          </p>
+          <button data-id="SETTINGS_REPEAT_INTRO" data-context="Settings">
+            <span class="button-title">Repeat settings intro</span>
+            <span class="button-meta">Replay the settings opening message</span>
+          </button>
+          <button data-id="SETTINGS_PROMPT_VERBOSITY" data-context="Settings">
+            <span class="button-title">Ask Verbosity</span>
+            <span class="button-meta">Do you want to adjust Verbosity?</span>
+          </button>
+          <button data-id="SETTINGS_ADJUST_VERBOSITY" data-context="Settings">
+            <span class="button-title">Start verbosity flow </span>
+            <span class="button-meta">Let me help you adjust the verbosity settings. How much detail would you like me
+              to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.</span>
+          </button>
+          <button data-id="SETTINGS_VERBOSITY_EXAMPLE_LOW" data-context="Settings">
+            <span class="button-title">Play low example</span>
+            <span class="button-meta">You've selected LOW. It sounds like this: FinSight is a voice assistant for
+              everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another
+              example.</span>
+          </button><button data-id="SETTINGS_VERBOSITY_EXAMPLE_MEDIUM" data-context="Settings">
+            <span class="button-title">Play medium example</span>
+            <span class="button-meta">You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for everyday
+              banking, designed for blind and low-vision users.(Sonic Sound) Say choose Medium to select this, or say Low or High
+              to hear another example.</span>
+          </button>
+          <button data-id="SETTINGS_VERBOSITY_EXAMPLE_HIGH" data-context="Settings">
+            <span class="button-title">Play high example</span>
+            <span class="button-meta">You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking assistant
+              designed for blind and low-vision users, helping you complete everyday banking tasks independently and with
+              confidence.(Sonic Sound) Say 'choose High to select this, or say Low or Medium to hear another example.</span>
+          </button>
+          <button data-id="SETTINGS_CHOOSE_VERBOSITY" data-context="Settings">
+            <span class="button-title">Confirm selected verbosity</span>
+            <span class="button-meta">Verbosity has been set to the currently selected level.</span>
+          </button>
+          <button data-id="SETTINGS_PROMPT_PACING" data-context="Settings">
+            <span class="button-title">Ask Pacing</span>
+            <span class="button-meta">Do you want to adjust Pacing?</span>
+          </button>
+          <button data-id="SETTINGS_ADJUST_PACING" data-context="Settings">
+            <span class="button-title">Start pacing flow</span>
+            <span class="button-meta">
+              Let me help you adjust the pacing. There are three options: 0.5x, 1.0x, and 1.5x. Say the option you would like to hear an example of.
+            </span>
+          </button>
+          <button data-id="SETTINGS_PACING_EXAMPLE_SLOW" data-context="Settings">
+            <span class="button-title">Play slow example</span>
+            <span class="button-meta">
+              You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
+              'choose 0.5x' to select this, or say '1.0x' or '1.5x' to hear another example.
+            </span>
+          </button>
+          <button data-id="SETTINGS_PACING_EXAMPLE_MEDIUM" data-context="Settings">
+            <span class="button-title">Play medium example</span>
+            <span class="button-meta">
+              You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
+              'choose 1.0x' to select this, or say '0.5x' or '1.5x' to hear another example.
+            </span>
+          </button>
+          <button data-id="SETTINGS_PACING_EXAMPLE_HIGH" data-context="Settings">
+            <span class="button-title">Play high pace example</span>
+            <span class="button-meta">You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for everyday
+              banking.' (Sonic Sound) Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another example.</span>
+          </button>
+          <button data-id="SETTINGS_CHOOSE_PACING" data-context="Settings">
+            <span class="button-title">Confirm selected pacing</span>
+            <span class="button-meta">Pacing has been set to the selected level.</span>
+          </button>
+          <button data-id="SETTINGS_SAVE_PREFERENCES" data-context="Settings">
+            <span class="button-title">Save preferences</span>
+            <span class="button-meta">Your preferences have been saved. I will speak at the selected speed with the selected detail level. Say “verbosity” or “pacing” to make changes, or say “go home.”</span>
+          </button>
+        </div>
+
+        <div class="group">
+          <h3>Operator Controls</h3>
+
+          <div class="subgroup">
+            <h4>Onboarding and Home</h4>
+            <button data-id="CONTINUE_FROM_ONBOARDING" data-context="Onboarding">
+              <span class="button-title">Go to Home page</span>
+              <span class="button-meta">Go to Home page</span>
             </button>
-            <button data-id="SETTINGS_VERBOSITY_EXAMPLE_LOW" data-context="Settings">
-              <span class="button-title">You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another example.</span>
-              <span class="button-meta">Play low example</span>
+            <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">
+              <span class="button-title">Open check deposit</span>
+              <span class="button-meta">Open check deposit flow</span>
             </button>
-            <button data-id="SETTINGS_VERBOSITY_EXAMPLE_MEDIUM" data-context="Settings">
-              <span class="button-title">You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.</span>
-              <span class="button-meta">Play medium example</span>
+            <button data-id="OPEN_SETTINGS" data-context="MainScreen">
+              <span class="button-title">Open settings.</span>
+              <span class="button-meta">Go to settings</span>
             </button>
-            <button data-id="SETTINGS_VERBOSITY_EXAMPLE_HIGH" data-context="Settings">
-              <span class="button-title">You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.</span>
-              <span class="button-meta">Play high example</span>
-            </button>
-            <button data-id="SETTINGS_CHOOSE_VERBOSITY_LOW" data-context="Settings">
-              <span class="button-title">Verbosity has been set to Low. Do you want to adjust Pacing?</span>
-              <span class="button-meta">Choose low</span>
-            </button>
-            <button data-id="SETTINGS_CHOOSE_VERBOSITY_MEDIUM" data-context="Settings">
-              <span class="button-title">Verbosity has been set to Medium. Do you want to adjust Pacing?</span>
-              <span class="button-meta">Choose medium</span>
-            </button>
-            <button data-id="SETTINGS_CHOOSE_VERBOSITY_HIGH" data-context="Settings">
-              <span class="button-title">Verbosity has been set to High. Do you want to adjust Pacing?</span>
-              <span class="button-meta">Choose high</span>
-            </button>
-            <button data-id="SETTINGS_PROMPT_PACING" data-context="Settings">
-              <span class="button-title">Do you want to adjust Pacing?</span>
-              <span class="button-meta">Replay pacing question</span>
-            </button>
-            <button data-id="SETTINGS_ADJUST_PACING" data-context="Settings">
-              <span class="button-title">Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.</span>
-              <span class="button-meta">Start pacing flow</span>
-            </button>
-            <button data-id="SETTINGS_PACING_EXAMPLE_SLOW" data-context="Settings">
-              <span class="button-title">You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.</span>
-              <span class="button-meta">Play slow example</span>
-            </button>
-            <button data-id="SETTINGS_PACING_EXAMPLE_MEDIUM" data-context="Settings">
-              <span class="button-title">You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.</span>
-              <span class="button-meta">Play medium pace example</span>
-            </button>
-            <button data-id="SETTINGS_PACING_EXAMPLE_HIGH" data-context="Settings">
-              <span class="button-title">You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.</span>
-              <span class="button-meta">Play high pace example</span>
-            </button>
-            <button data-id="SETTINGS_CHOOSE_PACING_SLOW" data-context="Settings">
-              <span class="button-title">Pacing has been set to Slow.</span>
-              <span class="button-meta">Choose slow pacing</span>
-            </button>
-            <button data-id="SETTINGS_CHOOSE_PACING_MEDIUM" data-context="Settings">
-              <span class="button-title">Pacing has been set to Medium.</span>
-              <span class="button-meta">Choose medium pacing</span>
-            </button>
-            <button data-id="SETTINGS_CHOOSE_PACING_HIGH" data-context="Settings">
-              <span class="button-title">Pacing has been set to High.</span>
-              <span class="button-meta">Choose high pacing</span>
-            </button>
-            <button data-id="RETURN_HOME_FROM_SETTINGS" data-context="Settings">
-              <span class="button-title">Return to the home screen.</span>
-              <span class="button-meta">Leave settings</span>
+            <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">
+              <span class="button-title">Trigger placeholder</span>
+              <span class="button-meta">Trigger placeholder for other tasks</span>
             </button>
           </div>
 
-          <div class="group">
-            <h3>Global Navigation</h3>
+          <div class="subgroup">
+            <h4>Global Controls</h4>
             <button data-id="GO_BACK" data-context="global">
-              <span class="button-title">Go back one screen.</span>
-              <span class="button-meta">Global back</span>
+              <span class="button-title">Go back to the previous screen in the flow.</span>
+              <span class="button-meta">Go back</span>
             </button>
+            <button data-id="SAY_NEED_MORE_TIME" data-context="global">
+              <span class="button-title">Do you need more time?</span>
+              <span class="button-meta">Speak more-time prompt</span>
+            </button>
+            <button data-id="SAY_DIDNT_CATCH" data-context="global">
+              <span class="button-title">I didn't catch that.</span>
+              <span class="button-meta">Speak did-not-catch prompt</span>
+            </button>
+            <button data-id="GO_HOME" data-context="global">
+              <span class="button-title">Return to the home screen.</span>
+              <span class="button-meta">Go home</span>
+            </button>
+          </div>
+
+          <div class="subgroup">
+            <h3>Close Flow</h3>
             <button data-id="CLOSE_FLOW" data-context="global">
               <span class="button-title">Close the current flow.</span>
               <span class="button-meta">Close modal flow</span>
             </button>
           </div>
         </div>
-      </section>
+      </div>
+    </section>
 
-      <section class="panel">
-        <h2>Event Log</h2>
-        <div class="note-bar">
-          <label class="input-label grow">
-            Operator Note
-            <input id="note-input" type="text" placeholder="Add a note to the current session log" />
-          </label>
-          <button id="save-note-btn" class="secondary">Save Note</button>
-        </div>
-        <p id="log-path" class="log-path">Session log file: waiting for app session</p>
-        <ul id="event-log" class="log"></ul>
-      </section>
-    </main>
+    <section class="panel">
+      <h2>Event Log</h2>
+      <div class="note-bar">
+        <label class="input-label grow">
+          Operator Note
+          <input id="note-input" type="text" placeholder="Add a note to the current session log" />
+        </label>
+        <button id="save-note-btn" class="secondary">Save Note</button>
+      </div>
+      <p id="log-path" class="log-path">Session log file: waiting for app session</p>
+      <ul id="event-log" class="log"></ul>
+    </section>
+  </main>
 
-    <script src="/app.js"></script>
-  </body>
-  </html>
+  <script src="/app.js"></script>
+</body>
+
+</html>

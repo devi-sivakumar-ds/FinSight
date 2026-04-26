@@ -78,6 +78,19 @@ body {
   margin-top: 0;
 }
 
+.subgroup + .subgroup {
+  margin-top: 18px;
+  padding-top: 18px;
+  border-top: 1px solid #2a2a2a;
+}
+
+.subgroup h4 {
+  margin: 0 0 10px;
+  color: #d1d5db;
+  font-size: 14px;
+  font-weight: 700;
+}
+
 .group-note {
   margin: -4px 0 12px;
   color: #9ca3af;

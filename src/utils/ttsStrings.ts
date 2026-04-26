@@ -61,12 +61,16 @@ export const ttsStrings = {
     } as VStr,
     verbosityExampleMedium: {
       low:    'Medium example.',
-      medium: "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.",
+      medium: `You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for everyday
+              banking, designed for blind and low-vision users.(Sonic Sound) Say choose Medium to select this, or say Low or High
+              to hear another example.`,
       high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.",
     } as VStr,
     verbosityExampleHigh: {
       low:    'High example.',
-      medium: "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.",
+      medium: `You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking assistant
+              designed for blind and low-vision users, helping you complete everyday banking tasks independently and with
+              confidence.(Sonic Sound) Say 'choose High to select this, or say Low or Medium to hear another example.`,
       high:   "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.",
     } as VStr,
     verbosityChanged: (label: string): VStr => ({
@@ -79,6 +83,16 @@ export const ttsStrings = {
       medium: `Verbosity has been set to ${label}.`,
       high:   `Verbosity has been set to ${label}.`,
     }),
+    preferencesSaved: (paceLabel: string, verbosityLabel: string): VStr => ({
+      low:    `${paceLabel}. ${verbosityLabel}.`,
+      medium: `Your preferences have been saved. I will speak at ${paceLabel} speed with ${verbosityLabel} detail. Say "verbosity" or "pacing" to make changes, or say "go home."`,
+      high:   `Your preferences have been saved. I will speak at ${paceLabel} speed with ${verbosityLabel} detail. Say "verbosity" or "pacing" to make changes, or say "go home."`,
+    }),
+    verbosityOffer: {
+      low:    'Adjust verbosity?',
+      medium: 'Do you want to adjust Verbosity?',
+      high:   'Do you want to adjust Verbosity?',
+    } as VStr,
     pacingOffer: {
       low:    'Adjust pacing?',
       medium: 'Do you want to adjust Pacing?',
@@ -86,22 +100,25 @@ export const ttsStrings = {
     } as VStr,
     pacingIntro: {
       low:    'Pacing settings.',
-      medium: "Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.",
+      medium: `Let me help you adjust the pacing. There are three options: 0.5x, 1.0x, and 1.5x. Say the option you would like to hear an example of.`,
       high:   "Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.",
     } as VStr,
     pacingExampleSlow: {
       low:    'Slow example.',
-      medium: "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.",
+      medium: `You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
+              'choose 0.5x' to select this, or say '1.0x' or '1.5x' to hear another example.`,
       high:   "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.",
     } as VStr,
     pacingExampleMedium: {
       low:    'Medium pace example.',
-      medium: "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.",
+      medium: `You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
+              'choose 1.0x' to select this, or say '0.5x' or '1.5x' to hear another example.`,
       high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.",
     } as VStr,
     pacingExampleHigh: {
       low:    'High pace example.',
-      medium: "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.",
+      medium: `You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for everyday
+              banking.' (Sonic Sound) Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another example.`,
       high:   "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.",
     } as VStr,
     paceChanged: (pace: number): VStr => ({

@@ -34,6 +34,7 @@ export interface TTSMessage {
   text: string;
   priority: TTSPriority;
   interrupt?: boolean;
+  rateOverride?: number;
 }
 
 // Haptic Feedback System

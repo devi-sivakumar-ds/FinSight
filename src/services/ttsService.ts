@@ -42,7 +42,8 @@ class TTSService {
   public async speak(
     text: string,
     priority: TTSPriority = TTSPriority.MEDIUM,
-    interrupt: boolean = false
+    interrupt: boolean = false,
+    rateOverride?: number
   ): Promise<void> {
     // If screen reader is active, suppress our TTS to avoid double-speaking
     if (this.screenReaderEnabled) {
@@ -50,7 +51,9 @@ class TTSService {
       return;
     }
 
-    const message: TTSMessage = { text, priority, interrupt };
+    const message: TTSMessage = { text, priority, interrupt, rateOverride } as TTSMessage & {
+      rateOverride?: number;
+    };
 
     // Handle interruption for CRITICAL priority
     if (interrupt || priority === TTSPriority.CRITICAL) {
@@ -122,7 +125,9 @@ class TTSService {
   /**
    * Speak a single message
    */
-  private async speakMessage(message: TTSMessage): Promise<void> {
+  private async speakMessage(
+    message: TTSMessage & { rateOverride?: number }
+  ): Promise<void> {
     return new Promise((resolve) => {
       console.log('[TTS] Speaking:', message.text);
 
@@ -133,7 +138,7 @@ class TTSService {
       };
 
       Speech.speak(message.text, {
-        rate: this.rate,
+        rate: message.rateOverride ?? this.rate,
         pitch: this.pitch,
         onStart: () => {
           this.onSpeakStartCb?.();
@@ -250,6 +255,13 @@ class TTSService {
    */
   public speakCritical(text: string): Promise<void> {
     return this.speak(text, TTSPriority.CRITICAL, true);
+  }
+
+  /**
+   * Convenience method: Speak with MEDIUM priority at a temporary rate.
+   */
+  public speakMediumAtRate(text: string, rate: number): Promise<void> {
+    return this.speak(text, TTSPriority.MEDIUM, false, rate);
   }
 }
 

@@ -131,7 +131,14 @@ const TabNavigator: React.FC = () => {
 
 export const AppNavigator: React.FC = () => {
   const navigationRef = useNavigationContainerRef<RootStackParamList>();
-  const { verbosity, pace, setVerbosity, setPace } = useVoiceSettings();
+  const {
+    verbosity,
+    pace,
+    visualVerbosity,
+    visualPace,
+    setVisualVerbosity,
+    setVisualPace,
+  } = useVoiceSettings();
 
   const reportWizardState = useCallback((lastCommandId?: string) => {
     if (!isPureWozMode()) return;
@@ -214,8 +221,10 @@ export const AppNavigator: React.FC = () => {
       executeWizardCommand(command, {
         navigationRef,
         verbosity,
-        setVerbosity,
-        setPace,
+        visualVerbosity,
+        visualPace,
+        setVisualVerbosity,
+        setVisualPace,
       });
 
       setTimeout(() => {
@@ -228,7 +237,15 @@ export const AppNavigator: React.FC = () => {
       unsubscribeCommands();
       wizardClient.stop();
     };
-  }, [reportWizardState]);
+  }, [
+    reportWizardState,
+    navigationRef,
+    verbosity,
+    visualVerbosity,
+    visualPace,
+    setVisualVerbosity,
+    setVisualPace,
+  ]);
 
   useEffect(() => {
     reportWizardState();

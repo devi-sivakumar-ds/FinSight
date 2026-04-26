@@ -37,18 +37,18 @@ const PACE_OPTIONS: { label: string; value: Pace }[] = [
 
 export const SettingsScreen: React.FC = () => {
   const { speakMedium } = useTTS();
-  const { verbosity, pace, setVerbosity, setPace } = useVoiceSettings();
+  const {
+    verbosity,
+    pace,
+    visualVerbosity,
+    visualPace,
+    setVerbosity,
+    setPace,
+    setVisualVerbosity,
+    setVisualPace,
+  } = useVoiceSettings();
   const navigation = useNavigation();
   const pureWozMode = isPureWozMode();
-  const [visualVerbosity, setVisualVerbosity] = React.useState<Verbosity>(verbosity);
-  const [visualPace, setVisualPace] = React.useState<Pace>(pace);
-
-  useEffect(() => {
-    if (!pureWozMode) {
-      setVisualVerbosity(verbosity);
-      setVisualPace(pace);
-    }
-  }, [pace, pureWozMode, verbosity]);
 
   // Announce current settings + voice options on mount
   useEffect(() => {
@@ -70,7 +70,7 @@ export const SettingsScreen: React.FC = () => {
     setVerbosity(val);
     const label = VERBOSITY_OPTIONS.find(o => o.value === val)?.label ?? val;
     speakMedium(v(val, ttsStrings.settings.verbosityChanged(label)));
-  }, [pureWozMode, setVerbosity, speakMedium]);
+  }, [pureWozMode, setVerbosity, setVisualVerbosity, speakMedium]);
 
   const handleSetPace = useCallback((val: Pace) => {
     if (pureWozMode) {
@@ -79,7 +79,7 @@ export const SettingsScreen: React.FC = () => {
     }
     setPace(val);
     speakMedium(v(verbosity, ttsStrings.settings.paceChanged(val)));
-  }, [pureWozMode, setPace, speakMedium, verbosity]);
+  }, [pureWozMode, setPace, setVisualPace, speakMedium, verbosity]);
 
   // Voice commands — LLM routes speech to these action keys
   useVoiceCommands(
