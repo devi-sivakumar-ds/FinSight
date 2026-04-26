@@ -16,10 +16,9 @@ import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import ttsService from '@services/ttsService';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
@@ -41,7 +40,6 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     amount,
   } = route.params;
   const { speakMedium } = useTTS();
-  const { voiceState } = useAlwaysOnVoice();
   const { verbosity } = useVoiceSettings();
   const nextSideLabel = nextSide === 'front' ? 'front' : 'back';
   const capturedSideLabel = capturedSide === 'front' ? 'Front' : 'Back';
@@ -137,10 +135,6 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say continue when you are ready."
-        />
         <AccessibleButton
           label={`Capture ${nextSideLabel}`}
           onPress={proceedToBackSide}
@@ -148,6 +142,9 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.readyButton}
           accessibilityHint={`Proceed to capture the ${nextSideLabel} side of the check`}
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -225,6 +222,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 16,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   readyButton: {
     width: '100%',

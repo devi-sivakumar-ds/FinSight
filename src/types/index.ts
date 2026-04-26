@@ -147,6 +147,7 @@ export type DepositStackParamList = {
     side: 'front' | 'back';
     frontImageUri?: string; // Present when capturing back side
     backImageUri?: string; // Present when capturing front side second
+    autoStart?: boolean;
   };
   CheckFlip: {
     capturedImageUri: string;
@@ -183,6 +184,7 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   TabNavigator: undefined;
   DepositFlow: undefined;
 };

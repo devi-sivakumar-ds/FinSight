@@ -12,7 +12,7 @@ import {
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { MainScreen, SettingsScreen } from '@screens';
+import { MainScreen, OnboardingScreen, SettingsScreen } from '@screens';
 import { DepositNavigator } from './DepositNavigator';
 import { RootStackParamList, TabParamList } from '@/types/index';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
@@ -46,6 +46,8 @@ function getActiveRouteChain(state: NavigationState | undefined): string[] {
 
 function getWizardContextFromRoute(routeName?: string): WizardCommandContext {
   switch (routeName) {
+    case 'Onboarding':
+      return 'Onboarding';
     case 'Tasks':
       return 'MainScreen';
     case 'Settings':
@@ -239,11 +241,13 @@ export const AppNavigator: React.FC = () => {
       onStateChange={() => reportWizardState()}
     >
       <RootStack.Navigator
+        initialRouteName="Onboarding"
         screenOptions={{
           headerShown: false,
           presentation: 'card',
         }}
       >
+        <RootStack.Screen name="Onboarding" component={OnboardingScreen} />
         <RootStack.Screen name="TabNavigator" component={TabNavigator} />
         <RootStack.Screen
           name="DepositFlow"

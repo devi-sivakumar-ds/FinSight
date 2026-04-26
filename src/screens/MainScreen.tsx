@@ -1,73 +1,68 @@
-// ============================================================================
-// MainScreen Component
-// Main screen with 4 task cards — always-on voice, no mic button
-// ============================================================================
-
 import React, { useEffect } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   Pressable,
   SafeAreaView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
 import { StackNavigationProp } from '@react-navigation/stack';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { RootStackParamList } from '@/types/index';
-import { COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
+import { COLORS, DARK_COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 
 type MainNavProp = StackNavigationProp<RootStackParamList>;
 
 interface TaskCardProps {
   title: string;
+  subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   backgroundColor: string;
-  textColor: string;
   onPress: () => void;
   accessibilityHint: string;
 }
 
 const TaskCard: React.FC<TaskCardProps> = ({
   title,
+  subtitle,
   icon,
   backgroundColor,
-  textColor,
   onPress,
   accessibilityHint,
 }) => {
   const { selection } = useHaptics();
 
-  const handlePress = () => {
-    selection();
-    onPress();
-  };
-
   return (
     <Pressable
-      accessible={true}
+      accessible
       accessibilityRole="button"
       accessibilityLabel={title}
       accessibilityHint={accessibilityHint}
-      onPress={handlePress}
+      onPress={() => {
+        selection();
+        onPress();
+      }}
       style={({ pressed }) => [
         styles.taskCard,
         { backgroundColor },
         pressed && styles.taskCardPressed,
       ]}
     >
-      <View style={styles.taskCardIcon}>
-        <Ionicons name={icon} size={36} color={textColor} />
+      <View style={styles.taskIconWrap}>
+        <Ionicons name={icon} size={24} color="#1b1b1b" />
       </View>
-      <Text style={[styles.taskCardText, { color: textColor }]}>{title}</Text>
+      <View style={styles.taskTextWrap}>
+        <Text style={styles.taskTitle}>{title}</Text>
+        <Text style={styles.taskSubtitle}>“{subtitle}”</Text>
+      </View>
     </Pressable>
   );
 };
@@ -80,7 +75,7 @@ export const MainScreen: React.FC = () => {
 
   useEffect(() => {
     speakMedium(v(verbosity, ttsStrings.main.welcome));
-  }, []);
+  }, [speakMedium, verbosity]);
 
   const handleDepositCheck = () => {
     navigation.navigate('DepositFlow');
@@ -102,7 +97,6 @@ export const MainScreen: React.FC = () => {
     navigation.navigate('Settings' as any);
   };
 
-  // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
     {
       DEPOSIT_CHECK: handleDepositCheck,
@@ -114,74 +108,72 @@ export const MainScreen: React.FC = () => {
     { context: 'MainScreen' }
   );
 
+  const statusText =
+    voiceState === 'listening'
+      ? 'Listening...'
+      : voiceState === 'processing'
+        ? 'Processing...'
+        : voiceState === 'paused'
+          ? 'Speaking...'
+          : "Didn't catch that.";
+
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        accessibilityRole="scrollbar"
-      >
-        {/* Header */}
-        <View style={styles.header}>
-          <Text
-            style={styles.title}
-            accessible={true}
-            accessibilityRole="header"
+      <View style={styles.content}>
+        <View style={styles.topBar}>
+          <View style={styles.timeStub} />
+          <Pressable
+            accessible
+            accessibilityRole="button"
+            accessibilityLabel="Open settings"
+            onPress={handleOpenSettings}
+            style={({ pressed }) => [styles.settingsButton, pressed && styles.settingsButtonPressed]}
           >
-            Welcome to FinSight
-          </Text>
-          <Text style={styles.subtitle}>
-            Always listening — just speak a command
-          </Text>
+            <Ionicons name="settings-outline" size={26} color={DARK_COLORS.TEXT_PRIMARY} />
+          </Pressable>
         </View>
 
-        {/* Try Saying Section */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Try saying</Text>
+        <Text style={styles.title} accessibilityRole="header">
+          What would you like to do today?
+        </Text>
 
-          {/* Task Grid */}
-          <View style={styles.taskGrid}>
-            <TaskCard
-              title="Send money"
-              icon="send"
-              backgroundColor={COLORS.BLUE_50}
-              textColor={COLORS.BLUE_600}
-              onPress={handleSendMoney}
-              accessibilityHint="Opens send money workflow"
-            />
-            <TaskCard
-              title="Check balance"
-              icon="wallet"
-              backgroundColor={COLORS.GREEN_50}
-              textColor={COLORS.GREEN_600}
-              onPress={handleCheckBalance}
-              accessibilityHint="Shows your account balances"
-            />
-            <TaskCard
-              title="Deposit a check"
-              icon="document-text"
-              backgroundColor={COLORS.ORANGE_50}
-              textColor={COLORS.ORANGE_600}
-              onPress={handleDepositCheck}
-              accessibilityHint="Opens check deposit workflow"
-            />
-            <TaskCard
-              title="Transfer money"
-              icon="swap-horizontal"
-              backgroundColor={COLORS.VIOLET_50}
-              textColor={COLORS.VIOLET_600}
-              onPress={handleTransferMoney}
-              accessibilityHint="Opens transfer money workflow"
-            />
-          </View>
+        <View style={styles.cards}>
+          <TaskCard
+            title="View account balance"
+            subtitle="Show my account balance"
+            icon="wallet-outline"
+            backgroundColor="#D4E8A6"
+            onPress={handleCheckBalance}
+            accessibilityHint="Shows your account balances"
+          />
+          <TaskCard
+            title="Send money"
+            subtitle="Send money to my friend"
+            icon="cash-outline"
+            backgroundColor="#79AFF5"
+            onPress={handleSendMoney}
+            accessibilityHint="Opens send money workflow"
+          />
+          <TaskCard
+            title="Deposit a check"
+            subtitle="I want to deposit a check"
+            icon="create-outline"
+            backgroundColor="#FBCB86"
+            onPress={handleDepositCheck}
+            accessibilityHint="Opens check deposit workflow"
+          />
         </View>
-      </ScrollView>
 
-      {/* Always-on voice status strip */}
-      <View style={styles.voiceBannerContainer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say a command — deposit, balance, send, or transfer."
-        />
+        <Pressable
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel="Voice command"
+          accessibilityHint="Use a voice command or select one of the options above"
+          onPress={() => {}}
+          style={({ pressed }) => [styles.micButton, pressed && styles.micButtonPressed]}
+        >
+          <VisualMic size="large" />
+        </Pressable>
       </View>
     </SafeAreaView>
   );
@@ -190,79 +182,113 @@ export const MainScreen: React.FC = () => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: COLORS.WHITE,
+    backgroundColor: DARK_COLORS.BG,
   },
-  scrollContent: {
-    flexGrow: 1,
-    paddingTop: 62,
-    paddingBottom: 100, // Space for voice banner
+  content: {
+    flex: 1,
+    paddingHorizontal: 20,
+    paddingTop: 18,
+    paddingBottom: 28,
   },
-  header: {
-    paddingHorizontal: 21,
-    paddingVertical: 48,
-    gap: 16,
+  topBar: {
+    minHeight: 40,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 26,
+  },
+  timeStub: {
+    width: 40,
+  },
+  settingsButton: {
+    width: MIN_TOUCH_TARGET_SIZE,
+    height: MIN_TOUCH_TARGET_SIZE,
+    borderRadius: MIN_TOUCH_TARGET_SIZE / 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  settingsButtonPressed: {
+    opacity: 0.7,
   },
   title: {
-    fontSize: 34,
+    fontSize: 38,
     fontWeight: 'bold',
-    color: COLORS.GRAY_900,
-    textAlign: 'center',
-    letterSpacing: -0.34,
-    lineHeight: 42,
+    color: DARK_COLORS.TEXT_PRIMARY,
+    lineHeight: 44,
+    letterSpacing: -0.8,
+    marginBottom: 28,
+    maxWidth: 300,
   },
-  subtitle: {
-    fontSize: 22,
-    color: COLORS.GRAY_700,
-    textAlign: 'center',
-    lineHeight: 31,
-  },
-  section: {
-    paddingHorizontal: 21,
-    gap: 16,
-  },
-  sectionTitle: {
-    fontSize: 22,
-    fontWeight: '600',
-    color: COLORS.GRAY_900,
-    textAlign: 'center',
-  },
-  taskGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 20,
+  cards: {
+    gap: 18,
   },
   taskCard: {
-    width: '47%',
-    height: 146,
-    borderRadius: 20,
-    padding: 20,
-    gap: 18,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 18,
+    paddingHorizontal: 18,
+    paddingVertical: 18,
+    gap: 14,
   },
   taskCardPressed: {
-    opacity: 0.8,
-    transform: [{ scale: 0.98 }],
+    opacity: 0.9,
+    transform: [{ scale: 0.985 }],
   },
-  taskCardIcon: {
-    width: 36,
-    height: 36,
+  taskIconWrap: {
+    width: 42,
+    height: 42,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  taskCardText: {
-    fontSize: 24,
-    fontWeight: '600',
-    lineHeight: 29,
+  taskTextWrap: {
     flex: 1,
   },
-  voiceBannerContainer: {
-    paddingHorizontal: 21,
-    paddingBottom: 24,
-    paddingTop: 8,
-    backgroundColor: COLORS.WHITE,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.GRAY_200,
+  taskTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#161616',
+    lineHeight: 24,
+    marginBottom: 4,
+  },
+  taskSubtitle: {
+    fontSize: 14,
+    fontStyle: 'italic',
+    color: 'rgba(22,22,22,0.8)',
+    lineHeight: 18,
+  },
+  listeningCard: {
+    marginTop: 28,
+    borderRadius: 18,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+    backgroundColor: '#2A2A2A',
+    borderWidth: 1,
+    borderColor: '#5A5A5A',
+    shadowColor: '#fff',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.12,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  listeningStatus: {
+    fontSize: 18,
+    color: DARK_COLORS.TEXT_SECONDARY,
+    marginBottom: 6,
+  },
+  listeningTranscript: {
+    fontSize: 30,
+    color: DARK_COLORS.TEXT_PRIMARY,
+    lineHeight: 34,
+  },
+  micButton: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'center',
+    marginTop: 22,
+  },
+  micButtonPressed: {
+    transform: [{ scale: 0.97 }],
+    opacity: 0.92,
   },
 });

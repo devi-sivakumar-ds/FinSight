@@ -17,11 +17,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { DepositStackParamList, Account } from '@/types/index';
 import { ScreenHeader } from '@components/ScreenHeader';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import { formatCurrencyForSpeech } from '@utils/accessibility';
@@ -38,7 +37,6 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
-  const { voiceState } = useAlwaysOnVoice();
   const { verbosity } = useVoiceSettings();
 
   // Load accounts and announce
@@ -192,10 +190,6 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Choose checking or savings, then say continue."
-        />
         <AccessibleButton
           label="Continue"
           onPress={handleContinue}
@@ -204,6 +198,9 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.continueBtn}
           accessibilityHint="Proceed to enter deposit amount"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -255,5 +252,6 @@ const styles = StyleSheet.create({
   accountBalance: { fontSize: 16, color: DARK_COLORS.TEXT_SECONDARY },
   separator: { height: 12 },
   footer: { paddingHorizontal: 21, paddingBottom: 24, paddingTop: 12, gap: 12 },
+  micWrap: { alignItems: 'center', paddingTop: 8 },
   continueBtn: { width: '100%' },
 });

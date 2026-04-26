@@ -78,6 +78,29 @@ body {
   margin-top: 0;
 }
 
+.group-note {
+  margin: -4px 0 12px;
+  color: #9ca3af;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.flow-note {
+  margin: 0 0 10px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: #171717;
+  border: 1px solid #343434;
+  color: #d1d5db;
+  font-size: 13px;
+  line-height: 1.45;
+}
+
+.flow-note code,
+.group-note code {
+  color: #f3f4f6;
+}
+
 button {
   width: 100%;
   margin-bottom: 10px;
@@ -88,10 +111,27 @@ button {
   color: white;
   font-weight: 600;
   cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 button:hover {
   opacity: 0.92;
+}
+
+.button-title {
+  display: block;
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.button-meta {
+  display: block;
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.78);
 }
 
 button.secondary {

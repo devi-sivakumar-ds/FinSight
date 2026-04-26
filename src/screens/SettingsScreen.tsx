@@ -15,9 +15,8 @@ import {
 import { useNavigation } from '@react-navigation/native';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import type { Verbosity } from '@utils/ttsStrings';
@@ -38,7 +37,6 @@ const PACE_OPTIONS: { label: string; value: Pace }[] = [
 export const SettingsScreen: React.FC = () => {
   const { speakMedium } = useTTS();
   const { verbosity, pace, setVerbosity, setPace } = useVoiceSettings();
-  const { voiceState } = useAlwaysOnVoice();
   const navigation = useNavigation();
 
   // Announce current settings + voice options on mount
@@ -142,12 +140,9 @@ export const SettingsScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Voice banner */}
+      {/* Visual mic */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say 'set verbosity low/medium/high' or 'set pace slow/normal/fast'."
-        />
+        <VisualMic size="small" />
       </View>
     </SafeAreaView>
   );

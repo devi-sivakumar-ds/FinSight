@@ -23,6 +23,15 @@ export function v(verbosity: Verbosity, strings: VStr): string {
 
 export const ttsStrings = {
 
+  // ── Onboarding ─────────────────────────────────────────────────────────────
+  onboarding: {
+    welcome: {
+      low:    'Welcome to FinSight.',
+      medium: 'Welcome to FinSight. FinSight is your AI voice assistant that helps you navigate your everyday banking tasks. I will guide you through everything by voice. Your voice is processed in real time to respond to your commands and is never recorded or stored.',
+      high:   'Welcome to FinSight. FinSight is your voice-guided banking assistant. I will guide you through your everyday banking tasks by voice. Your voice is processed in real time to respond to your commands and is never recorded or stored. Say continue when you are ready to go to the home page.',
+    } as VStr,
+  },
+
   // ── Settings ───────────────────────────────────────────────────────────────
   settings: {
     screenAnnounce: (currentVerbosity: string, currentPace: number): VStr => ({
@@ -45,9 +54,9 @@ export const ttsStrings = {
   // ── Main screen ────────────────────────────────────────────────────────────
   main: {
     welcome: {
-      low:    'Listening.',
-      medium: 'Welcome to FinSight. FinSight is your AI voice assistant that helps you navigate your everyday banking  tasks. I will guide you through everything by voice. Your voice is processed in real time to respond to your commands and is never recorded or stored.',
-      high:   'Welcome to FinSight, your voice-guided banking assistant. I am listening. You can say: deposit a check, check your balance, send money, or transfer money between accounts.',
+      low:    'Home page.',
+      medium: 'What would you like to do today? You can say a specific banking task in mind, ask me to read menu for all possible tasks, or you can adjust voice setting.',
+      high:   'What would you like to do today? You can say a specific banking task in mind, ask me to read menu for all possible tasks, or you can adjust voice setting.',
     } as VStr,
     featureComingSoon: (feature: string): VStr => ({
       low:    'Coming soon.',

@@ -7,6 +7,7 @@
 
 export type WizardCommandContext =
   | 'global'
+  | 'Onboarding'
   | 'MainScreen'
   | 'DepositOverview'
   | 'DepositPrivacy'
@@ -55,6 +56,10 @@ export const wizardCommands = {
     cmd('GO_BACK', 'Go Back', 'global', 'none', 'Go back one screen when supported.'),
   ],
 
+  onboarding: [
+    cmd('CONTINUE_FROM_ONBOARDING', 'Continue', 'Onboarding'),
+  ],
+
   main: [
     cmd('OPEN_DEPOSIT_FLOW', 'Open Deposit Flow', 'MainScreen'),
     cmd('OPEN_SETTINGS', 'Open Settings', 'MainScreen'),
@@ -93,6 +98,7 @@ export const wizardCommands = {
   ],
 
   checkCapture: [
+    cmd('START_CAPTURE_GUIDANCE', 'Start Capture Guidance', 'CheckCapture'),
     cmd('CAPTURE_FRONT_SUCCESS', 'Front Captured', 'CheckCapture'),
     cmd('CAPTURE_BACK_SUCCESS', 'Back Captured', 'CheckCapture'),
     cmd('CAPTURE_RETRY', 'Retry Capture', 'CheckCapture'),
@@ -143,6 +149,7 @@ export const wizardCommands = {
 
 export const wizardCommandList: WizardCommandDef[] = [
   ...wizardCommands.global,
+  ...wizardCommands.onboarding,
   ...wizardCommands.main,
   ...wizardCommands.depositOverview,
   ...wizardCommands.depositPrivacy,

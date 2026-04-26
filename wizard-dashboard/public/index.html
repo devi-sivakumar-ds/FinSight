@@ -31,52 +31,187 @@
       </section>
 
       <section class="panel">
-        <h2>Quick Actions</h2>
+        <h2>Flow Actions</h2>
         <div class="groups">
           <div class="group">
-            <h3>Home</h3>
-            <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">Open Deposit Flow</button>
-            <button data-id="OPEN_SETTINGS" data-context="MainScreen">Open Settings</button>
-            <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">Check Balance</button>
+            <h3>1. Onboarding</h3>
+            <p class="group-note">
+              Separate screen: <code>Onboarding</code>
+            </p>
+            <button data-id="CONTINUE_FROM_ONBOARDING" data-context="Onboarding">
+              <span class="button-title">Say continue when you're ready to go to the home page.</span>
+              <span class="button-meta">Continue from onboarding</span>
+            </button>
           </div>
 
           <div class="group">
-            <h3>Deposit Intro</h3>
-            <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">Continue Overview</button>
-            <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">Continue Privacy</button>
-            <button data-id="BACK_FROM_PRIVACY" data-context="DepositPrivacy">Back Privacy</button>
+            <h3>2. Home Page</h3>
+            <p class="group-note">
+              Separate screen: <code>MainScreen</code>
+            </p>
+            <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">
+              <span class="button-title">Home page. You can say deposit a check.</span>
+              <span class="button-meta">Open deposit flow</span>
+            </button>
+            <button data-id="OPEN_SETTINGS" data-context="MainScreen">
+              <span class="button-title">Open settings.</span>
+              <span class="button-meta">Go to settings</span>
+            </button>
+            <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">
+              <span class="button-title">Check balance is coming soon.</span>
+              <span class="button-meta">Trigger check balance placeholder</span>
+            </button>
           </div>
 
           <div class="group">
-            <h3>Account</h3>
-            <button data-id="SELECT_CHECKING" data-context="AccountSelect">Select Checking</button>
-            <button data-id="SELECT_SAVINGS" data-context="AccountSelect">Select Savings</button>
-            <button data-id="CONTINUE_FROM_ACCOUNT_SELECT" data-context="AccountSelect">Continue Account</button>
+            <h3>3. Deposit Overview</h3>
+            <p class="group-note">
+              Separate screen: <code>DepositOverview</code>
+            </p>
+            <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">
+              <span class="button-title">Say continue when you're ready.</span>
+              <span class="button-meta">Continue from deposit overview</span>
+            </button>
           </div>
 
           <div class="group">
-            <h3>Amount</h3>
+            <h3>4. Privacy</h3>
+            <p class="group-note">
+              Separate screen: <code>DepositPrivacy</code>
+            </p>
+            <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">
+              <span class="button-title">Say continue to move on and choose the account for this deposit.</span>
+              <span class="button-meta">Continue from privacy screen</span>
+            </button>
+            <button data-id="BACK_FROM_PRIVACY" data-context="DepositPrivacy">
+              <span class="button-title">Go back from the privacy screen.</span>
+              <span class="button-meta">Back from privacy</span>
+            </button>
+          </div>
+
+          <div class="group">
+            <h3>5. Choose Account</h3>
+            <p class="group-note">
+              Separate screen: <code>AccountSelect</code>
+            </p>
+            <button data-id="SELECT_CHECKING" data-context="AccountSelect">
+              <span class="button-title">Please choose the account where you want to deposit this check: checking.</span>
+              <span class="button-meta">Select checking account</span>
+            </button>
+            <button data-id="SELECT_SAVINGS" data-context="AccountSelect">
+              <span class="button-title">Please choose the account where you want to deposit this check: savings.</span>
+              <span class="button-meta">Select savings account</span>
+            </button>
+            <button data-id="CONTINUE_FROM_ACCOUNT_SELECT" data-context="AccountSelect">
+              <span class="button-title">Say continue to proceed, or choose a different account.</span>
+              <span class="button-meta">Continue from account selection</span>
+            </button>
+          </div>
+
+          <div class="group">
+            <h3>6. Daily Limit</h3>
+            <p class="group-note">
+              Same screen as amount entry: <code>AmountInput</code>
+            </p>
             <label class="input-label">
               Amount
               <input id="amount-input" type="number" min="0" step="0.01" value="25.00" />
             </label>
-            <button id="set-amount-btn">Set Amount</button>
-            <button data-id="SET_CAPTURE_ORDER_FRONT_FIRST" data-context="AmountInput">Front Then Back</button>
-            <button data-id="SET_CAPTURE_ORDER_BACK_FIRST" data-context="AmountInput">Back Then Front</button>
-            <button data-id="CONFIRM_AMOUNT" data-context="AmountInput">Confirm Amount</button>
+            <button id="set-amount-btn">
+              <span class="button-title">Please say the amount you would like to deposit.</span>
+              <span class="button-meta">Set entered amount in app state</span>
+            </button>
+            <button data-id="RETRY_AMOUNT" data-context="AmountInput">
+              <span class="button-title">Let us try that again. Please say the deposit amount.</span>
+              <span class="button-meta">Replay amount prompt</span>
+            </button>
+            <div class="flow-note">
+              <strong>Prompt on this same screen:</strong> The daily deposit limit is read automatically after the amount prompt.
+            </div>
           </div>
 
           <div class="group">
-            <h3>Capture</h3>
-            <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">Front Captured</button>
-            <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">Continue To Back</button>
-            <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">Back Captured</button>
-            <button data-id="CAPTURE_RETRY" data-context="CheckCapture">Retry Capture Prompt</button>
-            <button data-id="CAPTURE_FAIL" data-context="CheckCapture">Capture Failed</button>
+            <h3>7. Confirm Amount</h3>
+            <p class="group-note">
+              Same screen as daily limit: <code>AmountInput</code>
+            </p>
+            <button id="set-amount-confirm-btn">
+              <span class="button-title">The deposit amount is the value entered above. Is that correct? Say yes or no.</span>
+              <span class="button-meta">Use amount value above</span>
+            </button>
+            <button data-id="SET_CAPTURE_ORDER_FRONT_FIRST" data-context="AmountInput">
+              <span class="button-title">Capture order: front of check, then back of check.</span>
+              <span class="button-meta">Set front then back</span>
+            </button>
+            <button data-id="SET_CAPTURE_ORDER_BACK_FIRST" data-context="AmountInput">
+              <span class="button-title">Capture order: back of check, then front of check.</span>
+              <span class="button-meta">Set back then front</span>
+            </button>
+            <button data-id="CONFIRM_AMOUNT" data-context="AmountInput">
+              <span class="button-title">The deposit amount is correct. Open the camera.</span>
+              <span class="button-meta">Confirm amount and start capture</span>
+            </button>
           </div>
 
           <div class="group">
-            <h3>OCR</h3>
+            <h3>8. Before Capture Overview</h3>
+            <p class="group-note">
+              Same screen as auto-capture: <code>CheckCapture</code>
+            </p>
+            <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
+              <span class="button-title">Place your phone on the check. Say continue when you are ready.</span>
+              <span class="button-meta">Start capture guidance</span>
+            </button>
+            <div class="flow-note">
+              This step advances <code>CheckCapture</code> from setup into live guidance.
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>9. Auto-Capture</h3>
+            <p class="group-note">
+              Live guidance and capture on <code>CheckCapture</code>
+            </p>
+            <div class="flow-note">
+              Auto-guidance runs inside the app. The dashboard currently controls capture outcomes, not each live guidance cue.
+            </div>
+            <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
+              <span class="button-title">The front of your check has been captured successfully.</span>
+              <span class="button-meta">Mark front captured</span>
+            </button>
+            <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
+              <span class="button-title">The back of your check has been captured successfully.</span>
+              <span class="button-meta">Mark back captured</span>
+            </button>
+            <button data-id="CAPTURE_RETRY" data-context="CheckCapture">
+              <span class="button-title">Let us try that capture again.</span>
+              <span class="button-meta">Replay retry capture prompt</span>
+            </button>
+            <button data-id="CAPTURE_FAIL" data-context="CheckCapture">
+              <span class="button-title">Failed to capture check image. Please try again.</span>
+              <span class="button-meta">Open capture error screen</span>
+            </button>
+          </div>
+
+          <div class="group">
+            <h3>10. Front to Back or Back to Front</h3>
+            <p class="group-note">
+              Transition screen: <code>CheckFlip</code>
+            </p>
+            <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
+              <span class="button-title">Say continue when you are ready.</span>
+              <span class="button-meta">Continue from flip screen</span>
+            </button>
+            <div class="flow-note">
+              Capture order is chosen earlier in step 7.
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>11. Review Amount and Details</h3>
+            <p class="group-note">
+              OCR review feeds into <code>Confirmation</code>
+            </p>
             <label class="input-label">
               Check Number
               <input id="ocr-check-number" type="text" value="1024" />
@@ -89,35 +224,116 @@
               Account Number
               <input id="ocr-account-number" type="text" value="1234567890" />
             </label>
-            <button id="ocr-success-btn">OCR Success</button>
-            <button id="ocr-partial-btn">OCR Partial</button>
-            <button id="ocr-fail-btn">OCR Fail</button>
+            <button id="ocr-success-btn">
+              <span class="button-title">Check details found. Reviewing now.</span>
+              <span class="button-meta">OCR success</span>
+            </button>
+            <button id="ocr-partial-btn">
+              <span class="button-title">Could not read all check details. Using your entered amount.</span>
+              <span class="button-meta">OCR partial</span>
+            </button>
+            <button id="ocr-fail-btn">
+              <span class="button-title">Could not connect to the check reading service. Please try again.</span>
+              <span class="button-meta">OCR fail</span>
+            </button>
+            <div class="flow-note">
+              After OCR, the app shows the confirmation screen with amount and extracted details.
+            </div>
           </div>
 
           <div class="group">
-            <h3>Confirmation</h3>
-            <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">Confirm Deposit</button>
-            <button data-id="EDIT_AMOUNT" data-context="Confirmation">Edit Amount</button>
-            <button data-id="EDIT_ACCOUNT" data-context="Confirmation">Edit Account</button>
+            <h3>12. Countdown</h3>
+            <p class="group-note">
+              Confirmation step: <code>Confirmation</code>
+            </p>
+            <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">
+              <span class="button-title">Say confirm to proceed, or cancel to stop. You have 10 seconds to respond.</span>
+              <span class="button-meta">Submit deposit</span>
+            </button>
+            <button data-id="EDIT_AMOUNT" data-context="Confirmation">
+              <span class="button-title">Returning to amount entry.</span>
+              <span class="button-meta">Edit amount</span>
+            </button>
+            <button data-id="EDIT_ACCOUNT" data-context="Confirmation">
+              <span class="button-title">Returning to account selection.</span>
+              <span class="button-meta">Edit account</span>
+            </button>
+            <div class="flow-note">
+              In pure WoZ, the visible countdown is replaced by operator-controlled confirmation.
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>13. Complete and Summary</h3>
+            <p class="group-note">
+              Success screen: <code>Success</code>
+            </p>
+            <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">
+              <span class="button-title">Your session is complete. Say done to return to the home screen.</span>
+              <span class="button-meta">Finish success flow</span>
+            </button>
+            <div class="flow-note">
+              The summary details are spoken automatically on the success screen.
+            </div>
+          </div>
+
+          <div class="group">
+            <h3>14. Back to Home Page</h3>
+            <p class="group-note">
+              Available globally and after success
+            </p>
+            <button data-id="GO_HOME" data-context="global">
+              <span class="button-title">Return to the home screen.</span>
+              <span class="button-meta">Go home</span>
+            </button>
+            <button data-id="RETURN_HOME_FROM_SUCCESS" data-context="Success">
+              <span class="button-title">Return to the home screen after the summary is complete.</span>
+              <span class="button-meta">Return home from success</span>
+            </button>
           </div>
 
           <div class="group">
             <h3>Settings</h3>
-            <button data-id="SET_VERBOSITY_LOW" data-context="Settings">Verbosity Low</button>
-            <button data-id="SET_VERBOSITY_MEDIUM" data-context="Settings">Verbosity Medium</button>
-            <button data-id="SET_VERBOSITY_HIGH" data-context="Settings">Verbosity High</button>
-            <button data-id="SET_PACE_SLOW" data-context="Settings">Pace Slow</button>
-            <button data-id="SET_PACE_NORMAL" data-context="Settings">Pace Normal</button>
-            <button data-id="SET_PACE_FAST" data-context="Settings">Pace Fast</button>
-            <button data-id="RETURN_HOME_FROM_SETTINGS" data-context="Settings">Return Home</button>
+            <button data-id="SET_VERBOSITY_LOW" data-context="Settings">
+              <span class="button-title">Verbosity set to low.</span>
+              <span class="button-meta">Set verbosity low</span>
+            </button>
+            <button data-id="SET_VERBOSITY_MEDIUM" data-context="Settings">
+              <span class="button-title">Verbosity set to medium.</span>
+              <span class="button-meta">Set verbosity medium</span>
+            </button>
+            <button data-id="SET_VERBOSITY_HIGH" data-context="Settings">
+              <span class="button-title">Verbosity set to high.</span>
+              <span class="button-meta">Set verbosity high</span>
+            </button>
+            <button data-id="SET_PACE_SLOW" data-context="Settings">
+              <span class="button-title">Speech pace set to 0.5x.</span>
+              <span class="button-meta">Set pace slow</span>
+            </button>
+            <button data-id="SET_PACE_NORMAL" data-context="Settings">
+              <span class="button-title">Speech pace set to 1x.</span>
+              <span class="button-meta">Set pace normal</span>
+            </button>
+            <button data-id="SET_PACE_FAST" data-context="Settings">
+              <span class="button-title">Speech pace set to 1.5x.</span>
+              <span class="button-meta">Set pace fast</span>
+            </button>
+            <button data-id="RETURN_HOME_FROM_SETTINGS" data-context="Settings">
+              <span class="button-title">Return to the home screen.</span>
+              <span class="button-meta">Leave settings</span>
+            </button>
           </div>
 
           <div class="group">
-            <h3>Global</h3>
-            <button data-id="GO_HOME" data-context="global">Go Home</button>
-            <button data-id="GO_BACK" data-context="global">Go Back</button>
-            <button data-id="CLOSE_FLOW" data-context="global">Close Flow</button>
-            <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">Finish Success</button>
+            <h3>Global Navigation</h3>
+            <button data-id="GO_BACK" data-context="global">
+              <span class="button-title">Go back one screen.</span>
+              <span class="button-meta">Global back</span>
+            </button>
+            <button data-id="CLOSE_FLOW" data-context="global">
+              <span class="button-title">Close the current flow.</span>
+              <span class="button-meta">Close modal flow</span>
+            </button>
           </div>
         </div>
       </section>

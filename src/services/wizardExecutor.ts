@@ -141,6 +141,16 @@ export function executeWizardCommand(
   const { navigationRef, verbosity, setVerbosity, setPace } = deps;
 
   switch (command.id) {
+    case 'CONTINUE_FROM_ONBOARDING':
+      navigationRef.resetRoot({
+        index: 0,
+        routes: [{ name: 'TabNavigator' as keyof RootStackParamList }],
+      });
+      setTimeout(() => {
+        navigateToTab(navigationRef, 'Tasks');
+      }, 0);
+      return;
+
     case 'GO_HOME':
       goHome(navigationRef);
       return;
@@ -317,6 +327,27 @@ export function executeWizardCommand(
     case 'CLOSE_FROM_CHECK_CAPTURE':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
+
+    case 'START_CAPTURE_GUIDANCE': {
+      const deposit = wizardState.getDepositState();
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const side = deposit.currentCaptureSide ?? (deposit.backCaptured ? 'front' : 'back');
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'CheckCapture',
+        params: {
+          accountId,
+          accountType,
+          amount,
+          side,
+          frontImageUri: deposit.frontImageUri,
+          backImageUri: deposit.backImageUri,
+          autoStart: true,
+        },
+      });
+      return;
+    }
 
     case 'CAPTURE_FRONT_SUCCESS': {
       const deposit = wizardState.getDepositState();

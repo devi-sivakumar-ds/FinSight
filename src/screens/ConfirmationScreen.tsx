@@ -19,10 +19,9 @@ import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
 import { isPureWozMode } from '@/config/studyMode';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import wizardState from '@services/wizardState';
@@ -42,7 +41,6 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(10);
-  const { voiceState } = useAlwaysOnVoice();
 
   // Countdown refs
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -267,11 +265,6 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Footer — countdown auto-submit */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say confirm to proceed, or cancel to stop."
-        />
-
         {pureWozMode ? (
           <View
             style={styles.countdownCard}
@@ -349,6 +342,9 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
           size="large"
           accessibilityHint="Cancel deposit and return to main screen"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -414,6 +410,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 12,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   countdownCard: {
     backgroundColor: DARK_COLORS.SURFACE,

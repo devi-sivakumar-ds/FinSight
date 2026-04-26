@@ -87,7 +87,7 @@ type GuidanceCue =
   | 'capturing';
 
 export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { accountId, accountType, amount, side } = route.params;
+  const { accountId, accountType, amount, side, autoStart } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
@@ -126,6 +126,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const stableSinceRef        = useRef<number | null>(null);
   const lastConfidenceRef     = useRef(0);
   const lastCueRef            = useRef<GuidanceCue | null>(null);
+  const autoStartHandledRef   = useRef(false);
 
   // Keep phaseRef in sync
   useEffect(() => { phaseRef.current = phase; }, [phase]);
@@ -360,9 +361,19 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     }, 800);
   }, [side, speakMedium, verbosity]);
 
+  useEffect(() => {
+    if (!autoStart || autoStartHandledRef.current || !hasPermission || phase !== 'setup') return;
+    autoStartHandledRef.current = true;
+    const timer = setTimeout(() => {
+      handleReady();
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [autoStart, handleReady, hasPermission, phase]);
+
   // ── Setup phase: mount instructions ──────────────────────────────────────
   useEffect(() => {
     if (!hasPermission) return;
+    autoStartHandledRef.current = false;
 
     const t1 = setTimeout(() => {
       speakMedium(v(verbosity, ttsStrings.checkCapture.setupPlacement(side)));

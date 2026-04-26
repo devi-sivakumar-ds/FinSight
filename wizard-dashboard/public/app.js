@@ -4,7 +4,10 @@ const sessionInfoEl = document.getElementById('session-info');
 const appStateEl = document.getElementById('app-state');
 const eventLogEl = document.getElementById('event-log');
 const amountInput = document.getElementById('amount-input');
-const setAmountBtn = document.getElementById('set-amount-btn');
+const setAmountButtons = [
+  document.getElementById('set-amount-btn'),
+  document.getElementById('set-amount-confirm-btn'),
+].filter(Boolean);
 const ocrCheckNumberInput = document.getElementById('ocr-check-number');
 const ocrRoutingNumberInput = document.getElementById('ocr-routing-number');
 const ocrAccountNumberInput = document.getElementById('ocr-account-number');
@@ -120,9 +123,11 @@ document.querySelectorAll('button[data-id]').forEach(button => {
   });
 });
 
-setAmountBtn.addEventListener('click', () => {
-  const amount = Number(amountInput.value);
-  sendCommand('SET_AMOUNT', 'AmountInput', 'amount', { amount });
+setAmountButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    const amount = Number(amountInput.value);
+    sendCommand('SET_AMOUNT', 'AmountInput', 'amount', { amount });
+  });
 });
 
 function sendOcrCommand(id, outcome) {

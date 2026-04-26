@@ -15,11 +15,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
@@ -36,8 +35,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
-
-  const { voiceState } = useAlwaysOnVoice();
   const expectedDate = deposit.expectedAvailability
     ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
         month: 'long',
@@ -164,10 +161,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Your session is complete. Say done to return to the home screen."
-        />
         <AccessibleButton
           label="Done"
           onPress={handleDone}
@@ -175,6 +168,9 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.doneButton}
           accessibilityHint="Return to main screen"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -254,6 +250,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 12,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   doneButton: { width: '100%' },
 });

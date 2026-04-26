@@ -21,11 +21,10 @@ import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { ScreenHeader } from '@components/ScreenHeader';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import voiceService from '@services/voiceService';
 import ttsService from '@services/ttsService';
@@ -55,7 +54,6 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
   const { accountId, accountType } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { selection } = useHaptics();
-  const { voiceState } = useAlwaysOnVoice();
   const { verbosity } = useVoiceSettings();
 
   const [displayValue, setDisplayValue] = useState('0');
@@ -295,10 +293,6 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Footer: voice banner + continue */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say the amount you would like to deposit."
-        />
         <AccessibleButton
           label={mode === 'confirming' ? 'Continue' : 'Confirm Amount'}
           onPress={mode === 'confirming' ? proceedToCamera : handleConfirmAmount}
@@ -307,6 +301,9 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.continueBtn}
           accessibilityHint="Confirm this amount and proceed to capture your check"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -373,6 +370,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 8,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   continueBtn: { width: '100%' },
 });

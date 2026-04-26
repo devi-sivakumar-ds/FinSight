@@ -3,6 +3,7 @@
 // ============================================================================
 
 export { MainScreen } from './MainScreen';
+export { OnboardingScreen } from './OnboardingScreen';
 export { SettingsScreen } from './SettingsScreen';
 
 // Deposit flow screens
