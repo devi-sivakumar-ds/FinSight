@@ -189,6 +189,16 @@ export function executeWizardCommand(
     ttsService.speakMedium(v(verbosity, entry));
   };
 
+  const speakDepositOverview = () => {
+    ttsService.speakMedium(v(verbosity, ttsStrings.depositOverview.intro));
+    setTimeout(() => {
+      ttsService.speakMedium(v(verbosity, ttsStrings.depositOverview.process));
+      setTimeout(() => {
+        ttsService.speakMedium(v(verbosity, ttsStrings.depositOverview.continuePrompt));
+      }, 1700);
+    }, 900);
+  };
+
   switch (command.id) {
     case 'CONTINUE_FROM_ONBOARDING':
       navigationRef.resetRoot({
@@ -319,6 +329,10 @@ export function executeWizardCommand(
 
     case 'RETURN_HOME_FROM_SETTINGS':
       goHome(navigationRef);
+      return;
+
+    case 'REPEAT_OVERVIEW':
+      speakDepositOverview();
       return;
 
     case 'CONTINUE_FROM_OVERVIEW':

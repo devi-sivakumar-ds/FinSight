@@ -156,7 +156,7 @@ export const ttsStrings = {
     } as VStr,
     process: {
       low:    'Three steps.',
-      medium: 'We will proceed in three steps. First, choose an account. Next, enter the check amount. Then, capture the front and back of the check.',
+      medium: `I'll guide you through depositing your check. You'll select an account, and I'll walk you through capturing your check image — I'll tell you when the image is captured. From there, I'll read you the check amount and you'll confirm the deposit. `,
       high:   'We will proceed in three steps. First, choose an account. Next, enter the check amount. Then, capture the front and back of the check.',
     } as VStr,
     continuePrompt: {

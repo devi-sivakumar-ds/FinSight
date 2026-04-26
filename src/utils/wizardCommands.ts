@@ -69,6 +69,7 @@ export const wizardCommands = {
   ],
 
   depositOverview: [
+    cmd('REPEAT_OVERVIEW', 'Repeat Overview', 'DepositOverview'),
     cmd('CONTINUE_FROM_OVERVIEW', 'Continue', 'DepositOverview'),
     cmd('CLOSE_FROM_OVERVIEW', 'Close', 'DepositOverview'),
   ],
