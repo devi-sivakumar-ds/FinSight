@@ -27,6 +27,7 @@ import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import ttsService from '@services/ttsService';
 import { extractCheckData } from '@services/ocrService';
+import { isPureWozMode } from '@/config/studyMode';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
@@ -56,6 +57,16 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
     // Stop any lingering TTS from the camera screen immediately
     ttsService.reset();
     speakMedium(v(verbosity, ttsStrings.ocrProcessing.processing));
+
+    if (isPureWozMode()) {
+      setStatusText('Waiting for operator review…');
+      setTimeout(() => {
+        if (!cancelled) {
+          speakMedium(v(verbosity, ttsStrings.ocrProcessing.waitingForOperator));
+        }
+      }, 1000);
+      return () => { cancelled = true; };
+    }
 
     async function runOCR() {
       try {

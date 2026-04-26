@@ -34,6 +34,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import ttsService from '@services/ttsService';
+import wizardState from '@services/wizardState';
 import {
   analyzeSnapshotUri,
   SNAPSHOT_GUIDANCE_TTS,
@@ -171,9 +172,11 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       const normalizedPhotoUri = await normalizeImageToLandscape(photoUri);
 
       if (side === 'front') {
+        wizardState.setCaptureState(true, false, normalizedPhotoUri, route.params.frontImageUri);
         navigation.navigate('CheckFlip', { frontImageUri: normalizedPhotoUri, accountId, accountType, amount });
       } else {
         const frontUri = route.params.frontImageUri ?? '';
+        wizardState.setCaptureState(true, true, frontUri, normalizedPhotoUri);
         navigation.navigate('OCRProcessing', {
           frontImageUri: frontUri,
           backImageUri: normalizedPhotoUri,
@@ -313,34 +316,30 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     lastCueRef.current = null;
     setAnalysisResult(null);
 
-    speakMedium(
-      side === 'front'
-        ? 'Lift the phone straight up slowly. Keep the check under the middle of the phone. I will say left, right, up, down, raise, lower, or hold steady.'
-        : 'Lift the phone straight up slowly from the back of the check. Keep the check under the middle of the phone. I will say left, right, up, down, raise, lower, or hold steady.'
-    );
+    speakMedium(v(verbosity, ttsStrings.checkCapture.liveGuidanceStart(side)));
 
     // Give the TTS ~800 ms before first snapshot (phone still moving up)
     snapshotTimerRef.current = setTimeout(() => {
       runSnapshotLoopRef.current();
     }, 800);
-  }, []);
+  }, [side, speakMedium, verbosity]);
 
   // ── Setup phase: mount instructions ──────────────────────────────────────
   useEffect(() => {
     if (!hasPermission) return;
 
-    const instruction =
-      side === 'front'
-        ? 'Place the phone flat on top of the front of the check. Center it by touch, then say ready.'
-        : 'Place the phone flat on the back of the check where you signed. Center it by touch, then say ready.';
-
-    const t1 = setTimeout(() => speakMedium(instruction), 600);
+    const t1 = setTimeout(() => {
+      speakMedium(v(verbosity, ttsStrings.checkCapture.setupPlacement(side)));
+      setTimeout(() => {
+        speakMedium(v(verbosity, ttsStrings.checkCapture.readyPrompt));
+      }, 1400);
+    }, 600);
 
     return () => {
       clearTimeout(t1);
       if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
     };
-  }, [hasPermission, side]);
+  }, [hasPermission, side, speakMedium, verbosity]);
 
   // ── Voice commands ────────────────────────────────────────────────────────
   useVoiceCommands(
@@ -557,27 +556,27 @@ function getGuidanceCue(result: SnapshotAnalysisResult): GuidanceCue {
 function getCueText(cue: GuidanceCue, side: 'front' | 'back'): string {
   switch (cue) {
     case 'searching':
-      return 'Move the phone over the check.';
+      return ttsStrings.checkCapture.guidance.searching.medium;
     case 'check_found':
-      return 'Check found. Keep moving slowly.';
+      return ttsStrings.checkCapture.guidance.checkFound.medium;
     case 'move_left':
-      return 'Move left.';
+      return ttsStrings.checkCapture.guidance.moveLeft.medium;
     case 'move_right':
-      return 'Move right.';
+      return ttsStrings.checkCapture.guidance.moveRight.medium;
     case 'move_up':
-      return 'Move up.';
+      return ttsStrings.checkCapture.guidance.moveUp.medium;
     case 'move_down':
-      return 'Move down.';
+      return ttsStrings.checkCapture.guidance.moveDown.medium;
     case 'raise_phone':
-      return 'Raise the phone slightly.';
+      return ttsStrings.checkCapture.guidance.raisePhone.medium;
     case 'lower_phone':
-      return 'Lower the phone slightly.';
+      return ttsStrings.checkCapture.guidance.lowerPhone.medium;
     case 'hold':
-      return side === 'front' ? 'Hold steady. Capturing soon.' : 'Hold steady. Capturing soon.';
+      return ttsStrings.checkCapture.guidance.holdSteady.medium;
     case 'capturing':
       return 'Capturing now.';
     case 'setup':
-      return 'Center the phone on the check and say ready.';
+      return ttsStrings.checkCapture.readyPrompt.medium;
     default:
       return '';
   }

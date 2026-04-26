@@ -3,6 +3,7 @@
 // Lightweight in-memory state for pure WoZ flow control and dashboard sync.
 // ============================================================================
 
+import type { CheckOCRResponse } from '@/types/index';
 import { WizardAccountType, WizardAppState, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
 
 const DEFAULT_DEPOSIT_STATE: WizardDepositState = {
@@ -36,18 +37,29 @@ class WizardStateService {
     };
   }
 
-  public setCaptureState(frontCaptured: boolean, backCaptured: boolean): void {
+  public setCaptureState(
+    frontCaptured: boolean,
+    backCaptured: boolean,
+    frontImageUri?: string,
+    backImageUri?: string
+  ): void {
     this.deposit = {
       ...this.deposit,
       frontCaptured,
       backCaptured,
+      frontImageUri: frontImageUri ?? this.deposit.frontImageUri,
+      backImageUri: backImageUri ?? this.deposit.backImageUri,
     };
   }
 
-  public setOcrOutcome(ocrOutcome: WizardOcrOutcome): void {
+  public setOcrOutcome(
+    ocrOutcome: WizardOcrOutcome,
+    ocrData?: CheckOCRResponse['data']
+  ): void {
     this.deposit = {
       ...this.deposit,
       ocrOutcome,
+      ocrData,
     };
   }
 

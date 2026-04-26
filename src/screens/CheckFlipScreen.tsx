@@ -50,7 +50,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
       setTimeout(() => {
         speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction));
         setTimeout(() => {
-          speakMedium(v(verbosity, ttsStrings.checkFlip.tapReady));
+          speakMedium(v(verbosity, ttsStrings.checkFlip.continuePrompt));
         }, 2000);
       }, 1200);
     }, 400);
@@ -126,7 +126,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say 'ready' when the back side is facing the camera."
+          listeningText="Say continue when you are ready."
         />
         <AccessibleButton
           label="Ready"

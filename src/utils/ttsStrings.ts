@@ -46,7 +46,7 @@ export const ttsStrings = {
   main: {
     welcome: {
       low:    'Listening.',
-      medium: 'Welcome to FinSight. I am listening. Say deposit a check, check balance, send money, or transfer money.',
+      medium: 'Welcome to FinSight. FinSight is your AI voice assistant that helps you navigate your everyday banking  tasks. I will guide you through everything by voice. Your voice is processed in real time to respond to your commands and is never recorded or stored.',
       high:   'Welcome to FinSight, your voice-guided banking assistant. I am listening. You can say: deposit a check, check your balance, send money, or transfer money between accounts.',
     } as VStr,
     featureComingSoon: (feature: string): VStr => ({
@@ -65,7 +65,7 @@ export const ttsStrings = {
     } as VStr,
     process: {
       low:    'Three steps.',
-      medium: 'I will guide you through three steps: choose an account, enter the amount, and capture the front and back of the check.',
+      medium: `I'll guide you through depositing your check. You'll select an account, and I'll walk you through capturing your check image — I'll tell you when the image is captured. From there, I'll read you the check amount and you'll confirm the deposit. `,
       high:   'I will guide you through the process. First you will choose an account, then enter the check amount, and finally capture the front and back of the check.',
     } as VStr,
     continuePrompt: {
@@ -176,22 +176,54 @@ export const ttsStrings = {
     } as VStr,
     flipInstruction: {
       low:    'Flip to show the back.',
-      medium: 'Now flip the check to show the back, where you would sign it.',
-      high:   'Now please flip your check over to show the back side, where you endorse or sign the check.',
+      medium: 'Please flip the check over. Before proceeding, ensure you have endorsed the back.',
+      high:   'Please flip the check over. Before proceeding, ensure you have endorsed the back.',
     } as VStr,
-    tapReady: {
-      low:    'Tap when ready.',
-      medium: 'Tap the screen when ready.',
-      high:   'Tap anywhere on the screen when you are ready to capture the back of the check.',
+    continuePrompt: {
+      low:    'Continue when ready.',
+      medium: 'Say continue when you are ready.',
+      high:   'Say continue when you are ready.',
     } as VStr,
   },
 
   // ── Check capture ──────────────────────────────────────────────────────────
   checkCapture: {
-    setupInstruction: {
-      low:    'Lift phone and hold over check.',
-      medium: "Now slowly lift your phone straight up. I'll guide you in real time.",
-      high:   "Now slowly lift your phone straight up over the check. I will guide you in real time with positioning instructions.",
+    setupPlacement: (side: 'front' | 'back'): VStr => ({
+      low: side === 'front' ? 'Place phone on front.' : 'Place phone on back.',
+      medium:
+        side === 'front'
+          ? 'Place your phone at the bottom left corner of the front of the check.'
+          : 'Now place your phone at the bottom left corner of the check.',
+      high:
+        side === 'front'
+          ? 'Place your phone at the bottom left corner of the front of the check.'
+          : 'Now place your phone at the bottom left corner of the check.',
+    }),
+    readyPrompt: {
+      low:    'Continue when ready.',
+      medium: 'Say continue when you are ready.',
+      high:   'Say continue when you are ready.',
+    } as VStr,
+    liveGuidanceStart: (side: 'front' | 'back'): VStr => ({
+      low:    'Guiding now.',
+      medium:
+        side === 'front'
+          ? "Slowly lift your phone up. I'll guide you in real time."
+          : "Slowly lift your phone up. I'll guide you in real time.",
+      high:
+        side === 'front'
+          ? "Slowly lift your phone up. I'll guide you in real time."
+          : "Slowly lift your phone up. I'll guide you in real time.",
+    }),
+    frontDetectedReview: (amount: string): VStr => ({
+      low:    `Front detected. ${amount}.`,
+      medium: `I've detected the front of your check. The amount is ${amount}. Are these details correct?`,
+      high:   `I've detected the front of your check. The amount is ${amount}. Are these details correct?`,
+    }),
+    proceedToBackCapture: {
+      low:    'Proceeding to back.',
+      medium: "Thank you. We'll now proceed to capturing the back.",
+      high:   "Thank you. We'll now proceed to capturing the back.",
     } as VStr,
     capturingNow: {
       low:    'Capturing.',
@@ -203,6 +235,73 @@ export const ttsStrings = {
       medium: 'Failed to capture image. Please try again.',
       high:   'The image capture failed. Please try again, making sure the check is well lit and fully in frame.',
     } as VStr,
+    guidance: {
+      searching: {
+        low:    'Move slowly.',
+        medium: 'Move your phone slowly over the check.',
+        high:   'Move your phone slowly over the check.',
+      } as VStr,
+      checkFound: {
+        low:    'Keep moving.',
+        medium: 'Keep moving slowly.',
+        high:   'Keep moving slowly.',
+      } as VStr,
+      moveLeft: {
+        low:    'Left.',
+        medium: 'Move slightly to the left.',
+        high:   'Move slightly to the left.',
+      } as VStr,
+      moveRight: {
+        low:    'Right.',
+        medium: 'Move slightly to the right.',
+        high:   'Move slightly to the right.',
+      } as VStr,
+      moveUp: {
+        low:    'Top.',
+        medium: 'Move slightly to the top.',
+        high:   'Move slightly to the top.',
+      } as VStr,
+      moveDown: {
+        low:    'Bottom.',
+        medium: 'Move slightly to the bottom.',
+        high:   'Move slightly to the bottom.',
+      } as VStr,
+      raisePhone: {
+        low:    'Higher.',
+        medium: 'A bit higher.',
+        high:   'A bit higher.',
+      } as VStr,
+      lowerPhone: {
+        low:    'Lower.',
+        medium: 'A bit lower.',
+        high:   'A bit lower.',
+      } as VStr,
+      tiltLeft: {
+        low:    'Tilt left.',
+        medium: 'Tilt your phone a little to the left.',
+        high:   'Tilt your phone a little to the left.',
+      } as VStr,
+      tiltRight: {
+        low:    'Tilt right.',
+        medium: 'Tilt your phone a little to the right.',
+        high:   'Tilt your phone a little to the right.',
+      } as VStr,
+      tooMuchLight: {
+        low:    'Shade check.',
+        medium: 'Too much light. Try shading the check slightly.',
+        high:   'Too much light. Try shading the check slightly.',
+      } as VStr,
+      notEnoughLight: {
+        low:    'Brighter spot.',
+        medium: 'Not enough light. Move to a brighter spot.',
+        high:   'Not enough light. Move to a brighter spot.',
+      } as VStr,
+      holdSteady: {
+        low:    'Hold steady.',
+        medium: 'Perfect. Hold steady.',
+        high:   'Perfect. Hold steady.',
+      } as VStr,
+    },
   },
 
   // ── OCR processing ─────────────────────────────────────────────────────────
@@ -211,6 +310,11 @@ export const ttsStrings = {
       low:    'Processing.',
       medium: 'Check captured. Preparing your deposit details.',
       high:   'Your check has been captured. I am now preparing your deposit details.',
+    } as VStr,
+    waitingForOperator: {
+      low:    'Reviewing.',
+      medium: 'Reviewing your check details now.',
+      high:   'Reviewing your check details now.',
     } as VStr,
   },
 
@@ -221,6 +325,15 @@ export const ttsStrings = {
       medium: 'Your check has been captured. Let me read the details.',
       high:   'Your check has been captured successfully. Let me read the deposit details to you.',
     } as VStr,
+    reviewSummary: (amount: string, accountDigits?: string): VStr => ({
+      low:    `${amount}.`,
+      medium: accountDigits
+        ? `I have deposited ${amount} into your checking account ending in ${accountDigits}.`
+        : `I have deposited ${amount} into your selected account.`,
+      high: accountDigits
+        ? `I have deposited ${amount} into your checking account ending in ${accountDigits}.`
+        : `I have deposited ${amount} into your selected account.`,
+    }),
     depositAmount: (amount: string): VStr => ({
       low:    `${amount}.`,
       medium: `Depositing ${amount}.`,
@@ -238,8 +351,8 @@ export const ttsStrings = {
     }),
     confirmPrompt: {
       low:    'Confirm or cancel?',
-      medium: "Say 'confirm' to complete the deposit, or 'cancel' to start over.",
-      high:   "To complete your deposit, say confirm. To cancel this deposit, say cancel.",
+      medium: "Say 'confirm' to proceed, or 'cancel' to stop. You have 10 seconds to respond.",
+      high:   "Say 'confirm' to proceed, or 'cancel' to stop. You have 10 seconds to respond.",
     } as VStr,
     submitting: {
       low:    'Submitting.',
@@ -265,11 +378,21 @@ export const ttsStrings = {
 
   // ── Success ────────────────────────────────────────────────────────────────
   success: {
+    received: (amount: string, date: string): VStr => ({
+      low:    'Deposit received.',
+      medium: `We have received your check. Your deposit of ${amount} has been submitted on ${date}.`,
+      high:   `We have received your check. Your deposit of ${amount} has been submitted on ${date}.`,
+    }),
     submitted: {
       low:    'Deposit submitted.',
       medium: 'Deposit submitted successfully.',
       high:   'Your deposit has been submitted successfully and is now being processed.',
     } as VStr,
+    availableByDate: (date: string): VStr => ({
+      low:    '',
+      medium: `Your remaining funds will be available by ${date}.`,
+      high:   `Your remaining funds will be available by ${date}.`,
+    }),
     availability: {
       low:    '',
       medium: 'Your check will be reviewed and funds will be available within 1 to 2 business days.',
@@ -282,8 +405,8 @@ export const ttsStrings = {
     }),
     exitPrompt: {
       low:    '',
-      medium: "Say 'done' or 'go home' to return to the main screen.",
-      high:   "Say done or go home to return to the main screen.",
+      medium: "Your session is complete. Say done to return to the home screen.",
+      high:   "Your session is complete. Say done to return to the home screen.",
     } as VStr,
   },
 

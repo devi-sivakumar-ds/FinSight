@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { NavigationContainerRefWithCurrent } from '@react-navigation/native';
-import { RootStackParamList } from '@/types/index';
+import { CheckOCRResponse, RootStackParamList } from '@/types/index';
 import { Pace } from '@/contexts/VoiceSettingsContext';
 import { WizardOperatorCommand } from '@/types/wizard';
 import { Verbosity, ttsStrings, v } from '@utils/ttsStrings';
@@ -37,6 +37,29 @@ function goHome(
   setTimeout(() => {
     navigateToTab(navigationRef, 'Tasks');
   }, 0);
+}
+
+function buildWizardOcrData(command: WizardOperatorCommand): CheckOCRResponse['data'] | undefined {
+  if (!command.payload || !('outcome' in command.payload)) return undefined;
+
+  const checkNumber = command.payload.checkNumber?.trim();
+  const routingNumber = command.payload.routingNumber?.trim();
+  const accountNumber = command.payload.accountNumber?.trim();
+  const hasData = checkNumber || routingNumber || accountNumber;
+
+  if (!hasData) return undefined;
+
+  return {
+    checkNumber: checkNumber ?? '',
+    routingNumber: routingNumber ?? '',
+    accountNumber: accountNumber ?? '',
+    confidence: {
+      overall: 0,
+      routingNumber: 0,
+      accountNumber: 0,
+      checkNumber: 0,
+    },
+  };
 }
 
 export function executeWizardCommand(
@@ -182,13 +205,12 @@ export function executeWizardCommand(
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
       (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'Confirmation',
+        screen: 'CheckCapture',
         params: {
           accountId,
           accountType,
           amount,
-          frontImageUri: 'wizard://front',
-          backImageUri: 'wizard://back',
+          side: 'front',
         },
       });
       return;
@@ -206,6 +228,95 @@ export function executeWizardCommand(
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
 
+    case 'CAPTURE_FRONT_SUCCESS': {
+      const deposit = wizardState.getDepositState();
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+      wizardState.setCaptureState(true, deposit.backCaptured, frontImageUri, deposit.backImageUri);
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'CheckFlip',
+        params: { frontImageUri, accountId, accountType, amount },
+      });
+      return;
+    }
+
+    case 'CONTINUE_FROM_CHECK_FLIP': {
+      const deposit = wizardState.getDepositState();
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'CheckCapture',
+        params: { frontImageUri, accountId, accountType, amount, side: 'back' },
+      });
+      return;
+    }
+
+    case 'CAPTURE_BACK_SUCCESS': {
+      const deposit = wizardState.getDepositState();
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+      const backImageUri = deposit.backImageUri ?? 'wizard://back';
+      wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'OCRProcessing',
+        params: { frontImageUri, backImageUri, accountId, accountType, amount },
+      });
+      return;
+    }
+
+    case 'CAPTURE_RETRY':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.captureFailed));
+      return;
+
+    case 'CAPTURE_FAIL': {
+      const message =
+        command.payload && 'text' in command.payload && command.payload.text
+          ? command.payload.text
+          : 'Failed to capture check image. Please try again.';
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'Error',
+        params: {
+          error: message,
+          canRetry: true,
+        },
+      });
+      return;
+    }
+
+    case 'OCR_SUCCESS':
+    case 'OCR_PARTIAL':
+    case 'OCR_FAIL': {
+      const deposit = wizardState.getDepositState();
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+      const backImageUri = deposit.backImageUri ?? 'wizard://back';
+      const outcome =
+        command.id === 'OCR_SUCCESS' ? 'success' : command.id === 'OCR_PARTIAL' ? 'partial' : 'fail';
+      const ocrData = command.id === 'OCR_FAIL' ? undefined : buildWizardOcrData(command);
+
+      wizardState.setOcrOutcome(outcome, ocrData);
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'Confirmation',
+        params: {
+          accountId,
+          accountType,
+          amount,
+          frontImageUri,
+          backImageUri,
+          ocrData,
+        },
+      });
+      return;
+    }
+
     case 'CONFIRM_DEPOSIT': {
       const depositState = wizardState.getDepositState();
       const amount = depositState.amount ?? 0;
@@ -215,8 +326,11 @@ export function executeWizardCommand(
         const deposit = await mockBankingAPI.submitDeposit(
           accountId,
           amount,
-          'wizard://front',
-          'wizard://back'
+          depositState.frontImageUri ?? 'wizard://front',
+          depositState.backImageUri ?? 'wizard://back',
+          depositState.ocrData?.checkNumber,
+          depositState.ocrData?.routingNumber,
+          depositState.ocrData?.accountNumber
         );
         wizardState.setConfirmationNumber(deposit.confirmationNumber);
         (navigationRef.navigate as any)('DepositFlow', {

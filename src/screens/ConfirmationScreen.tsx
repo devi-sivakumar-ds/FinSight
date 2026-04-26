@@ -55,31 +55,20 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
+  const amountSpeech = formatAmountForSpeech(amount);
+  const accountDigits = accountId === 'acc_1' ? '7749' : accountId === 'acc_2' ? '3182' : undefined;
 
   // Announce details on mount, then start countdown
   useEffect(() => {
-    // Estimate TTS chain duration so countdown starts right after
-    const hasCkNum = !!ocrData?.checkNumber;
-    // Rough duration: intro(400+1000) + amount(1200) + [ckNum(1200)] + account(1200) + prompt(1200)
-    const ttsDuration = hasCkNum ? 7500 : 6300;
+    const ttsDuration = 5000;
 
     setTimeout(() => {
       speakMedium(v(verbosity, ttsStrings.confirmation.intro));
       setTimeout(() => {
-        speakMedium(v(verbosity, ttsStrings.confirmation.depositAmount(formatAmountForSpeech(amount))));
-        if (hasCkNum) {
-          setTimeout(() => {
-            const digits = ocrData!.checkNumber.split('').join(' ');
-            const ckStr = v(verbosity, ttsStrings.confirmation.checkNumber(digits));
-            if (ckStr) speakMedium(ckStr);
-          }, 1200);
-        }
+        speakMedium(v(verbosity, ttsStrings.confirmation.reviewSummary(amountSpeech, accountDigits)));
         setTimeout(() => {
-          speakMedium(v(verbosity, ttsStrings.confirmation.toAccount(accountLabel)));
-          setTimeout(() => {
-            speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
-          }, 1200);
-        }, hasCkNum ? 2400 : 1200);
+          speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
+        }, 1400);
       }, 1000);
     }, 400);
 
@@ -112,7 +101,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
       clearTimeout(countdownStart);
       stopCountdown();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [accountDigits, amountSpeech, progressAnim, speakMedium, stopCountdown, verbosity]);
 
   const handleSubmit = useCallback(async () => {
     stopCountdown();
@@ -270,7 +259,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say 'confirm' to submit now, or 'cancel' to stop."
+          listeningText="Say 'confirm' to proceed, or 'cancel' to stop."
         />
 
         {/* Countdown card */}

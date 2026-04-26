@@ -5,6 +5,12 @@ const appStateEl = document.getElementById('app-state');
 const eventLogEl = document.getElementById('event-log');
 const amountInput = document.getElementById('amount-input');
 const setAmountBtn = document.getElementById('set-amount-btn');
+const ocrCheckNumberInput = document.getElementById('ocr-check-number');
+const ocrRoutingNumberInput = document.getElementById('ocr-routing-number');
+const ocrAccountNumberInput = document.getElementById('ocr-account-number');
+const ocrSuccessBtn = document.getElementById('ocr-success-btn');
+const ocrPartialBtn = document.getElementById('ocr-partial-btn');
+const ocrFailBtn = document.getElementById('ocr-fail-btn');
 const noteInput = document.getElementById('note-input');
 const saveNoteBtn = document.getElementById('save-note-btn');
 const logPathEl = document.getElementById('log-path');
@@ -117,6 +123,27 @@ document.querySelectorAll('button[data-id]').forEach(button => {
 setAmountBtn.addEventListener('click', () => {
   const amount = Number(amountInput.value);
   sendCommand('SET_AMOUNT', 'AmountInput', 'amount', { amount });
+});
+
+function sendOcrCommand(id, outcome) {
+  sendCommand(id, 'OCRProcessing', 'ocrOutcome', {
+    outcome,
+    checkNumber: ocrCheckNumberInput.value.trim(),
+    routingNumber: ocrRoutingNumberInput.value.trim(),
+    accountNumber: ocrAccountNumberInput.value.trim(),
+  });
+}
+
+ocrSuccessBtn.addEventListener('click', () => {
+  sendOcrCommand('OCR_SUCCESS', 'success');
+});
+
+ocrPartialBtn.addEventListener('click', () => {
+  sendOcrCommand('OCR_PARTIAL', 'partial');
+});
+
+ocrFailBtn.addEventListener('click', () => {
+  sendCommand('OCR_FAIL', 'OCRProcessing', 'ocrOutcome', { outcome: 'fail' });
 });
 
 saveNoteBtn.addEventListener('click', sendNote);

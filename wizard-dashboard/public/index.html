@@ -65,6 +65,34 @@
           </div>
 
           <div class="group">
+            <h3>Capture</h3>
+            <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">Front Captured</button>
+            <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">Continue To Back</button>
+            <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">Back Captured</button>
+            <button data-id="CAPTURE_RETRY" data-context="CheckCapture">Retry Capture Prompt</button>
+            <button data-id="CAPTURE_FAIL" data-context="CheckCapture">Capture Failed</button>
+          </div>
+
+          <div class="group">
+            <h3>OCR</h3>
+            <label class="input-label">
+              Check Number
+              <input id="ocr-check-number" type="text" value="1024" />
+            </label>
+            <label class="input-label">
+              Routing Number
+              <input id="ocr-routing-number" type="text" value="021000021" />
+            </label>
+            <label class="input-label">
+              Account Number
+              <input id="ocr-account-number" type="text" value="1234567890" />
+            </label>
+            <button id="ocr-success-btn">OCR Success</button>
+            <button id="ocr-partial-btn">OCR Partial</button>
+            <button id="ocr-fail-btn">OCR Fail</button>
+          </div>
+
+          <div class="group">
             <h3>Confirmation</h3>
             <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">Confirm Deposit</button>
             <button data-id="EDIT_AMOUNT" data-context="Confirmation">Edit Amount</button>

@@ -3,7 +3,7 @@
 // Shared app <-> dashboard protocol for pure WoZ mode.
 // ============================================================================
 
-import type { DepositStackParamList, RootStackParamList } from '@/types/index';
+import type { CheckOCRResponse, DepositStackParamList, RootStackParamList } from '@/types/index';
 import type { Pace } from '@/contexts/VoiceSettingsContext';
 import type { Verbosity } from '@utils/ttsStrings';
 import type {
@@ -66,7 +66,10 @@ export interface WizardDepositState {
   amount?: number;
   frontCaptured: boolean;
   backCaptured: boolean;
+  frontImageUri?: string;
+  backImageUri?: string;
   ocrOutcome?: WizardOcrOutcome;
+  ocrData?: CheckOCRResponse['data'];
   confirmationNumber?: string;
 }
 

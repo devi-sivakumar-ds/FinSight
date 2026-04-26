@@ -38,6 +38,18 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { verbosity } = useVoiceSettings();
 
   const { voiceState } = useAlwaysOnVoice();
+  const expectedDate = deposit.expectedAvailability
+    ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : 'within 1-2 business days';
+  const submittedDate = new Date(deposit.createdAt).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
   // Announce success on mount — haptic burst first, then voice
   useEffect(() => {
@@ -47,9 +59,11 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
 
     setTimeout(() => {
-      speakHigh(v(verbosity, ttsStrings.success.submitted));
+      speakHigh(v(verbosity, ttsStrings.success.received(formatAmountDisplay(deposit.amount), submittedDate)));
       setTimeout(() => {
-        const availStr = v(verbosity, ttsStrings.success.availability);
+        const availStr = deposit.expectedAvailability
+          ? v(verbosity, ttsStrings.success.availableByDate(expectedDate))
+          : v(verbosity, ttsStrings.success.availability);
         if (availStr) speakMedium(availStr);
         const confirmNum = deposit.confirmationNumber;
         if (confirmNum) {
@@ -64,7 +78,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
-  }, []);
+  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, speakHigh, speakMedium, submittedDate, trigger, verbosity]);
 
   const handleDone = () => {
     // DepositFlow is a modal on RootStack — one goBack() dismisses it entirely
@@ -81,14 +95,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     { context: 'Success' }
   );
-
-  const expectedDate = deposit.expectedAvailability
-    ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : 'within 1-2 business days';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -160,7 +166,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say 'done' to return to the home screen."
+          listeningText="Your session is complete. Say done to return to the home screen."
         />
         <AccessibleButton
           label="Done"
