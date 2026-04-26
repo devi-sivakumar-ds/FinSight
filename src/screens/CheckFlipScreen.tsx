@@ -56,15 +56,15 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
   // Announce instructions on mount
   useEffect(() => {
     setTimeout(() => {
-      speakMedium(v(verbosity, ttsStrings.checkFlip.frontCaptured));
+      speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured(capturedSide)));
       setTimeout(() => {
-        speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction));
+        speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction(nextSide)));
         setTimeout(() => {
           speakMedium(v(verbosity, ttsStrings.checkFlip.continuePrompt));
         }, 2000);
       }, 1200);
     }, 400);
-  }, []);
+  }, [capturedSide, nextSide, speakMedium, verbosity]);
 
   const proceedToBackSide = () => {
     navigation.navigate('CheckCapture', {

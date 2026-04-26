@@ -263,7 +263,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
         {/* Mode feedback */}
         {mode === 'confirming' && (
           <Text style={styles.confirmBanner} accessibilityLiveRegion="polite">
-            Is this correct? Say "yes" or tap Continue.
+            Is this correct? Say "yes" or "no".
           </Text>
         )}
         {mode === 'error' && (
@@ -297,7 +297,7 @@ export const AmountInputScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say an amount, like 'one hundred fifty dollars'."
+          listeningText="Say the amount you would like to deposit."
         />
         <AccessibleButton
           label={mode === 'confirming' ? 'Continue' : 'Confirm Amount'}

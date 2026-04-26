@@ -4,7 +4,8 @@
 // ============================================================================
 
 import type { CheckOCRResponse } from '@/types/index';
-import { WizardAccountType, WizardAppState, WizardCaptureOrder, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
+import { WizardAccountType, WizardAppState, WizardCaptureOrder, WizardCaptureSide, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
+import type { DepositStackParamList } from '@/types/index';
 
 const DEFAULT_DEPOSIT_STATE: WizardDepositState = {
   frontCaptured: false,
@@ -44,6 +45,13 @@ class WizardStateService {
     };
   }
 
+  public setCurrentCaptureSide(currentCaptureSide: WizardCaptureSide): void {
+    this.deposit = {
+      ...this.deposit,
+      currentCaptureSide,
+    };
+  }
+
   public setCaptureState(
     frontCaptured: boolean,
     backCaptured: boolean,
@@ -74,6 +82,13 @@ class WizardStateService {
     this.deposit = {
       ...this.deposit,
       confirmationNumber,
+    };
+  }
+
+  public setRetryScreen(retryScreen?: keyof DepositStackParamList): void {
+    this.deposit = {
+      ...this.deposit,
+      retryScreen,
     };
   }
 

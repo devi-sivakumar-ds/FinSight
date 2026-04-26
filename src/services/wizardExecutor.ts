@@ -4,7 +4,7 @@
 // ============================================================================
 
 import { NavigationContainerRefWithCurrent } from '@react-navigation/native';
-import { CheckOCRResponse, RootStackParamList } from '@/types/index';
+import { CheckOCRResponse, DepositStackParamList, RootStackParamList } from '@/types/index';
 import { Pace } from '@/contexts/VoiceSettingsContext';
 import { WizardOperatorCommand } from '@/types/wizard';
 import { Verbosity, ttsStrings, v } from '@utils/ttsStrings';
@@ -17,6 +17,78 @@ interface WizardExecutorDeps {
   verbosity: Verbosity;
   setVerbosity: (value: Verbosity) => void;
   setPace: (value: Pace) => void;
+}
+
+function getDepositBaseParams() {
+  const deposit = wizardState.getDepositState();
+  return {
+    deposit,
+    amount: deposit.amount ?? 0,
+    accountType: deposit.accountType ?? 'checking',
+    accountId: deposit.accountId ?? 'acc_1',
+  };
+}
+
+function navigateToRetryStep(
+  navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>,
+  retryScreen?: keyof RootStackParamList | keyof DepositStackParamList
+) {
+  const { deposit, amount, accountType, accountId } = getDepositBaseParams();
+  const resolvedRetryScreen = (retryScreen as keyof DepositStackParamList | undefined) ?? deposit.retryScreen;
+
+  switch (resolvedRetryScreen) {
+    case 'AmountInput':
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'AmountInput',
+        params: { accountId, accountType },
+      });
+      return;
+    case 'CheckCapture':
+      (navigationRef.navigate as any)('DepositFlow', {
+        screen: 'CheckCapture',
+        params: {
+          accountId,
+          accountType,
+          amount,
+          side: deposit.currentCaptureSide ?? (deposit.backCaptured ? 'front' : 'back'),
+          frontImageUri: deposit.frontImageUri,
+          backImageUri: deposit.backImageUri,
+        },
+      });
+      return;
+    case 'OCRProcessing':
+      if (deposit.frontImageUri && deposit.backImageUri) {
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'OCRProcessing',
+          params: {
+            frontImageUri: deposit.frontImageUri,
+            backImageUri: deposit.backImageUri,
+            accountId,
+            accountType,
+            amount,
+          },
+        });
+      }
+      return;
+    case 'Confirmation':
+      if (deposit.frontImageUri && deposit.backImageUri) {
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'Confirmation',
+          params: {
+            accountId,
+            accountType,
+            amount,
+            frontImageUri: deposit.frontImageUri,
+            backImageUri: deposit.backImageUri,
+            ocrData: deposit.ocrData,
+          },
+        });
+      }
+      return;
+    case 'AccountSelect':
+    default:
+      (navigationRef.navigate as any)('DepositFlow', { screen: 'AccountSelect' });
+  }
 }
 
 function navigateToTab(
@@ -213,6 +285,7 @@ export function executeWizardCommand(
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
       const firstSide = deposit.captureOrder === 'back_first' ? 'back' : 'front';
+      wizardState.setCurrentCaptureSide(firstSide);
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'CheckCapture',
         params: {
@@ -234,6 +307,14 @@ export function executeWizardCommand(
       return;
 
     case 'CLOSE_FROM_AMOUNT_INPUT':
+      if (navigationRef.canGoBack()) navigationRef.goBack();
+      return;
+
+    case 'BACK_FROM_CHECK_CAPTURE':
+      if (navigationRef.canGoBack()) navigationRef.goBack();
+      return;
+
+    case 'CLOSE_FROM_CHECK_CAPTURE':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
 
@@ -276,6 +357,7 @@ export function executeWizardCommand(
       const frontImageUri = deposit.frontImageUri;
       const backImageUri = deposit.backImageUri;
       const nextSide = deposit.frontCaptured && !deposit.backCaptured ? 'back' : 'front';
+      wizardState.setCurrentCaptureSide(nextSide);
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'CheckCapture',
         params: {
@@ -330,15 +412,25 @@ export function executeWizardCommand(
         command.payload && 'text' in command.payload && command.payload.text
           ? command.payload.text
           : 'Failed to capture check image. Please try again.';
+      wizardState.setRetryScreen('CheckCapture');
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'Error',
         params: {
           error: message,
           canRetry: true,
+          retryScreen: 'CheckCapture',
         },
       });
       return;
     }
+
+    case 'BACK_FROM_CHECK_FLIP':
+      if (navigationRef.canGoBack()) navigationRef.goBack();
+      return;
+
+    case 'CLOSE_FROM_CHECK_FLIP':
+      if (navigationRef.canGoBack()) navigationRef.goBack();
+      return;
 
     case 'OCR_SUCCESS':
     case 'OCR_PARTIAL':
@@ -354,6 +446,7 @@ export function executeWizardCommand(
       const ocrData = command.id === 'OCR_FAIL' ? undefined : buildWizardOcrData(command);
 
       wizardState.setOcrOutcome(outcome, ocrData);
+      wizardState.setRetryScreen(undefined);
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'Confirmation',
         params: {
@@ -384,6 +477,7 @@ export function executeWizardCommand(
           depositState.ocrData?.accountNumber
         );
         wizardState.setConfirmationNumber(deposit.confirmationNumber);
+        wizardState.setRetryScreen(undefined);
         (navigationRef.navigate as any)('DepositFlow', {
           screen: 'Success',
           params: { deposit },
@@ -417,7 +511,10 @@ export function executeWizardCommand(
       return;
 
     case 'RETRY_FROM_ERROR':
-      (navigationRef.navigate as any)('DepositFlow', { screen: 'AccountSelect' });
+      navigateToRetryStep(
+        navigationRef,
+        command.payload && 'retryScreen' in command.payload ? command.payload.retryScreen : undefined
+      );
       return;
 
     case 'GO_HOME_FROM_ERROR':

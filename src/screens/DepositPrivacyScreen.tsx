@@ -87,7 +87,7 @@ export const DepositPrivacyScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say continue to choose an account."
+          listeningText="Say continue to move on."
         />
         <AccessibleButton
           label="Continue"

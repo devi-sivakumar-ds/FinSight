@@ -60,13 +60,13 @@ export const ttsStrings = {
   depositOverview: {
     intro: {
       low:    'Deposit check.',
-      medium: 'You chose to deposit a check.',
-      high:   'You have chosen to deposit a check.',
+      medium: 'You selected deposit a check.',
+      high:   'You selected deposit a check.',
     } as VStr,
     process: {
       low:    'Three steps.',
-      medium: `I'll guide you through depositing your check. You'll select an account, and I'll walk you through capturing your check image — I'll tell you when the image is captured. From there, I'll read you the check amount and you'll confirm the deposit. `,
-      high:   'I will guide you through the process. First you will choose an account, then enter the check amount, and finally capture the front and back of the check.',
+      medium: 'We will proceed in three steps. First, choose an account. Next, enter the check amount. Then, capture the front and back of the check.',
+      high:   'We will proceed in three steps. First, choose an account. Next, enter the check amount. Then, capture the front and back of the check.',
     } as VStr,
     continuePrompt: {
       low:    'Say continue.',
@@ -80,12 +80,12 @@ export const ttsStrings = {
     intro: {
       low:    'Privacy.',
       medium: 'Your privacy matters.',
-      high:   'Before we begin, here is a quick privacy note.',
+      high:   'Your privacy matters.',
     } as VStr,
     details: {
       low:    'Not saved in app.',
-      medium: "Your deposit information is used only for this flow and isn't stored in the app after this session.",
-      high:   "Your deposit information is used only to guide this deposit flow and is not stored in the app after this session.",
+      medium: 'Your deposit information is used only for this flow and is not stored in the app after this session.',
+      high:   'Your deposit information is used only for this flow and is not stored in the app after this session.',
     } as VStr,
     continuePrompt: {
       low:    'Continue.',
@@ -98,13 +98,13 @@ export const ttsStrings = {
   accountSelect: {
     prompt: {
       low:    'Which account?',
-      medium: 'Which account do you want to deposit to?',
-      high:   'Which account would you like to deposit your check to?',
+      medium: 'Please choose the account where you want to deposit this check.',
+      high:   'Please choose the account where you want to deposit this check.',
     } as VStr,
     accountCount: (n: number): VStr => ({
       low:    '',
-      medium: `You have ${n} accounts.`,
-      high:   `You have ${n} accounts. I will read them out now.`,
+      medium: `You have ${n} available accounts.`,
+      high:   `You have ${n} available accounts. I will read them now.`,
     }),
     accountDetail: (typeLabel: string, digits: string, balance: string): VStr => ({
       low:    `${typeLabel} ending in ${digits}.`,
@@ -118,8 +118,8 @@ export const ttsStrings = {
     }),
     continuePrompt: {
       low:    '',
-      medium: 'Say continue to proceed, or select a different account.',
-      high:   'Say continue to proceed with this account, or select a different account to change your selection.',
+      medium: 'Say continue to proceed, or choose a different account.',
+      high:   'Say continue to proceed, or choose a different account.',
     } as VStr,
     noAccount: {
       low:    'Select an account.',
@@ -137,48 +137,60 @@ export const ttsStrings = {
     }),
     prompt: {
       low:    'How much?',
-      medium: 'How much are you depositing?',
-      high:   "How much would you like to deposit? Say the amount, for example, 'one hundred fifty dollars'.",
+      medium: "Please say the amount you would like to deposit. For example, one hundred fifty dollars.",
+      high:   "Please say the amount you would like to deposit. For example, one hundred fifty dollars.",
     } as VStr,
     dailyLimit: (limit: string): VStr => ({
       low:    '',
-      medium: `Daily limit: ${limit}.`,
-      high:   `Your daily deposit limit is ${limit}.`,
+      medium: `The daily deposit limit is ${limit}.`,
+      high:   `The daily deposit limit is ${limit}.`,
     }),
     retryPrompt: {
       low:    'Try again.',
-      medium: 'Okay, how much are you depositing?',
-      high:   "Let's try that again. How much would you like to deposit?",
+      medium: 'Let us try that again. Please say the deposit amount.',
+      high:   'Let us try that again. Please say the deposit amount.',
     } as VStr,
     didntCatch: {
       low:    "Didn't catch that.",
-      medium: "Sorry, I didn't catch that. Please say an amount like 'one hundred fifty dollars'.",
-      high:   "Sorry, I wasn't able to understand the amount. Please say it clearly, for example: one hundred fifty dollars.",
+      medium: "Sorry, I did not catch that. Please say an amount like one hundred fifty dollars.",
+      high:   "Sorry, I did not catch that. Please say an amount like one hundred fifty dollars.",
     } as VStr,
     voiceConfirm: (amount: string): VStr => ({
       low:    `${amount}. Correct?`,
-      medium: `I heard ${amount}. Is that correct? Say yes to continue or no to try again.`,
-      high:   `I heard ${amount}. Is that the correct deposit amount? Say yes to continue, or no to say the amount again.`,
+      medium: `I heard ${amount}. Is that correct? Say yes or no.`,
+      high:   `I heard ${amount}. Is that correct? Say yes or no.`,
     }),
     typedConfirm: (amount: string): VStr => ({
       low:    `${amount}.`,
-      medium: `${amount}. Is that correct? Say yes to continue or no to change it.`,
-      high:   `The deposit amount is ${amount}. Is that correct? Say yes to continue, or no to change it.`,
+      medium: `The deposit amount is ${amount}. Is that correct? Say yes or no.`,
+      high:   `The deposit amount is ${amount}. Is that correct? Say yes or no.`,
     }),
   },
 
   // ── Check flip ─────────────────────────────────────────────────────────────
   checkFlip: {
-    frontCaptured: {
-      low:    'Front captured.',
-      medium: 'Front captured successfully.',
-      high:   'The front of your check has been captured successfully.',
-    } as VStr,
-    flipInstruction: {
-      low:    'Flip to show the back.',
-      medium: 'Please flip the check over. Before proceeding, ensure you have endorsed the back.',
-      high:   'Please flip the check over. Before proceeding, ensure you have endorsed the back.',
-    } as VStr,
+    sideCaptured: (side: 'front' | 'back'): VStr => ({
+      low:    side === 'front' ? 'Front captured.' : 'Back captured.',
+      medium:
+        side === 'front'
+          ? 'Front captured successfully.'
+          : 'Back captured successfully.',
+      high:
+        side === 'front'
+          ? 'The front of your check has been captured successfully.'
+          : 'The back of your check has been captured successfully.',
+    }),
+    flipInstruction: (nextSide: 'front' | 'back'): VStr => ({
+      low:    nextSide === 'back' ? 'Flip to show the back.' : 'Flip to show the front.',
+      medium:
+        nextSide === 'back'
+          ? 'Please flip the check over. Before proceeding, ensure you have endorsed the back.'
+          : 'Please flip the check over to show the front of the check.',
+      high:
+        nextSide === 'back'
+          ? 'Please flip the check over. Before proceeding, ensure you have endorsed the back.'
+          : 'Please flip the check over to show the front of the check.',
+    }),
     continuePrompt: {
       low:    'Continue when ready.',
       medium: 'Say continue when you are ready.',
@@ -313,8 +325,23 @@ export const ttsStrings = {
     } as VStr,
     waitingForOperator: {
       low:    'Reviewing.',
-      medium: 'Reviewing your check details now.',
-      high:   'Reviewing your check details now.',
+      medium: 'Reviewing your check details now. Please wait for the operator to continue.',
+      high:   'Reviewing your check details now. Please wait for the operator to continue.',
+    } as VStr,
+    detailsFound: {
+      low:    'Details found.',
+      medium: 'Check details found. Reviewing now.',
+      high:   'Check details found. Reviewing now.',
+    } as VStr,
+    usingEnteredAmount: {
+      low:    'Using entered amount.',
+      medium: 'Could not read all check details. Using your entered amount.',
+      high:   'Could not read all check details. Using your entered amount.',
+    } as VStr,
+    serviceUnavailable: {
+      low:    'Service unavailable.',
+      medium: 'Could not connect to the check reading service. Please try again.',
+      high:   'Could not connect to the check reading service. Please try again.',
     } as VStr,
   },
 
@@ -322,8 +349,8 @@ export const ttsStrings = {
   confirmation: {
     intro: {
       low:    'Check captured.',
-      medium: 'Your check has been captured. Let me read the details.',
-      high:   'Your check has been captured successfully. Let me read the deposit details to you.',
+      medium: 'Your check has been captured successfully. Let me read the deposit details.',
+      high:   'Your check has been captured successfully. Let me read the deposit details.',
     } as VStr,
     reviewSummary: (amount: string, accountDigits?: string): VStr => ({
       low:    `${amount}.`,
@@ -356,7 +383,7 @@ export const ttsStrings = {
     } as VStr,
     submitting: {
       low:    'Submitting.',
-      medium: 'Submitting deposit...',
+      medium: 'Submitting your deposit now. Please wait.',
       high:   'Submitting your deposit now. Please wait.',
     } as VStr,
     submitError: {
@@ -385,8 +412,8 @@ export const ttsStrings = {
     }),
     submitted: {
       low:    'Deposit submitted.',
-      medium: 'Deposit submitted successfully.',
-      high:   'Your deposit has been submitted successfully and is now being processed.',
+      medium: 'Your deposit has been submitted successfully.',
+      high:   'Your deposit has been submitted successfully.',
     } as VStr,
     availableByDate: (date: string): VStr => ({
       low:    '',

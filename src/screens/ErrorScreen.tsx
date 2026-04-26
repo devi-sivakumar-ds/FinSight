@@ -16,6 +16,7 @@ import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
+import wizardState from '@services/wizardState';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
@@ -43,13 +44,65 @@ export const ErrorScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [error, canRetry]);
 
   const handleRetry = () => {
-    if (retryScreen) {
-      // Navigate to specific retry screen
-      navigation.navigate(retryScreen as any);
+    const deposit = wizardState.getDepositState();
+    const resolvedRetryScreen = retryScreen ?? deposit.retryScreen;
+
+    if (resolvedRetryScreen) {
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+
+      switch (resolvedRetryScreen) {
+        case 'AmountInput':
+          navigation.navigate('AmountInput', { accountId, accountType });
+          return;
+        case 'CheckCapture':
+          navigation.navigate('CheckCapture', {
+            accountId,
+            accountType,
+            amount,
+            side: deposit.currentCaptureSide ?? (deposit.backCaptured ? 'front' : 'back'),
+            frontImageUri: deposit.frontImageUri,
+            backImageUri: deposit.backImageUri,
+          });
+          return;
+        case 'OCRProcessing':
+          if (deposit.frontImageUri && deposit.backImageUri) {
+            navigation.navigate('OCRProcessing', {
+              frontImageUri: deposit.frontImageUri,
+              backImageUri: deposit.backImageUri,
+              accountId,
+              accountType,
+              amount,
+            });
+            return;
+          }
+          break;
+        case 'Confirmation':
+          if (deposit.frontImageUri && deposit.backImageUri) {
+            navigation.navigate('Confirmation', {
+              accountId,
+              accountType,
+              amount,
+              frontImageUri: deposit.frontImageUri,
+              backImageUri: deposit.backImageUri,
+              ocrData: deposit.ocrData,
+            });
+            return;
+          }
+          break;
+        case 'AccountSelect':
+          navigation.navigate('AccountSelect');
+          return;
+        default:
+          break;
+      }
     } else {
-      // Default: restart from account selection
       navigation.navigate('AccountSelect');
     }
+
+    // Fallback: restart from account selection if retry context is incomplete.
+    navigation.navigate('AccountSelect');
   };
 
   const handleGoHome = () => {

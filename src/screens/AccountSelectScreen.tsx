@@ -164,7 +164,7 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
 
       <View style={styles.content}>
         <Text style={styles.title} accessible accessibilityRole="header">
-          Which account do you want to deposit to?
+          Choose the account for this deposit
         </Text>
 
         {loading ? (
@@ -194,7 +194,7 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Which account — Checking or Savings?"
+          listeningText="Choose checking or savings, then say continue."
         />
         <AccessibleButton
           label="Continue"

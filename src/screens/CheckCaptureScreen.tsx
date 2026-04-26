@@ -132,6 +132,10 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const sideLabel = side === 'front' ? 'front' : 'back';
 
+  useEffect(() => {
+    wizardState.setCurrentCaptureSide(side);
+  }, [side]);
+
   // ── TTS drain on screen leave ─────────────────────────────────────────────
   useFocusEffect(
     useCallback(() => {

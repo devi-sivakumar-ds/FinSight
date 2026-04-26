@@ -25,6 +25,7 @@ import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
+import wizardState from '@services/wizardState';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
@@ -112,6 +113,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   const handleSubmit = useCallback(async () => {
     stopCountdown();
     setIsSubmitting(true);
+    wizardState.setRetryScreen('Confirmation');
     speakMedium(v(verbosity, ttsStrings.confirmation.submitting));
 
     try {
@@ -125,6 +127,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         ocrData?.accountNumber
       );
 
+      wizardState.setRetryScreen(undefined);
       navigation.replace('Success', { deposit });
     } catch (error) {
       console.error('Deposit submission error:', error);
@@ -134,6 +137,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         navigation.navigate('Error', {
           error: 'Failed to submit deposit. Please try again.',
           canRetry: true,
+          retryScreen: 'Confirmation',
         });
       }, 2000);
     }
@@ -265,7 +269,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
       <View style={styles.footer}>
         <VoiceBanner
           state={voiceState}
-          listeningText="Say 'confirm' to proceed, or 'cancel' to stop."
+          listeningText="Say confirm to proceed, or cancel to stop."
         />
 
         {pureWozMode ? (
