@@ -146,12 +146,17 @@ export type DepositStackParamList = {
     amount: number;
     side: 'front' | 'back';
     frontImageUri?: string; // Present when capturing back side
+    backImageUri?: string; // Present when capturing front side second
   };
   CheckFlip: {
-    frontImageUri: string;
+    capturedImageUri: string;
     accountId: string;
     accountType: 'checking' | 'savings';
     amount: number;
+    capturedSide: 'front' | 'back';
+    nextSide: 'front' | 'back';
+    frontImageUri?: string;
+    backImageUri?: string;
   };
   OCRProcessing: {
     frontImageUri: string;

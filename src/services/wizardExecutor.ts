@@ -199,18 +199,27 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'SET_CAPTURE_ORDER_FRONT_FIRST':
+      wizardState.setCaptureOrder('front_first');
+      return;
+
+    case 'SET_CAPTURE_ORDER_BACK_FIRST':
+      wizardState.setCaptureOrder('back_first');
+      return;
+
     case 'CONFIRM_AMOUNT': {
       const deposit = wizardState.getDepositState();
       const amount = deposit.amount ?? 0;
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
+      const firstSide = deposit.captureOrder === 'back_first' ? 'back' : 'front';
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'CheckCapture',
         params: {
           accountId,
           accountType,
           amount,
-          side: 'front',
+          side: firstSide,
         },
       });
       return;
@@ -234,11 +243,28 @@ export function executeWizardCommand(
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
       const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
-      wizardState.setCaptureState(true, deposit.backCaptured, frontImageUri, deposit.backImageUri);
-      (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'CheckFlip',
-        params: { frontImageUri, accountId, accountType, amount },
-      });
+      if (deposit.backCaptured) {
+        const backImageUri = deposit.backImageUri ?? 'wizard://back';
+        wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'OCRProcessing',
+          params: { frontImageUri, backImageUri, accountId, accountType, amount },
+        });
+      } else {
+        wizardState.setCaptureState(true, false, frontImageUri, deposit.backImageUri);
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'CheckFlip',
+          params: {
+            capturedImageUri: frontImageUri,
+            capturedSide: 'front',
+            nextSide: 'back',
+            accountId,
+            accountType,
+            amount,
+            frontImageUri,
+          },
+        });
+      }
       return;
     }
 
@@ -247,10 +273,19 @@ export function executeWizardCommand(
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
-      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+      const frontImageUri = deposit.frontImageUri;
+      const backImageUri = deposit.backImageUri;
+      const nextSide = deposit.frontCaptured && !deposit.backCaptured ? 'back' : 'front';
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'CheckCapture',
-        params: { frontImageUri, accountId, accountType, amount, side: 'back' },
+        params: {
+          frontImageUri,
+          backImageUri,
+          accountId,
+          accountType,
+          amount,
+          side: nextSide,
+        },
       });
       return;
     }
@@ -260,13 +295,29 @@ export function executeWizardCommand(
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
-      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
       const backImageUri = deposit.backImageUri ?? 'wizard://back';
-      wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
-      (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'OCRProcessing',
-        params: { frontImageUri, backImageUri, accountId, accountType, amount },
-      });
+      if (deposit.frontCaptured) {
+        const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+        wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'OCRProcessing',
+          params: { frontImageUri, backImageUri, accountId, accountType, amount },
+        });
+      } else {
+        wizardState.setCaptureState(false, true, deposit.frontImageUri, backImageUri);
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'CheckFlip',
+          params: {
+            capturedImageUri: backImageUri,
+            capturedSide: 'back',
+            nextSide: 'front',
+            accountId,
+            accountType,
+            amount,
+            backImageUri,
+          },
+        });
+      }
       return;
     }
 

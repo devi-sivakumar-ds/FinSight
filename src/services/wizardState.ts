@@ -4,7 +4,7 @@
 // ============================================================================
 
 import type { CheckOCRResponse } from '@/types/index';
-import { WizardAccountType, WizardAppState, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
+import { WizardAccountType, WizardAppState, WizardCaptureOrder, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
 
 const DEFAULT_DEPOSIT_STATE: WizardDepositState = {
   frontCaptured: false,
@@ -34,6 +34,13 @@ class WizardStateService {
     this.deposit = {
       ...this.deposit,
       amount,
+    };
+  }
+
+  public setCaptureOrder(captureOrder: WizardCaptureOrder): void {
+    this.deposit = {
+      ...this.deposit,
+      captureOrder,
     };
   }
 

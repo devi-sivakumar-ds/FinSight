@@ -31,10 +31,20 @@ type Props = {
 };
 
 export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { frontImageUri, accountId, accountType, amount } = route.params;
+  const {
+    capturedImageUri,
+    capturedSide,
+    nextSide,
+    frontImageUri,
+    accountId,
+    accountType,
+    amount,
+  } = route.params;
   const { speakMedium } = useTTS();
   const { voiceState } = useAlwaysOnVoice();
   const { verbosity } = useVoiceSettings();
+  const nextSideLabel = nextSide === 'front' ? 'front' : 'back';
+  const capturedSideLabel = capturedSide === 'front' ? 'Front' : 'Back';
 
   // Stop any lingering TTS when leaving this screen (e.g. user says "ready" quickly)
   useFocusEffect(
@@ -61,8 +71,9 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
       accountId,
       accountType,
       amount,
-      side: 'back',
+      side: nextSide,
       frontImageUri,
+      backImageUri: route.params.backImageUri,
     });
   };
 
@@ -92,26 +103,28 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Title */}
         <Text style={styles.title} accessible accessibilityRole="header">
-          Front Captured Successfully
+          {capturedSideLabel} Captured Successfully
         </Text>
 
         {/* Instruction */}
         <Text style={styles.instruction}>
-          Now flip the check to show the back, where you would sign it.
+          {nextSide === 'back'
+            ? 'Now flip the check to show the back, where you would sign it.'
+            : 'Now flip the check to show the front of the check.'}
         </Text>
 
         {/* Thumbnail (optional) */}
-        {frontImageUri && (
+        {capturedImageUri && (
           <View style={styles.thumbnailContainer}>
             <Image
-              source={{ uri: frontImageUri }}
+              source={{ uri: capturedImageUri }}
               style={styles.thumbnail}
               resizeMode="contain"
               accessible
-              accessibilityLabel="Captured front image preview"
+              accessibilityLabel={`Captured ${capturedSide} image preview`}
             />
             <View style={styles.thumbnailOverlay}>
-              <Text style={styles.thumbnailLabel}>FRONT</Text>
+              <Text style={styles.thumbnailLabel}>{capturedSide.toUpperCase()}</Text>
             </View>
           </View>
         )}
@@ -129,11 +142,11 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
           listeningText="Say continue when you are ready."
         />
         <AccessibleButton
-          label="Ready"
+          label={`Capture ${nextSideLabel}`}
           onPress={proceedToBackSide}
           size="large"
           style={styles.readyButton}
-          accessibilityHint="Proceed to capture the back side of the check"
+          accessibilityHint={`Proceed to capture the ${nextSideLabel} side of the check`}
         />
       </View>
     </SafeAreaView>

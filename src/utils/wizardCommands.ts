@@ -84,6 +84,8 @@ export const wizardCommands = {
 
   amountInput: [
     cmd('SET_AMOUNT', 'Set Amount', 'AmountInput', 'amount', 'Set the deposit amount manually from the dashboard.'),
+    cmd('SET_CAPTURE_ORDER_FRONT_FIRST', 'Front Then Back', 'AmountInput'),
+    cmd('SET_CAPTURE_ORDER_BACK_FIRST', 'Back Then Front', 'AmountInput'),
     cmd('CONFIRM_AMOUNT', 'Confirm Amount', 'AmountInput'),
     cmd('RETRY_AMOUNT', 'Retry Amount', 'AmountInput'),
     cmd('BACK_FROM_AMOUNT_INPUT', 'Back', 'AmountInput'),

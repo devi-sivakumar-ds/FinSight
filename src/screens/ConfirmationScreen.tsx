@@ -17,6 +17,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
+import { isPureWozMode } from '@/config/studyMode';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { VoiceBanner } from '@components/VoiceBanner';
 import { useTTS } from '@hooks/useTTS';
@@ -57,6 +58,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
   const amountSpeech = formatAmountForSpeech(amount);
   const accountDigits = accountId === 'acc_1' ? '7749' : accountId === 'acc_2' ? '3182' : undefined;
+  const pureWozMode = isPureWozMode();
 
   // Announce details on mount, then start countdown
   useEffect(() => {
@@ -71,6 +73,10 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         }, 1400);
       }, 1000);
     }, 400);
+
+    if (pureWozMode) {
+      return undefined;
+    }
 
     // Start countdown after TTS chain ends
     const countdownStart = setTimeout(() => {
@@ -101,7 +107,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
       clearTimeout(countdownStart);
       stopCountdown();
     };
-  }, [accountDigits, amountSpeech, progressAnim, speakMedium, stopCountdown, verbosity]);
+  }, [accountDigits, amountSpeech, progressAnim, pureWozMode, speakMedium, stopCountdown, verbosity]);
 
   const handleSubmit = useCallback(async () => {
     stopCountdown();
@@ -262,52 +268,74 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
           listeningText="Say 'confirm' to proceed, or 'cancel' to stop."
         />
 
-        {/* Countdown card */}
-        <View
-          style={styles.countdownCard}
-          accessible
-          accessibilityLabel={
-            isSubmitting
-              ? 'Submitting your deposit'
-              : `Submitting in ${countdown} seconds`
-          }
-        >
-          <Text style={styles.countdownLabel}>
-            {isSubmitting ? 'Submitting…' : 'Submitting in'}
-          </Text>
-          {!isSubmitting && (
-            <Text style={styles.countdownNumber}>{countdown}</Text>
-          )}
-          {isSubmitting && (
-            <ActivityIndicator
-              size="large"
-              color={DARK_COLORS.BLUE}
-              style={{ marginVertical: 8 }}
-            />
-          )}
-          {!isSubmitting && (
-            <Text style={styles.countdownUnit}>seconds</Text>
-          )}
-
-          {/* Progress bar */}
-          <View style={styles.progressTrack}>
-            <Animated.View
-              style={[
-                styles.progressFill,
-                {
-                  width: progressAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                  }),
-                },
-              ]}
-            />
+        {pureWozMode ? (
+          <View
+            style={styles.countdownCard}
+            accessible
+            accessibilityLabel={isSubmitting ? 'Submitting your deposit' : 'Awaiting operator confirmation'}
+          >
+            <Text style={styles.countdownLabel}>
+              {isSubmitting ? 'Submitting…' : 'Awaiting Confirmation'}
+            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator
+                size="large"
+                color={DARK_COLORS.BLUE}
+                style={{ marginVertical: 8 }}
+              />
+            ) : (
+              <Text style={styles.countdownNote}>
+                The operator will confirm or cancel this step.
+              </Text>
+            )}
           </View>
+        ) : (
+          <View
+            style={styles.countdownCard}
+            accessible
+            accessibilityLabel={
+              isSubmitting
+                ? 'Submitting your deposit'
+                : `Submitting in ${countdown} seconds`
+            }
+          >
+            <Text style={styles.countdownLabel}>
+              {isSubmitting ? 'Submitting…' : 'Submitting in'}
+            </Text>
+            {!isSubmitting && (
+              <Text style={styles.countdownNumber}>{countdown}</Text>
+            )}
+            {isSubmitting && (
+              <ActivityIndicator
+                size="large"
+                color={DARK_COLORS.BLUE}
+                style={{ marginVertical: 8 }}
+              />
+            )}
+            {!isSubmitting && (
+              <Text style={styles.countdownUnit}>seconds</Text>
+            )}
 
-          <Text style={styles.countdownNote}>
-            You can cancel during this countdown.
-          </Text>
-        </View>
+            {/* Progress bar */}
+            <View style={styles.progressTrack}>
+              <Animated.View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
+
+            <Text style={styles.countdownNote}>
+              You can cancel during this countdown.
+            </Text>
+          </View>
+        )}
 
         <AccessibleButton
           label="Cancel"

@@ -172,18 +172,50 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       const normalizedPhotoUri = await normalizeImageToLandscape(photoUri);
 
       if (side === 'front') {
-        wizardState.setCaptureState(true, false, normalizedPhotoUri, route.params.frontImageUri);
-        navigation.navigate('CheckFlip', { frontImageUri: normalizedPhotoUri, accountId, accountType, amount });
+        if (route.params.backImageUri) {
+          wizardState.setCaptureState(true, true, normalizedPhotoUri, route.params.backImageUri);
+          navigation.navigate('OCRProcessing', {
+            frontImageUri: normalizedPhotoUri,
+            backImageUri: route.params.backImageUri,
+            accountId,
+            accountType,
+            amount,
+          });
+        } else {
+          wizardState.setCaptureState(true, false, normalizedPhotoUri, route.params.frontImageUri);
+          navigation.navigate('CheckFlip', {
+            capturedImageUri: normalizedPhotoUri,
+            capturedSide: 'front',
+            nextSide: 'back',
+            accountId,
+            accountType,
+            amount,
+            frontImageUri: normalizedPhotoUri,
+          });
+        }
       } else {
         const frontUri = route.params.frontImageUri ?? '';
-        wizardState.setCaptureState(true, true, frontUri, normalizedPhotoUri);
-        navigation.navigate('OCRProcessing', {
-          frontImageUri: frontUri,
-          backImageUri: normalizedPhotoUri,
-          accountId,
-          accountType,
-          amount,
-        });
+        if (frontUri) {
+          wizardState.setCaptureState(true, true, frontUri, normalizedPhotoUri);
+          navigation.navigate('OCRProcessing', {
+            frontImageUri: frontUri,
+            backImageUri: normalizedPhotoUri,
+            accountId,
+            accountType,
+            amount,
+          });
+        } else {
+          wizardState.setCaptureState(false, true, undefined, normalizedPhotoUri);
+          navigation.navigate('CheckFlip', {
+            capturedImageUri: normalizedPhotoUri,
+            capturedSide: 'back',
+            nextSide: 'front',
+            accountId,
+            accountType,
+            amount,
+            backImageUri: normalizedPhotoUri,
+          });
+        }
       }
     } catch (err) {
       console.error('[CheckCapture] takePhoto error:', err);
