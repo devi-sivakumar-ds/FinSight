@@ -51,6 +51,7 @@ import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { COLORS, DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
+import { isPureWozMode } from '@/config/studyMode';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'CheckCapture'>;
@@ -91,6 +92,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
+  const pureWozMode = isPureWozMode();
 
   // ── Guide box — portrait-shaped (taller than wide) ───────────────────────
   // User holds phone in landscape. The check's long 6" side runs vertically
@@ -355,11 +357,15 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
 
     speakMedium(v(verbosity, ttsStrings.checkCapture.liveGuidanceStart(side)));
 
+    if (pureWozMode) {
+      return;
+    }
+
     // Give the TTS ~800 ms before first snapshot (phone still moving up)
     snapshotTimerRef.current = setTimeout(() => {
       runSnapshotLoopRef.current();
     }, 800);
-  }, [side, speakMedium, verbosity]);
+  }, [pureWozMode, side, speakMedium, verbosity]);
 
   useEffect(() => {
     if (!autoStart || autoStartHandledRef.current || !hasPermission || phase !== 'setup') return;
@@ -376,9 +382,12 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     autoStartHandledRef.current = false;
 
     const t1 = setTimeout(() => {
-      speakMedium(v(verbosity, ttsStrings.checkCapture.setupPlacement(side)));
+      speakMedium(v(verbosity, ttsStrings.checkCapture.setupOrientation));
       setTimeout(() => {
-        speakMedium(v(verbosity, ttsStrings.checkCapture.readyPrompt));
+        speakMedium(v(verbosity, ttsStrings.checkCapture.setupPlacement(side)));
+        setTimeout(() => {
+          speakMedium(v(verbosity, ttsStrings.checkCapture.readyPrompt));
+        }, 1500);
       }, 1400);
     }, 600);
 

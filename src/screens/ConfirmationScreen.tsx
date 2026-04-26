@@ -143,8 +143,8 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleEditAmount = useCallback(() => {
     speakMedium(v(verbosity, ttsStrings.confirmation.editAmount));
-    navigation.navigate('AmountInput', { accountId, accountType });
-  }, [accountId, accountType, navigation]);
+    navigation.navigate('AccountSelect');
+  }, [navigation, speakMedium, verbosity]);
 
   const handleEditAccount = useCallback(() => {
     speakMedium(v(verbosity, ttsStrings.confirmation.editAccount));

@@ -11,6 +11,8 @@ import { Verbosity, ttsStrings, v } from '@utils/ttsStrings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import ttsService from '@services/ttsService';
 import wizardState from '@services/wizardState';
+import { DEPOSIT_LIMITS } from '@utils/constants';
+import { formatAmountForSpeech } from '@utils/amountParser';
 
 interface WizardExecutorDeps {
   navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>;
@@ -40,10 +42,7 @@ function navigateToRetryStep(
 
   switch (resolvedRetryScreen) {
     case 'AmountInput':
-      (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'AmountInput',
-        params: { accountId, accountType },
-      });
+      (navigationRef.navigate as any)('DepositFlow', { screen: 'AccountSelect' });
       return;
     case 'CheckCapture':
       (navigationRef.navigate as any)('DepositFlow', {
@@ -197,6 +196,64 @@ export function executeWizardCommand(
         ttsService.speakMedium(v(verbosity, ttsStrings.depositOverview.continuePrompt));
       }, 1700);
     }, 900);
+  };
+
+  const speakAccountPrompt = () => {
+    ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.prompt));
+    setTimeout(() => {
+      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.accountCount(2)));
+    }, 1000);
+  };
+
+  const speakSelectedAccountLimit = (accountType: 'checking' | 'savings') => {
+    const typeLabel = accountType === 'checking' ? 'Checking' : 'Savings';
+    const limit = formatAmountForSpeech(DEPOSIT_LIMITS.DAILY_LIMIT);
+    ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.dailyLimitSelected(typeLabel, limit)));
+    setTimeout(() => {
+      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.readyPrompt));
+    }, 1400);
+  };
+
+  const speakPreCaptureOverview = () => {
+    ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.preCaptureIntro));
+    setTimeout(() => {
+      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.preCaptureSurface));
+      setTimeout(() => {
+        ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.preCaptureRetention));
+        setTimeout(() => {
+          ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.readyPrompt));
+        }, 1500);
+      }, 1400);
+    }, 1100);
+  };
+
+  const speakCapturePlacement = (side: 'front' | 'back') => {
+    ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.setupPlacement(side)));
+    setTimeout(() => {
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.readyPrompt));
+    }, 1500);
+  };
+
+  const speakCaptureGuidance = (
+    key:
+      | 'moveLeft'
+      | 'moveRight'
+      | 'moveUp'
+      | 'moveDown'
+      | 'tiltLeft'
+      | 'tiltRight'
+      | 'raisePhone'
+      | 'lowerPhone'
+      | 'tooMuchLight'
+      | 'notEnoughLight'
+      | 'holdSteady'
+  ) => {
+    ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.guidance[key]));
+  };
+
+  const hasSelectedAccount = () => {
+    const deposit = wizardState.getDepositState();
+    return Boolean(deposit.accountType && deposit.accountId);
   };
 
   switch (command.id) {
@@ -355,58 +412,57 @@ export function executeWizardCommand(
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
 
+    case 'REPEAT_ACCOUNT_PROMPT':
+      speakAccountPrompt();
+      return;
+
     case 'SELECT_CHECKING':
       wizardState.setAccount('checking', 'acc_1');
-      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.accountSelected('Checking', '7 7 4 9')));
+      speakSelectedAccountLimit('checking');
       return;
 
     case 'SELECT_SAVINGS':
       wizardState.setAccount('savings', 'acc_2');
-      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.accountSelected('Savings', '3 1 8 2')));
+      speakSelectedAccountLimit('savings');
+      return;
+
+    case 'REPEAT_ACCOUNT_LIMIT': {
+      const deposit = wizardState.getDepositState();
+      if (!deposit.accountType) {
+        ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.noAccount));
+        return;
+      }
+      speakSelectedAccountLimit(deposit.accountType ?? 'checking');
+      return;
+    }
+
+    case 'START_PRE_CAPTURE_OVERVIEW':
+    case 'REPEAT_PRE_CAPTURE_OVERVIEW':
+      if (!hasSelectedAccount()) {
+        ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.noAccount));
+        return;
+      }
+      speakPreCaptureOverview();
       return;
 
     case 'CONTINUE_FROM_ACCOUNT_SELECT': {
-      const deposit = wizardState.getDepositState();
-      const accountType = deposit.accountType ?? 'checking';
-      const accountId = deposit.accountId ?? 'acc_1';
-      (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'AmountInput',
-        params: { accountId, accountType },
-      });
-      return;
-    }
-
-    case 'BACK_FROM_ACCOUNT_SELECT':
-      if (navigationRef.canGoBack()) navigationRef.goBack();
-      return;
-
-    case 'CLOSE_FROM_ACCOUNT_SELECT':
-      if (navigationRef.canGoBack()) navigationRef.goBack();
-      return;
-
-    case 'SET_AMOUNT': {
-      const amount =
-        command.payload && 'amount' in command.payload ? Number(command.payload.amount) : 0;
-      if (Number.isFinite(amount) && amount > 0) {
-        wizardState.setAmount(amount);
-        ttsService.speakMedium(v(verbosity, ttsStrings.amountInput.typedConfirm(`$${amount.toFixed(2)}`)));
+      if (!hasSelectedAccount()) {
+        ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.noAccount));
+        return;
       }
+      speakPreCaptureOverview();
       return;
     }
 
-    case 'SET_CAPTURE_ORDER_FRONT_FIRST':
-      wizardState.setCaptureOrder('front_first');
-      return;
-
-    case 'SET_CAPTURE_ORDER_BACK_FIRST':
-      wizardState.setCaptureOrder('back_first');
-      return;
-
-    case 'CONFIRM_AMOUNT': {
+    case 'CONTINUE_TO_CAMERA': {
       const deposit = wizardState.getDepositState();
-      const amount = deposit.amount ?? 0;
+      if (!hasSelectedAccount()) {
+        ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.noAccount));
+        return;
+      }
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
       const firstSide = deposit.captureOrder === 'back_first' ? 'back' : 'front';
       wizardState.setCurrentCaptureSide(firstSide);
       (navigationRef.navigate as any)('DepositFlow', {
@@ -421,16 +477,20 @@ export function executeWizardCommand(
       return;
     }
 
-    case 'RETRY_AMOUNT':
-      ttsService.speakMedium(v(verbosity, ttsStrings.amountInput.retryPrompt));
-      return;
-
-    case 'BACK_FROM_AMOUNT_INPUT':
+    case 'BACK_FROM_ACCOUNT_SELECT':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
 
-    case 'CLOSE_FROM_AMOUNT_INPUT':
+    case 'CLOSE_FROM_ACCOUNT_SELECT':
       if (navigationRef.canGoBack()) navigationRef.goBack();
+      return;
+
+    case 'SET_CAPTURE_ORDER_FRONT_FIRST':
+      wizardState.setCaptureOrder('front_first');
+      return;
+
+    case 'SET_CAPTURE_ORDER_BACK_FIRST':
+      wizardState.setCaptureOrder('back_first');
       return;
 
     case 'BACK_FROM_CHECK_CAPTURE':
@@ -440,6 +500,17 @@ export function executeWizardCommand(
     case 'CLOSE_FROM_CHECK_CAPTURE':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
+
+    case 'REPEAT_CAPTURE_ORIENTATION':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.setupOrientation));
+      return;
+
+    case 'REPEAT_CAPTURE_PLACEMENT': {
+      const deposit = wizardState.getDepositState();
+      const side = deposit.currentCaptureSide ?? (deposit.backCaptured ? 'front' : 'back');
+      speakCapturePlacement(side);
+      return;
+    }
 
     case 'START_CAPTURE_GUIDANCE': {
       const deposit = wizardState.getDepositState();
@@ -462,13 +533,57 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'GUIDE_MOVE_LEFT':
+      speakCaptureGuidance('moveLeft');
+      return;
+
+    case 'GUIDE_MOVE_RIGHT':
+      speakCaptureGuidance('moveRight');
+      return;
+
+    case 'GUIDE_MOVE_FORWARD':
+      speakCaptureGuidance('moveUp');
+      return;
+
+    case 'GUIDE_MOVE_BACK':
+      speakCaptureGuidance('moveDown');
+      return;
+
+    case 'GUIDE_TILT_LEFT':
+      speakCaptureGuidance('tiltLeft');
+      return;
+
+    case 'GUIDE_TILT_RIGHT':
+      speakCaptureGuidance('tiltRight');
+      return;
+
+    case 'GUIDE_A_BIT_HIGHER':
+      speakCaptureGuidance('raisePhone');
+      return;
+
+    case 'GUIDE_A_BIT_LOWER':
+      speakCaptureGuidance('lowerPhone');
+      return;
+
+    case 'GUIDE_TOO_MUCH_LIGHT':
+      speakCaptureGuidance('tooMuchLight');
+      return;
+
+    case 'GUIDE_NOT_ENOUGH_LIGHT':
+      speakCaptureGuidance('notEnoughLight');
+      return;
+
+    case 'GUIDE_HOLD_STEADY':
+      speakCaptureGuidance('holdSteady');
+      return;
+
     case 'CAPTURE_FRONT_SUCCESS': {
       const deposit = wizardState.getDepositState();
-      const accountType = deposit.accountType ?? 'checking';
-      const accountId = deposit.accountId ?? 'acc_1';
-      const amount = deposit.amount ?? 0;
       const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
       if (deposit.backCaptured) {
+        const accountType = deposit.accountType ?? 'checking';
+        const accountId = deposit.accountId ?? 'acc_1';
+        const amount = deposit.amount ?? 0;
         const backImageUri = deposit.backImageUri ?? 'wizard://back';
         wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
         (navigationRef.navigate as any)('DepositFlow', {
@@ -477,6 +592,27 @@ export function executeWizardCommand(
         });
       } else {
         wizardState.setCaptureState(true, false, frontImageUri, deposit.backImageUri);
+      }
+      return;
+    }
+
+    case 'SPEAK_FRONT_REVIEW': {
+      if (command.payload && 'text' in command.payload && command.payload.text.trim()) {
+        ttsService.speakMedium(command.payload.text.trim());
+      }
+      return;
+    }
+
+    case 'CONFIRM_FRONT_DETAILS': {
+      const deposit = wizardState.getDepositState();
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.proceedToBackCapture));
+
+      setTimeout(() => {
         (navigationRef.navigate as any)('DepositFlow', {
           screen: 'CheckFlip',
           params: {
@@ -489,9 +625,16 @@ export function executeWizardCommand(
             frontImageUri,
           },
         });
-      }
+      }, 900);
       return;
     }
+
+    case 'REPEAT_BACK_CAPTURE_INTRO':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction('back')));
+      setTimeout(() => {
+        ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.continuePrompt));
+      }, 1400);
+      return;
 
     case 'CONTINUE_FROM_CHECK_FLIP': {
       const deposit = wizardState.getDepositState();
@@ -605,6 +748,24 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'SPEAK_POST_CAPTURE_SUMMARY':
+      if (command.payload && 'text' in command.payload && command.payload.text.trim()) {
+        ttsService.speakMedium(command.payload.text.trim());
+      }
+      return;
+
+    case 'SPEAK_FINAL_CONFIRM_PROMPT':
+      ttsService.speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
+      return;
+
+    case 'SPEAK_COUNTDOWN_10':
+      ttsService.speakMedium(v(verbosity, ttsStrings.confirmation.countdownTen));
+      return;
+
+    case 'SPEAK_COUNTDOWN_5':
+      ttsService.speakMedium(v(verbosity, ttsStrings.confirmation.countdownFive));
+      return;
+
     case 'CONFIRM_DEPOSIT': {
       const depositState = wizardState.getDepositState();
       const amount = depositState.amount ?? 0;
@@ -630,14 +791,14 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'SPEAK_SUCCESS_SUMMARY':
+      if (command.payload && 'text' in command.payload && command.payload.text.trim()) {
+        ttsService.speakMedium(command.payload.text.trim());
+      }
+      return;
+
     case 'EDIT_AMOUNT': {
-      const deposit = wizardState.getDepositState();
-      const accountType = deposit.accountType ?? 'checking';
-      const accountId = deposit.accountId ?? 'acc_1';
-      (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'AmountInput',
-        params: { accountId, accountType },
-      });
+      (navigationRef.navigate as any)('DepositFlow', { screen: 'AccountSelect' });
       return;
     }
 

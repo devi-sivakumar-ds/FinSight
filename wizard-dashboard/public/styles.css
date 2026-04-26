@@ -67,6 +67,23 @@ body {
   gap: 16px;
 }
 
+.flow-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) minmax(280px, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.flow-main {
+  display: grid;
+  gap: 16px;
+}
+
+.flow-side {
+  display: grid;
+  gap: 16px;
+}
+
 .group {
   background: #0f0f0f;
   border: 1px solid #2f2f2f;
@@ -221,6 +238,10 @@ input {
 
 @media (max-width: 800px) {
   .grid-two {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-layout {
     grid-template-columns: 1fr;
   }
 

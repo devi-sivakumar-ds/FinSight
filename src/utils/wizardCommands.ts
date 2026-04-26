@@ -81,26 +81,38 @@ export const wizardCommands = {
   ],
 
   accountSelect: [
+    cmd('REPEAT_ACCOUNT_PROMPT', 'Repeat Account Prompt', 'AccountSelect'),
     cmd('SELECT_CHECKING', 'Select Checking', 'AccountSelect', 'accountType'),
     cmd('SELECT_SAVINGS', 'Select Savings', 'AccountSelect', 'accountType'),
+    cmd('REPEAT_ACCOUNT_LIMIT', 'Repeat Account Limit', 'AccountSelect'),
+    cmd('SET_CAPTURE_ORDER_FRONT_FIRST', 'Front Then Back', 'AccountSelect'),
+    cmd('SET_CAPTURE_ORDER_BACK_FIRST', 'Back Then Front', 'AccountSelect'),
+    cmd('START_PRE_CAPTURE_OVERVIEW', 'Start Pre-Capture Overview', 'AccountSelect'),
+    cmd('REPEAT_PRE_CAPTURE_OVERVIEW', 'Repeat Pre-Capture Overview', 'AccountSelect'),
     cmd('CONTINUE_FROM_ACCOUNT_SELECT', 'Continue', 'AccountSelect'),
+    cmd('CONTINUE_TO_CAMERA', 'Continue To Camera', 'AccountSelect'),
     cmd('BACK_FROM_ACCOUNT_SELECT', 'Back', 'AccountSelect'),
     cmd('CLOSE_FROM_ACCOUNT_SELECT', 'Close', 'AccountSelect'),
   ],
 
-  amountInput: [
-    cmd('SET_AMOUNT', 'Set Amount', 'AmountInput', 'amount', 'Set the deposit amount manually from the dashboard.'),
-    cmd('SET_CAPTURE_ORDER_FRONT_FIRST', 'Front Then Back', 'AmountInput'),
-    cmd('SET_CAPTURE_ORDER_BACK_FIRST', 'Back Then Front', 'AmountInput'),
-    cmd('CONFIRM_AMOUNT', 'Confirm Amount', 'AmountInput'),
-    cmd('RETRY_AMOUNT', 'Retry Amount', 'AmountInput'),
-    cmd('BACK_FROM_AMOUNT_INPUT', 'Back', 'AmountInput'),
-    cmd('CLOSE_FROM_AMOUNT_INPUT', 'Close', 'AmountInput'),
-  ],
-
   checkCapture: [
+    cmd('REPEAT_CAPTURE_ORIENTATION', 'Repeat Capture Orientation', 'CheckCapture'),
+    cmd('REPEAT_CAPTURE_PLACEMENT', 'Repeat Capture Placement', 'CheckCapture'),
     cmd('START_CAPTURE_GUIDANCE', 'Start Capture Guidance', 'CheckCapture'),
+    cmd('GUIDE_MOVE_LEFT', 'Guide Move Left', 'CheckCapture'),
+    cmd('GUIDE_MOVE_RIGHT', 'Guide Move Right', 'CheckCapture'),
+    cmd('GUIDE_MOVE_FORWARD', 'Guide Move Forward', 'CheckCapture'),
+    cmd('GUIDE_MOVE_BACK', 'Guide Move Back', 'CheckCapture'),
+    cmd('GUIDE_TILT_LEFT', 'Guide Tilt Left', 'CheckCapture'),
+    cmd('GUIDE_TILT_RIGHT', 'Guide Tilt Right', 'CheckCapture'),
+    cmd('GUIDE_A_BIT_HIGHER', 'Guide A Bit Higher', 'CheckCapture'),
+    cmd('GUIDE_A_BIT_LOWER', 'Guide A Bit Lower', 'CheckCapture'),
+    cmd('GUIDE_TOO_MUCH_LIGHT', 'Guide Too Much Light', 'CheckCapture'),
+    cmd('GUIDE_NOT_ENOUGH_LIGHT', 'Guide Not Enough Light', 'CheckCapture'),
+    cmd('GUIDE_HOLD_STEADY', 'Guide Hold Steady', 'CheckCapture'),
     cmd('CAPTURE_FRONT_SUCCESS', 'Front Captured', 'CheckCapture'),
+    cmd('SPEAK_FRONT_REVIEW', 'Speak Front Review', 'CheckCapture', 'text'),
+    cmd('CONFIRM_FRONT_DETAILS', 'Confirm Front Details', 'CheckCapture'),
     cmd('CAPTURE_BACK_SUCCESS', 'Back Captured', 'CheckCapture'),
     cmd('CAPTURE_RETRY', 'Retry Capture', 'CheckCapture'),
     cmd('CAPTURE_FAIL', 'Capture Failed', 'CheckCapture', 'text'),
@@ -109,6 +121,7 @@ export const wizardCommands = {
   ],
 
   checkFlip: [
+    cmd('REPEAT_BACK_CAPTURE_INTRO', 'Repeat Back Capture Intro', 'CheckFlip'),
     cmd('CONTINUE_FROM_CHECK_FLIP', 'Ready For Back Capture', 'CheckFlip'),
     cmd('BACK_FROM_CHECK_FLIP', 'Back', 'CheckFlip'),
     cmd('CLOSE_FROM_CHECK_FLIP', 'Close', 'CheckFlip'),
@@ -121,6 +134,10 @@ export const wizardCommands = {
   ],
 
   confirmation: [
+    cmd('SPEAK_POST_CAPTURE_SUMMARY', 'Speak Post-Capture Summary', 'Confirmation', 'text'),
+    cmd('SPEAK_FINAL_CONFIRM_PROMPT', 'Speak Final Confirm Prompt', 'Confirmation'),
+    cmd('SPEAK_COUNTDOWN_10', 'Speak Countdown 10', 'Confirmation'),
+    cmd('SPEAK_COUNTDOWN_5', 'Speak Countdown 5', 'Confirmation'),
     cmd('CONFIRM_DEPOSIT', 'Confirm Deposit', 'Confirmation'),
     cmd('EDIT_AMOUNT', 'Edit Amount', 'Confirmation'),
     cmd('EDIT_ACCOUNT', 'Edit Account', 'Confirmation'),
@@ -128,6 +145,7 @@ export const wizardCommands = {
   ],
 
   success: [
+    cmd('SPEAK_SUCCESS_SUMMARY', 'Speak Success Summary', 'Success', 'text'),
     cmd('FINISH_SUCCESS_FLOW', 'Done', 'Success'),
     cmd('RETURN_HOME_FROM_SUCCESS', 'Go Home', 'Success'),
   ],
@@ -163,7 +181,6 @@ export const wizardCommandList: WizardCommandDef[] = [
   ...wizardCommands.depositOverview,
   ...wizardCommands.depositPrivacy,
   ...wizardCommands.accountSelect,
-  ...wizardCommands.amountInput,
   ...wizardCommands.checkCapture,
   ...wizardCommands.checkFlip,
   ...wizardCommands.ocrProcessing,

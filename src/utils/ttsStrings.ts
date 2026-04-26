@@ -189,13 +189,13 @@ export const ttsStrings = {
   accountSelect: {
     prompt: {
       low:    'Which account?',
-      medium: 'Please choose the account where you want to deposit this check.',
-      high:   'Please choose the account where you want to deposit this check.',
+      medium: 'Which account do you want to deposit into?',
+      high:   'Which account do you want to deposit into?',
     } as VStr,
     accountCount: (n: number): VStr => ({
       low:    '',
-      medium: `You have ${n} available accounts.`,
-      high:   `You have ${n} available accounts. I will read them now.`,
+      medium: `You have ${n} accounts. Which one would you like to use?`,
+      high:   `You have ${n} accounts. Which one would you like to use?`,
     }),
     accountDetail: (typeLabel: string, digits: string, balance: string): VStr => ({
       low:    `${typeLabel} ending in ${digits}.`,
@@ -207,6 +207,11 @@ export const ttsStrings = {
       medium: `${typeLabel} ending in ${digits} selected.`,
       high:   `You selected your ${typeLabel} account ending in ${digits}.`,
     }),
+    dailyLimitSelected: (typeLabel: string, limit: string): VStr => ({
+      low:    `${limit}.`,
+      medium: `You selected ${typeLabel}. Your daily deposit limit is ${limit} for this account.`,
+      high:   `You selected ${typeLabel}. Your daily deposit limit is ${limit} for this account.`,
+    }),
     continuePrompt: {
       low:    '',
       medium: 'Say continue to proceed, or choose a different account.',
@@ -216,6 +221,26 @@ export const ttsStrings = {
       low:    'Select an account.',
       medium: 'Please select an account first.',
       high:   'Please select an account before continuing.',
+    } as VStr,
+    readyPrompt: {
+      low:    'Continue.',
+      medium: `Say continue when you're ready.`,
+      high:   `Say continue when you're ready.`,
+    } as VStr,
+    preCaptureIntro: {
+      low:    'Capture next.',
+      medium: `We will now proceed to capture your check. I will guide you through positioning the check and capturing the required details.`,
+      high:   `We will now proceed to capture your check. I will guide you through positioning the check and capturing the required details.`,
+    } as VStr,
+    preCaptureSurface: {
+      low:    'Use flat surface.',
+      medium: `For best results, place the check on a flat, smooth surface.`,
+      high:   `For best results, place the check on a flat, smooth surface.`,
+    } as VStr,
+    preCaptureRetention: {
+      low:    'Amount kept.',
+      medium: `Only the amount you confirm at the time of deposit will be retained.`,
+      high:   `Only the amount you confirm at the time of deposit will be retained.`,
     } as VStr,
   },
 
@@ -275,11 +300,11 @@ export const ttsStrings = {
       low:    nextSide === 'back' ? 'Flip to show the back.' : 'Flip to show the front.',
       medium:
         nextSide === 'back'
-          ? 'Please flip the check over. Before proceeding, ensure you have endorsed the back.'
+          ? 'Please flip the check over. Before proceeding, ensure you have signed the back.'
           : 'Please flip the check over to show the front of the check.',
       high:
         nextSide === 'back'
-          ? 'Please flip the check over. Before proceeding, ensure you have endorsed the back.'
+          ? 'Please flip the check over. Before proceeding, ensure you have signed the back.'
           : 'Please flip the check over to show the front of the check.',
     }),
     continuePrompt: {
@@ -291,16 +316,21 @@ export const ttsStrings = {
 
   // ── Check capture ──────────────────────────────────────────────────────────
   checkCapture: {
+    setupOrientation: {
+      low:    'Rotate phone.',
+      medium: 'Rotate your phone horizontally so the charging port is on your right.',
+      high:   'Rotate your phone horizontally so the charging port is on your right.',
+    } as VStr,
     setupPlacement: (side: 'front' | 'back'): VStr => ({
       low: side === 'front' ? 'Place phone on front.' : 'Place phone on back.',
       medium:
         side === 'front'
-          ? 'Place your phone at the bottom left corner of the front of the check.'
-          : 'Now place your phone at the bottom left corner of the check.',
+          ? 'Perfect. Now place your phone at the bottom left corner of the check.'
+          : 'Perfect. Now place your phone at the bottom left corner of the check.',
       high:
         side === 'front'
-          ? 'Place your phone at the bottom left corner of the front of the check.'
-          : 'Now place your phone at the bottom left corner of the check.',
+          ? 'Perfect. Now place your phone at the bottom left corner of the check.'
+          : 'Perfect. Now place your phone at the bottom left corner of the check.',
     }),
     readyPrompt: {
       low:    'Continue when ready.',
@@ -361,13 +391,13 @@ export const ttsStrings = {
       } as VStr,
       moveUp: {
         low:    'Top.',
-        medium: 'Move slightly to the top.',
-        high:   'Move slightly to the top.',
+        medium: 'Move slightly forward.',
+        high:   'Move slightly forward.',
       } as VStr,
       moveDown: {
         low:    'Bottom.',
-        medium: 'Move slightly to the bottom.',
-        high:   'Move slightly to the bottom.',
+        medium: 'Move slightly back.',
+        high:   'Move slightly back.',
       } as VStr,
       raisePhone: {
         low:    'Higher.',
@@ -411,8 +441,8 @@ export const ttsStrings = {
   ocrProcessing: {
     processing: {
       low:    'Processing.',
-      medium: 'Check captured. Preparing your deposit details.',
-      high:   'Your check has been captured. I am now preparing your deposit details.',
+      medium: `Your check has been successfully captured. Your image has been submitted to your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details shortly.`,
+      high:   `Your check has been successfully captured. Your image has been submitted to your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details shortly.`,
     } as VStr,
     waitingForOperator: {
       low:    'Reviewing.',
@@ -469,8 +499,18 @@ export const ttsStrings = {
     }),
     confirmPrompt: {
       low:    'Confirm or cancel?',
-      medium: "Say 'confirm' to proceed, or 'cancel' to stop. You have 10 seconds to respond.",
-      high:   "Say 'confirm' to proceed, or 'cancel' to stop. You have 10 seconds to respond.",
+      medium: `Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+      high:   `Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+    } as VStr,
+    countdownTen: {
+      low:    'Ten left.',
+      medium: '10 seconds left',
+      high:   '10 seconds left',
+    } as VStr,
+    countdownFive: {
+      low:    'Five left.',
+      medium: '5 seconds left',
+      high:   '5 seconds left',
     } as VStr,
     submitting: {
       low:    'Submitting.',
@@ -508,8 +548,8 @@ export const ttsStrings = {
     } as VStr,
     availableByDate: (date: string): VStr => ({
       low:    '',
-      medium: `Your remaining funds will be available by ${date}.`,
-      high:   `Your remaining funds will be available by ${date}.`,
+      medium: `The remaining funds will be available by ${date}.`,
+      high:   `The remaining funds will be available by ${date}.`,
     }),
     availability: {
       low:    '',
@@ -523,8 +563,8 @@ export const ttsStrings = {
     }),
     exitPrompt: {
       low:    '',
-      medium: "Your session is complete. Say done to return to the home screen.",
-      high:   "Your session is complete. Say done to return to the home screen.",
+      medium: 'Your session is complete. Returning to home.',
+      high:   'Your session is complete. Returning to home.',
     } as VStr,
   },
 

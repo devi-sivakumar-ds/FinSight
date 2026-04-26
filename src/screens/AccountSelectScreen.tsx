@@ -85,9 +85,11 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
       speakHigh(v(verbosity, ttsStrings.accountSelect.noAccount));
       return;
     }
-    navigation.navigate('AmountInput', {
+    navigation.navigate('CheckCapture', {
       accountId: account.id,
       accountType: account.type,
+      amount: 0,
+      side: 'front',
     });
   }, [selectedId, accounts, navigation]);
 

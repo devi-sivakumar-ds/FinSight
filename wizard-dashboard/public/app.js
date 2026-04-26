@@ -3,14 +3,22 @@ const appStatus = document.getElementById('app-status');
 const sessionInfoEl = document.getElementById('session-info');
 const appStateEl = document.getElementById('app-state');
 const eventLogEl = document.getElementById('event-log');
-const amountInput = document.getElementById('amount-input');
-const setAmountButtons = [
-  document.getElementById('set-amount-btn'),
-  document.getElementById('set-amount-confirm-btn'),
-].filter(Boolean);
 const ocrCheckNumberInput = document.getElementById('ocr-check-number');
 const ocrRoutingNumberInput = document.getElementById('ocr-routing-number');
 const ocrAccountNumberInput = document.getElementById('ocr-account-number');
+const summaryAmountInput = document.getElementById('summary-amount');
+const summaryAccountInput = document.getElementById('summary-account');
+const summaryIssuerInput = document.getElementById('summary-issuer');
+const summaryDateInput = document.getElementById('summary-date');
+const postCaptureSummaryBtn = document.getElementById('post-capture-summary-btn');
+const frontReviewAmountInput = document.getElementById('front-review-amount');
+const frontReviewIssuerInput = document.getElementById('front-review-issuer');
+const frontReviewDateInput = document.getElementById('front-review-date');
+const frontReviewBtn = document.getElementById('front-review-btn');
+const successAvailableNowInput = document.getElementById('success-available-now');
+const successRemainingInput = document.getElementById('success-remaining');
+const successAvailableByInput = document.getElementById('success-available-by');
+const successSummaryBtn = document.getElementById('success-summary-btn');
 const ocrSuccessBtn = document.getElementById('ocr-success-btn');
 const ocrPartialBtn = document.getElementById('ocr-partial-btn');
 const ocrFailBtn = document.getElementById('ocr-fail-btn');
@@ -123,19 +131,47 @@ document.querySelectorAll('button[data-id]').forEach(button => {
   });
 });
 
-setAmountButtons.forEach(button => {
-  button.addEventListener('click', () => {
-    const amount = Number(amountInput.value);
-    sendCommand('SET_AMOUNT', 'AmountInput', 'amount', { amount });
-  });
-});
-
 function sendOcrCommand(id, outcome) {
   sendCommand(id, 'OCRProcessing', 'ocrOutcome', {
     outcome,
     checkNumber: ocrCheckNumberInput.value.trim(),
     routingNumber: ocrRoutingNumberInput.value.trim(),
     accountNumber: ocrAccountNumberInput.value.trim(),
+  });
+}
+
+function sendFrontReviewCommand() {
+  const amount = frontReviewAmountInput.value.trim() || 'the entered amount';
+  const issuer = frontReviewIssuerInput.value.trim() || 'the entered issuer';
+  const checkDate = frontReviewDateInput.value.trim() || 'the entered date';
+
+  sendCommand('SPEAK_FRONT_REVIEW', 'CheckCapture', 'text', {
+    text: `I've detected the front of your check. The amount is ${amount}, issued by ${issuer} on ${checkDate}. Are these details correct?`,
+  });
+}
+
+function sendPostCaptureSummaryCommand() {
+  const amount = summaryAmountInput.value.trim() || '$1,000';
+  const account = summaryAccountInput.value.trim() || 'Checking account ending in 7-7-4-9';
+  const issuer = summaryIssuerInput.value.trim() || 'University of California';
+  const checkDate = summaryDateInput.value.trim() || 'April 15th';
+  const routing = ocrRoutingNumberInput.value.trim() || '021000021';
+  const accountNumber = ocrAccountNumberInput.value.trim() || '123456789';
+
+  sendCommand('SPEAK_POST_CAPTURE_SUMMARY', 'Confirmation', 'text', {
+    text: `You are depositing ${amount} into your ${account}. The check was issued by ${issuer}, dated ${checkDate}. Routing number is ${routing.split('').join('-')}. And account number is ${accountNumber.split('').join('-')}. To submit to your bank, say "confirm." To cancel, say "cancel."`,
+  });
+}
+
+function sendSuccessSummaryCommand() {
+  const availableNow = successAvailableNowInput.value.trim() || '$100.00';
+  const remaining = successRemainingInput.value.trim() || '$900.00';
+  const availableBy = successAvailableByInput.value.trim() || 'April 19th, 2026';
+  const amount = summaryAmountInput.value.trim() || '$1,000.00';
+  const date = summaryDateInput.value.trim() || 'April 15th, 2026';
+
+  sendCommand('SPEAK_SUCCESS_SUMMARY', 'Success', 'text', {
+    text: `We have received your check. Your deposit of ${amount} was submitted on ${date}. A total of ${availableNow} is available immediately. The remaining ${remaining} will be available by ${availableBy}.`,
   });
 }
 
@@ -150,6 +186,10 @@ ocrPartialBtn.addEventListener('click', () => {
 ocrFailBtn.addEventListener('click', () => {
   sendCommand('OCR_FAIL', 'OCRProcessing', 'ocrOutcome', { outcome: 'fail' });
 });
+
+frontReviewBtn.addEventListener('click', sendFrontReviewCommand);
+postCaptureSummaryBtn.addEventListener('click', sendPostCaptureSummaryCommand);
+successSummaryBtn.addEventListener('click', sendSuccessSummaryCommand);
 
 saveNoteBtn.addEventListener('click', sendNote);
 noteInput.addEventListener('keydown', event => {

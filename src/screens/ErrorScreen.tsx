@@ -54,7 +54,7 @@ export const ErrorScreen: React.FC<Props> = ({ navigation, route }) => {
 
       switch (resolvedRetryScreen) {
         case 'AmountInput':
-          navigation.navigate('AmountInput', { accountId, accountType });
+          navigation.navigate('AccountSelect');
           return;
         case 'CheckCapture':
           navigation.navigate('CheckCapture', {
