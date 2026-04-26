@@ -28,6 +28,7 @@ import wizardState from '@services/wizardState';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
+import { getAccountProfileById } from '@/data/accountProfiles';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'Confirmation'>;
@@ -56,11 +57,15 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
   const amountSpeech = formatAmountForSpeech(amount);
-  const accountDigits = accountId === 'acc_1' ? '7749' : accountId === 'acc_2' ? '3182' : undefined;
+  const accountDigits = getAccountProfileById(accountId)?.displayNumber;
   const pureWozMode = isPureWozMode();
 
   // Announce details on mount, then start countdown
   useEffect(() => {
+    if (pureWozMode) {
+      return undefined;
+    }
+
     const ttsDuration = 5000;
 
     setTimeout(() => {
@@ -72,10 +77,6 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         }, 1400);
       }, 1000);
     }, 400);
-
-    if (pureWozMode) {
-      return undefined;
-    }
 
     // Start countdown after TTS chain ends
     const countdownStart = setTimeout(() => {

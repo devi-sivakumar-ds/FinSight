@@ -125,12 +125,6 @@ socket.addEventListener('message', event => {
   }
 });
 
-document.querySelectorAll('button[data-id]').forEach(button => {
-  button.addEventListener('click', () => {
-    sendCommand(button.dataset.id, button.dataset.context);
-  });
-});
-
 function sendOcrCommand(id, outcome) {
   sendCommand(id, 'OCRProcessing', 'ocrOutcome', {
     outcome,
@@ -146,6 +140,16 @@ function sendFrontReviewCommand() {
   const checkDate = frontReviewDateInput.value.trim() || 'the entered date';
 
   sendCommand('SPEAK_FRONT_REVIEW', 'CheckCapture', 'text', {
+    text: `I've detected the front of your check. The amount is ${amount}, issued by ${issuer} on ${checkDate}. Are these details correct?`,
+  });
+}
+
+function sendFrontCaptureSuccessCommand() {
+  const amount = frontReviewAmountInput.value.trim() || '$1,000';
+  const issuer = frontReviewIssuerInput.value.trim() || 'University of California';
+  const checkDate = frontReviewDateInput.value.trim() || 'April 15th';
+
+  sendCommand('CAPTURE_FRONT_SUCCESS', 'CheckCapture', 'text', {
     text: `I've detected the front of your check. The amount is ${amount}, issued by ${issuer} on ${checkDate}. Are these details correct?`,
   });
 }
@@ -174,6 +178,17 @@ function sendSuccessSummaryCommand() {
     text: `We have received your check. Your deposit of ${amount} was submitted on ${date}. A total of ${availableNow} is available immediately. The remaining ${remaining} will be available by ${availableBy}.`,
   });
 }
+
+document.querySelectorAll('button[data-id]').forEach(button => {
+  button.addEventListener('click', () => {
+    if (button.dataset.id === 'CAPTURE_FRONT_SUCCESS') {
+      sendFrontCaptureSuccessCommand();
+      return;
+    }
+
+    sendCommand(button.dataset.id, button.dataset.context);
+  });
+});
 
 ocrSuccessBtn.addEventListener('click', () => {
   sendOcrCommand('OCR_SUCCESS', 'success');

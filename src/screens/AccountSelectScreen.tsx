@@ -23,6 +23,7 @@ import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
+import wizardState from '@services/wizardState';
 import { formatCurrencyForSpeech } from '@utils/accessibility';
 import { DARK_COLORS, MIN_TOUCH_TARGET_SIZE } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
@@ -65,6 +66,13 @@ export const AccountSelectScreen: React.FC<Props> = ({ navigation }) => {
       }, 400);
     })();
     return () => { cancelled = true; };
+  }, []);
+
+  useEffect(() => {
+    setSelectedId(wizardState.getDepositState().accountId ?? null);
+    return wizardState.subscribe(state => {
+      setSelectedId(state.accountId ?? null);
+    });
   }, []);
 
   const handleSelect = useCallback((account: Account) => {

@@ -4,26 +4,10 @@
 // ============================================================================
 
 import { Account, Deposit, CheckOCRResponse } from '@/types/index';
+import { ACCOUNT_PROFILES } from '@/data/accountProfiles';
 
 class MockBankingAPI {
-  private mockAccounts: Account[] = [
-    {
-      id: 'acc_1',
-      type: 'checking',
-      accountNumber: '1234567890',
-      displayNumber: '7749',
-      balance: 2270.0,
-      currency: 'USD',
-    },
-    {
-      id: 'acc_2',
-      type: 'savings',
-      accountNumber: '0987654321',
-      displayNumber: '3182',
-      balance: 18000.0,
-      currency: 'USD',
-    },
-  ];
+  private mockAccounts: Account[] = ACCOUNT_PROFILES.map(account => ({ ...account }));
 
   private mockDeposits: Deposit[] = [];
   private depositCounter: number = 1;
@@ -192,24 +176,7 @@ class MockBankingAPI {
   public reset(): void {
     this.mockDeposits = [];
     this.depositCounter = 1;
-    this.mockAccounts = [
-      {
-        id: 'acc_1',
-        type: 'checking',
-        accountNumber: '1234567890',
-        displayNumber: '7749',
-        balance: 2270.0,
-        currency: 'USD',
-      },
-      {
-        id: 'acc_2',
-        type: 'savings',
-        accountNumber: '0987654321',
-        displayNumber: '3182',
-        balance: 18000.0,
-        currency: 'USD',
-      },
-    ];
+    this.mockAccounts = ACCOUNT_PROFILES.map(account => ({ ...account }));
     console.log('[MockAPI] Data reset');
   }
 }

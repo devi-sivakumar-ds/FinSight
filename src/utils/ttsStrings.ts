@@ -446,8 +446,8 @@ export const ttsStrings = {
     } as VStr,
     waitingForOperator: {
       low:    'Reviewing.',
-      medium: 'Reviewing your check details now. Please wait for the operator to continue.',
-      high:   'Reviewing your check details now. Please wait for the operator to continue.',
+      medium: 'Reviewing your check details now.',
+      high:   'Reviewing your check details now.',
     } as VStr,
     detailsFound: {
       low:    'Details found.',

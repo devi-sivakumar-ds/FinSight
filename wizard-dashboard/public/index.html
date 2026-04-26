@@ -39,294 +39,292 @@
           <div class="group">
             <h3>Check Deposit Flow</h3>
 
-          <div class="subgroup">
-            <h4>Overview and Privacy</h4>
-            <button data-id="REPEAT_OVERVIEW" data-context="DepositOverview">
-              <span class="button-title">Repeat deposit overview.</span>
-              <span class="button-meta">Replay the overview script without changing screens</span>
-            </button>
-            <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">
-              <span class="button-title">To privacy overview</span>
-              <span class="button-meta">Finished Check overview</span>
-            </button>
-            <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">
-              <span class="button-title">To account selection</span>
-              <span class="button-meta">Choose account</span>
-            </button>
-            <button data-id="BACK_FROM_PRIVACY" data-context="DepositPrivacy">
-              <span class="button-title">Go back from the privacy screen.</span>
-              <span class="button-meta">Back from privacy</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Overview and Privacy</h4>
+              <button data-id="REPEAT_OVERVIEW" data-context="DepositOverview">
+                <span class="button-title">Replay deposit overview.</span>
+                <span class="button-meta">Replay the overview script without changing screens</span>
+              </button>
+              <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">
+                <span class="button-title">To privacy overview</span>
+                <span class="button-meta">Finished Check overview</span>
+              </button>
+              <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">
+                <span class="button-title">To account selection</span>
+                <span class="button-meta">Choose account</span>
+              </button>
+              <button data-id="BACK_FROM_PRIVACY" data-context="DepositPrivacy">
+                <span class="button-title">Go back from the privacy screen.</span>
+                <span class="button-meta">Back from privacy</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Account and Pre-Capture</h4>
-            <button data-id="REPEAT_ACCOUNT_PROMPT" data-context="AccountSelect">
-              <span class="button-title">Replay account choice prompt</span>
-              <span class="button-meta">Which account do you want to deposit into?</span>
-            </button>
-            <button data-id="SELECT_CHECKING" data-context="AccountSelect">
-              <span class="button-title">You selected Checking. Your daily deposit limit is ten thousand dollars for this account.</span>
-              <span class="button-meta">Select checking account</span>
-            </button>
-            <button data-id="SELECT_SAVINGS" data-context="AccountSelect">
-              <span class="button-title">You selected Savings. Your daily deposit limit is ten thousand dollars for this account.</span>
-              <span class="button-meta">Select savings account</span>
-            </button>
-            <!-- <button data-id="REPEAT_ACCOUNT_LIMIT" data-context="AccountSelect">
-              <span class="button-title">Your daily deposit limit is ten thousand dollars for this account. Say continue when you're ready.</span>
-              <span class="button-meta">Replay account limit prompt</span>
-            </button> -->
-            <button data-id="START_PRE_CAPTURE_OVERVIEW" data-context="AccountSelect">
-              <span class="button-title">We will now proceed to capture your check. I will guide you through positioning the check and capturing the required details.</span>
-              <span class="button-meta">Start pre-capture overview</span>
-            </button>
-            <button data-id="REPEAT_PRE_CAPTURE_OVERVIEW" data-context="AccountSelect">
-              <span class="button-title">For best results, place the check on a flat, smooth surface. Only the amount you confirm at the time of deposit will be retained.</span>
-              <span class="button-meta">Replay pre-capture overview</span>
-            </button>
-            <button data-id="CONTINUE_FROM_ACCOUNT_SELECT" data-context="AccountSelect">
-              <span class="button-title">Say continue when you're ready.</span>
-              <span class="button-meta">Continue from account selection into pre-capture overview</span>
-            </button>
-            <button data-id="SET_CAPTURE_ORDER_FRONT_FIRST" data-context="AccountSelect">
-              <span class="button-title">Capture order: front of check, then back of check.</span>
-              <span class="button-meta">Set front then back</span>
-            </button>
-            <button data-id="SET_CAPTURE_ORDER_BACK_FIRST" data-context="AccountSelect">
-              <span class="button-title">Capture order: back of check, then front of check.</span>
-              <span class="button-meta">Set back then front</span>
-            </button>
-            <button data-id="CONTINUE_TO_CAMERA" data-context="AccountSelect">
-              <span class="button-title">Say continue when you're ready. Open the camera.</span>
-              <span class="button-meta">Continue to camera</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Account and Pre-Capture</h4>
+              <button data-id="REPEAT_ACCOUNT_PROMPT" data-context="AccountSelect">
+                <span class="button-title">Replay account choice prompt</span>
+                <span class="button-meta">Which account do you want to deposit into?</span>
+              </button>
+              <button data-id="SELECT_CHECKING" data-context="AccountSelect">
+                <span class="button-title">Select checking account</span>
+                <span class="button-meta">You selected Checking. Your daily deposit limit is ten thousand dollars for
+                  this account.</span>
+              </button>
+              <button data-id="SELECT_SAVINGS" data-context="AccountSelect">
+                <span class="button-title">Select savings account</span>
+                <span class="button-meta">You selected Savings. Your daily deposit limit is five thousand dollars for
+                  this account.
+                </span>
+              </button>
+              <button data-id="CONTINUE_FROM_ACCOUNT_SELECT" data-context="AccountSelect">
+                <span class="button-title">Pre-capture overview
+                </span>
+                <span class="button-meta">We will now proceed to capture your check. I will guide you through
+                  positioning the check
+                  and capturing the required details. For best results, place the check on a flat, smooth surface. Only
+                  the amount you
+                  confirm at the time of deposit will be retained. Say continue when you're ready.</span>
+              </button>
+              <button data-id="CONTINUE_TO_CAMERA" data-context="AccountSelect">
+                <span class="button-title">Go to Capture. Open camera.</span>
+                <span class="button-meta">Go to Capture. Open camera</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Capture Setup</h4>
-            <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
-              <span class="button-title">Rotate your phone horizontally so the charging port is on your right.</span>
-              <span class="button-meta">Replay capture orientation</span>
-            </button>
-            <button data-id="REPEAT_CAPTURE_PLACEMENT" data-context="CheckCapture">
-              <span class="button-title">Perfect. Now place your phone at the bottom left corner of the check. Say continue when you're ready.</span>
-              <span class="button-meta">Replay capture placement</span>
-            </button>
-            <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
-              <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
-              <span class="button-meta">Start live capture guidance</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Capture Setup</h4>
+              <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
+                <span class="button-title">Replay Capture orientation)</span>
+                <span class="button-meta">Rotate your phone horizontally so the charging port is on your right.</span>
+              </button>
+              <button data-id="REPEAT_CAPTURE_PLACEMENT" data-context="CheckCapture">
+                <span class="button-title">Replay Capture placement</span>
+                <span class="button-meta">Perfect. Now place your phone at the bottom left corner of the check. Say
+                  continue when you're ready.</span>
+              </button>
+              <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
+                <span class="button-title">Start live capture guidance</span>
+                <span class="button-meta">Slowly lift your phone up. I'll guide you in real time.</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Capture Guidance</h4>
-            <button data-id="GUIDE_MOVE_LEFT" data-context="CheckCapture">
-              <span class="button-title">Move slightly to the left.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_MOVE_RIGHT" data-context="CheckCapture">
-              <span class="button-title">Move slightly to the right.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_MOVE_FORWARD" data-context="CheckCapture">
-              <span class="button-title">Move slightly forward.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_MOVE_BACK" data-context="CheckCapture">
-              <span class="button-title">Move slightly back.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_TILT_LEFT" data-context="CheckCapture">
-              <span class="button-title">Tilt your phone a little to the left.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_TILT_RIGHT" data-context="CheckCapture">
-              <span class="button-title">Tilt your phone a little to the right.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_A_BIT_HIGHER" data-context="CheckCapture">
-              <span class="button-title">A bit higher.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_A_BIT_LOWER" data-context="CheckCapture">
-              <span class="button-title">A bit lower.</span>
-              <span class="button-meta">Guidance cue</span>
-            </button>
-            <button data-id="GUIDE_TOO_MUCH_LIGHT" data-context="CheckCapture">
-              <span class="button-title">Too much light. Try shading the check slightly.</span>
-              <span class="button-meta">Lighting cue</span>
-            </button>
-            <button data-id="GUIDE_NOT_ENOUGH_LIGHT" data-context="CheckCapture">
-              <span class="button-title">Not enough light. Move to a brighter spot.</span>
-              <span class="button-meta">Lighting cue</span>
-            </button>
-            <button data-id="GUIDE_HOLD_STEADY" data-context="CheckCapture">
-              <span class="button-title">Perfect. Hold steady.</span>
-              <span class="button-meta">Hold steady cue</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Capture Guidance</h4>
+              <button data-id="GUIDE_MOVE_LEFT" data-context="CheckCapture">
+                <span class="button-title">Move slightly to the left.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_MOVE_RIGHT" data-context="CheckCapture">
+                <span class="button-title">Move slightly to the right.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_MOVE_FORWARD" data-context="CheckCapture">
+                <span class="button-title">Move slightly forward.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_MOVE_BACK" data-context="CheckCapture">
+                <span class="button-title">Move slightly back.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_TILT_LEFT" data-context="CheckCapture">
+                <span class="button-title">Tilt your phone a little to the left.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_TILT_RIGHT" data-context="CheckCapture">
+                <span class="button-title">Tilt your phone a little to the right.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_A_BIT_HIGHER" data-context="CheckCapture">
+                <span class="button-title">A bit higher.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_A_BIT_LOWER" data-context="CheckCapture">
+                <span class="button-title">A bit lower.</span>
+                <span class="button-meta">Guidance cue</span>
+              </button>
+              <button data-id="GUIDE_TOO_MUCH_LIGHT" data-context="CheckCapture">
+                <span class="button-title">Too much light. Try shading the check slightly.</span>
+                <span class="button-meta">Lighting cue</span>
+              </button>
+              <button data-id="GUIDE_NOT_ENOUGH_LIGHT" data-context="CheckCapture">
+                <span class="button-title">Not enough light. Move to a brighter spot.</span>
+                <span class="button-meta">Lighting cue</span>
+              </button>
+              <button data-id="GUIDE_HOLD_STEADY" data-context="CheckCapture">
+                <span class="button-title">Perfect. Hold steady.</span>
+                <span class="button-meta">Hold steady cue</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Capture Outcome</h4>
-            <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
-              <span class="button-title">Mark the front of the check as captured.</span>
-              <span class="button-meta">Stay in capture flow and prepare front review</span>
-            </button>
-            <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
-              <span class="button-title">The back of your check has been captured successfully.</span>
-              <span class="button-meta">Mark back captured</span>
-            </button>
-            <button data-id="CAPTURE_RETRY" data-context="CheckCapture">
-              <span class="button-title">Let us try that capture again.</span>
-              <span class="button-meta">Replay retry capture prompt</span>
-            </button>
-            <button data-id="CAPTURE_FAIL" data-context="CheckCapture">
-              <span class="button-title">Failed to capture check image. Please try again.</span>
-              <span class="button-meta">Open capture error screen</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Capture Outcome</h4>
+              <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
+                <span class="button-title">Mark the front of the check as captured.</span>
+                <span class="button-meta">Stay in capture flow and prepare front review</span>
+              </button>
+              <div class="subgroup">
+              <h4>Front Review</h4>
+              <label class="input-label">
+                Front Amount
+                <input id="front-review-amount" type="text" value="$1,000" />
+              </label>
+              <label class="input-label">
+                Issuer
+                <input id="front-review-issuer" type="text" value="University of California" />
+              </label>
+              <label class="input-label">
+                Date
+                <input id="front-review-date" type="text" value="April 15th" />
+              </label>
+              <button id="front-review-btn">
+                <span class="button-title">I've detected the front of your check. The amount is the entered amount,
+                  issued by the entered issuer on the entered date. Are these details correct?</span>
+                <span class="button-meta">Speak front-side review</span>
+              </button>
+              <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
+                <span class="button-title">Thank you. We'll now proceed to capturing the back side.</span>
+                <span class="button-meta">Confirm front details and move to back capture</span>
+              </button>
+            </div>
+            <div class="subgroup">
+              <h4>Back Capture</h4>
+              <button data-id="REPEAT_BACK_CAPTURE_INTRO" data-context="CheckFlip">
+                <span class="button-title">Please flip the check over. Before proceeding, ensure you have signed the
+                  back. Say continue when you are ready.</span>
+                <span class="button-meta">Replay back-side intro</span>
+              </button>
+              <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
+                <span class="button-title">Say continue when you are ready.</span>
+                <span class="button-meta">Continue from flip screen</span>
+              </button>
+            </div>
+            Use Capture Guidance buttons to simulate the capture process.
+              <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
+                <span class="button-title">The back of your check has been captured successfully.</span>
+                <span class="button-meta">Mark back captured</span>
+              </button>
+              <button data-id="CAPTURE_RETRY" data-context="CheckCapture">
+                <span class="button-title">Let us try that capture again.</span>
+                <span class="button-meta">Replay retry capture prompt</span>
+              </button>
+              <button data-id="CAPTURE_FAIL" data-context="CheckCapture">
+                <span class="button-title">Failed to capture check image. Please try again.</span>
+                <span class="button-meta">Open capture error screen</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Front Review</h4>
-            <label class="input-label">
-              Front Amount
-              <input id="front-review-amount" type="text" value="$1,000" />
-            </label>
-            <label class="input-label">
-              Issuer
-              <input id="front-review-issuer" type="text" value="University of California" />
-            </label>
-            <label class="input-label">
-              Date
-              <input id="front-review-date" type="text" value="April 15th" />
-            </label>
-            <button id="front-review-btn">
-              <span class="button-title">I've detected the front of your check. The amount is the entered amount, issued by the entered issuer on the entered date. Are these details correct?</span>
-              <span class="button-meta">Speak front-side review</span>
-            </button>
-            <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
-              <span class="button-title">Thank you. We'll now proceed to capturing the back side.</span>
-              <span class="button-meta">Confirm front details and move to back capture</span>
-            </button>
-          </div>
+            
 
-          <div class="subgroup">
-            <h4>Back Capture</h4>
-            <button data-id="REPEAT_BACK_CAPTURE_INTRO" data-context="CheckFlip">
-              <span class="button-title">Please flip the check over. Before proceeding, ensure you have signed the back. Say continue when you are ready.</span>
-              <span class="button-meta">Replay back-side intro</span>
-            </button>
-            <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
-              <span class="button-title">Say continue when you are ready.</span>
-              <span class="button-meta">Continue from flip screen</span>
-            </button>
-          </div>
+            
 
-          <div class="subgroup">
-            <h4>Post-Capture Review</h4>
-            <label class="input-label">
-              Check Number
-              <input id="ocr-check-number" type="text" value="1024" />
-            </label>
-            <label class="input-label">
-              Routing Number
-              <input id="ocr-routing-number" type="text" value="021000021" />
-            </label>
-            <label class="input-label">
-              Account Number
-              <input id="ocr-account-number" type="text" value="1234567890" />
-            </label>
-            <label class="input-label">
-              Summary Amount
-              <input id="summary-amount" type="text" value="$1,000" />
-            </label>
-            <label class="input-label">
-              Deposit Account
-              <input id="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
-            </label>
-            <label class="input-label">
-              Issuer
-              <input id="summary-issuer" type="text" value="University of California" />
-            </label>
-            <label class="input-label">
-              Check Date
-              <input id="summary-date" type="text" value="April 15th" />
-            </label>
-            <button id="ocr-success-btn">
-              <span class="button-title">Check details found. Reviewing now.</span>
-              <span class="button-meta">OCR success</span>
-            </button>
-            <button id="ocr-partial-btn">
-              <span class="button-title">Could not read all check details. Using your entered amount.</span>
-              <span class="button-meta">OCR partial</span>
-            </button>
-            <button id="ocr-fail-btn">
-              <span class="button-title">Could not connect to the check reading service. Please try again.</span>
-              <span class="button-meta">OCR fail</span>
-            </button>
-            <button id="post-capture-summary-btn">
-              <span class="button-title">Your check has been successfully captured. Your image has been submitted to your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details shortly.</span>
-              <span class="button-meta">Speak detailed post-capture summary</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Post-Capture Review</h4>
+              <label class="input-label">
+                Check Number
+                <input id="ocr-check-number" type="text" value="1024" />
+              </label>
+              <label class="input-label">
+                Routing Number
+                <input id="ocr-routing-number" type="text" value="021000021" />
+              </label>
+              <label class="input-label">
+                Account Number
+                <input id="ocr-account-number" type="text" value="1234567890" />
+              </label>
+              <label class="input-label">
+                Summary Amount
+                <input id="summary-amount" type="text" value="$1,000" />
+              </label>
+              <label class="input-label">
+                Deposit Account
+                <input id="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
+              </label>
+              <label class="input-label">
+                Issuer
+                <input id="summary-issuer" type="text" value="University of California" />
+              </label>
+              <label class="input-label">
+                Check Date
+                <input id="summary-date" type="text" value="April 15th" />
+              </label>
+              <button id="ocr-success-btn">
+                <span class="button-title">Check details found. Reviewing now.</span>
+                <span class="button-meta">OCR success</span>
+              </button>
+              <button id="ocr-partial-btn">
+                <span class="button-title">Could not read all check details. Using your entered amount.</span>
+                <span class="button-meta">OCR partial</span>
+              </button>
+              <button id="ocr-fail-btn">
+                <span class="button-title">Could not connect to the check reading service. Please try again.</span>
+                <span class="button-meta">OCR fail</span>
+              </button>
+              <button id="post-capture-summary-btn">
+                <span class="button-title">Your check has been successfully captured. Your image has been submitted to
+                  your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
+                  shortly.</span>
+                <span class="button-meta">Speak detailed post-capture summary</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Final Confirmation</h4>
-            <button data-id="SPEAK_FINAL_CONFIRM_PROMPT" data-context="Confirmation">
-              <span class="button-title">Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.</span>
-              <span class="button-meta">Speak final confirm prompt</span>
-            </button>
-            <button data-id="SPEAK_COUNTDOWN_10" data-context="Confirmation">
-              <span class="button-title">10 seconds left</span>
-              <span class="button-meta">Countdown cue</span>
-            </button>
-            <button data-id="SPEAK_COUNTDOWN_5" data-context="Confirmation">
-              <span class="button-title">5 seconds left</span>
-              <span class="button-meta">Countdown cue</span>
-            </button>
-            <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">
-              <span class="button-title">Say confirm to proceed, or cancel to stop. You have 10 seconds to
-                respond.</span>
-              <span class="button-meta">Submit deposit</span>
-            </button>
-            <button data-id="EDIT_AMOUNT" data-context="Confirmation">
-              <span class="button-title">Returning to amount entry.</span>
-              <span class="button-meta">Edit amount</span>
-            </button>
-            <button data-id="EDIT_ACCOUNT" data-context="Confirmation">
-              <span class="button-title">Returning to account selection.</span>
-              <span class="button-meta">Edit account</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Final Confirmation</h4>
+              <button data-id="SPEAK_FINAL_CONFIRM_PROMPT" data-context="Confirmation">
+                <span class="button-title">Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to
+                  respond. If no response is detected, the deposit will proceed.</span>
+                <span class="button-meta">Speak final confirm prompt</span>
+              </button>
+              <button data-id="SPEAK_COUNTDOWN_10" data-context="Confirmation">
+                <span class="button-title">10 seconds left</span>
+                <span class="button-meta">Countdown cue</span>
+              </button>
+              <button data-id="SPEAK_COUNTDOWN_5" data-context="Confirmation">
+                <span class="button-title">5 seconds left</span>
+                <span class="button-meta">Countdown cue</span>
+              </button>
+              <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">
+                <span class="button-title">Say confirm to proceed, or cancel to stop. You have 10 seconds to
+                  respond.</span>
+                <span class="button-meta">Submit deposit</span>
+              </button>
+              <button data-id="EDIT_AMOUNT" data-context="Confirmation">
+                <span class="button-title">Returning to amount entry.</span>
+                <span class="button-meta">Edit amount</span>
+              </button>
+              <button data-id="EDIT_ACCOUNT" data-context="Confirmation">
+                <span class="button-title">Returning to account selection.</span>
+                <span class="button-meta">Edit account</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Success</h4>
-            <label class="input-label">
-              Available Immediately
-              <input id="success-available-now" type="text" value="$100.00" />
-            </label>
-            <label class="input-label">
-              Remaining Amount
-              <input id="success-remaining" type="text" value="$900.00" />
-            </label>
-            <label class="input-label">
-              Available By
-              <input id="success-available-by" type="text" value="April 19th, 2026" />
-            </label>
-            <button id="success-summary-btn">
-              <span class="button-title">We have received your check. Your deposit was submitted. Immediate and remaining funds will be available soon.</span>
-              <span class="button-meta">Speak success summary</span>
-            </button>
-            <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">
-              <span class="button-title">Your session is complete. Say done to return to the home screen.</span>
-              <span class="button-meta">Finish success flow</span>
-            </button>
-            <button data-id="RETURN_HOME_FROM_SUCCESS" data-context="Success">
-              <span class="button-title">Return to the home screen after the summary is complete.</span>
-              <span class="button-meta">Return home from success</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Success</h4>
+              <label class="input-label">
+                Available Immediately
+                <input id="success-available-now" type="text" value="$100.00" />
+              </label>
+              <label class="input-label">
+                Remaining Amount
+                <input id="success-remaining" type="text" value="$900.00" />
+              </label>
+              <label class="input-label">
+                Available By
+                <input id="success-available-by" type="text" value="April 19th, 2026" />
+              </label>
+              <button id="success-summary-btn">
+                <span class="button-title">We have received your check. Your deposit was submitted. Immediate and
+                  remaining funds will be available soon.</span>
+                <span class="button-meta">Speak success summary</span>
+              </button>
+              <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">
+                <span class="button-title">Your session is complete. Say done to return to the home screen.</span>
+                <span class="button-meta">Finish success flow</span>
+              </button>
+              <button data-id="RETURN_HOME_FROM_SUCCESS" data-context="Success">
+                <span class="button-title">Return to the home screen after the summary is complete.</span>
+                <span class="button-meta">Return home from success</span>
+              </button>
+            </div>
           </div>
 
           <div class="group">
@@ -345,7 +343,8 @@
             <button data-id="SETTINGS_ADJUST_VERBOSITY" data-context="Settings">
               <span class="button-title">Start verbosity flow </span>
               <span class="button-meta">Let me help you adjust the verbosity settings. How much detail would you like me
-                to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.</span>
+                to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example
+                of.</span>
             </button>
             <button data-id="SETTINGS_VERBOSITY_EXAMPLE_LOW" data-context="Settings">
               <span class="button-title">Play low example</span>
@@ -354,15 +353,20 @@
                 example.</span>
             </button><button data-id="SETTINGS_VERBOSITY_EXAMPLE_MEDIUM" data-context="Settings">
               <span class="button-title">Play medium example</span>
-              <span class="button-meta">You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for everyday
-                banking, designed for blind and low-vision users.(Sonic Sound) Say choose Medium to select this, or say Low or High
+              <span class="button-meta">You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for
+                everyday
+                banking, designed for blind and low-vision users.(Sonic Sound) Say choose Medium to select this, or say
+                Low or High
                 to hear another example.</span>
             </button>
             <button data-id="SETTINGS_VERBOSITY_EXAMPLE_HIGH" data-context="Settings">
               <span class="button-title">Play high example</span>
-              <span class="button-meta">You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking assistant
-                designed for blind and low-vision users, helping you complete everyday banking tasks independently and with
-                confidence.(Sonic Sound) Say 'choose High to select this, or say Low or Medium to hear another example.</span>
+              <span class="button-meta">You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking
+                assistant
+                designed for blind and low-vision users, helping you complete everyday banking tasks independently and
+                with
+                confidence.(Sonic Sound) Say 'choose High to select this, or say Low or Medium to hear another
+                example.</span>
             </button>
             <button data-id="SETTINGS_CHOOSE_VERBOSITY" data-context="Settings">
               <span class="button-title">Confirm selected verbosity</span>
@@ -375,27 +379,32 @@
             <button data-id="SETTINGS_ADJUST_PACING" data-context="Settings">
               <span class="button-title">Start pacing flow</span>
               <span class="button-meta">
-                Let me help you adjust the pacing. There are three options: 0.5x, 1.0x, and 1.5x. Say the option you would like to hear an example of.
+                Let me help you adjust the pacing. There are three options: 0.5x, 1.0x, and 1.5x. Say the option you
+                would like to hear an example of.
               </span>
             </button>
             <button data-id="SETTINGS_PACING_EXAMPLE_SLOW" data-context="Settings">
               <span class="button-title">Play slow example</span>
               <span class="button-meta">
-                You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
+                You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic
+                Sound) Say
                 'choose 0.5x' to select this, or say '1.0x' or '1.5x' to hear another example.
               </span>
             </button>
             <button data-id="SETTINGS_PACING_EXAMPLE_MEDIUM" data-context="Settings">
               <span class="button-title">Play medium example</span>
               <span class="button-meta">
-                You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
+                You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic
+                Sound) Say
                 'choose 1.0x' to select this, or say '0.5x' or '1.5x' to hear another example.
               </span>
             </button>
             <button data-id="SETTINGS_PACING_EXAMPLE_HIGH" data-context="Settings">
               <span class="button-title">Play high pace example</span>
-              <span class="button-meta">You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for everyday
-                banking.' (Sonic Sound) Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another example.</span>
+              <span class="button-meta">You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for
+                everyday
+                banking.' (Sonic Sound) Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another
+                example.</span>
             </button>
             <button data-id="SETTINGS_CHOOSE_PACING" data-context="Settings">
               <span class="button-title">Confirm selected pacing</span>
@@ -403,7 +412,8 @@
             </button>
             <button data-id="SETTINGS_SAVE_PREFERENCES" data-context="Settings">
               <span class="button-title">Save preferences</span>
-              <span class="button-meta">Your preferences have been saved. I will speak at the selected speed with the selected detail level. Say “verbosity” or “pacing” to make changes, or say “go home.”</span>
+              <span class="button-meta">Your preferences have been saved. I will speak at the selected speed with the
+                selected detail level. Say “verbosity” or “pacing” to make changes, or say “go home.”</span>
             </button>
           </div>
         </div>
@@ -412,45 +422,45 @@
           <div class="group">
             <h3>Operator Controls</h3>
 
-          <div class="subgroup">
-            <h4>Onboarding and Home</h4>
-            <button data-id="CONTINUE_FROM_ONBOARDING" data-context="Onboarding">
-              <span class="button-title">Go to Home page</span>
-              <span class="button-meta">Go to Home page</span>
-            </button>
-            <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">
-              <span class="button-title">Open check deposit</span>
-              <span class="button-meta">Open check deposit flow</span>
-            </button>
-            <button data-id="OPEN_SETTINGS" data-context="MainScreen">
-              <span class="button-title">Open settings.</span>
-              <span class="button-meta">Go to settings</span>
-            </button>
-            <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">
-              <span class="button-title">Trigger placeholder</span>
-              <span class="button-meta">Trigger placeholder for other tasks</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Onboarding and Home</h4>
+              <button data-id="CONTINUE_FROM_ONBOARDING" data-context="Onboarding">
+                <span class="button-title">Go to Home page</span>
+                <span class="button-meta">Go to Home page</span>
+              </button>
+              <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">
+                <span class="button-title">Open check deposit</span>
+                <span class="button-meta">Open check deposit flow</span>
+              </button>
+              <button data-id="OPEN_SETTINGS" data-context="MainScreen">
+                <span class="button-title">Open settings.</span>
+                <span class="button-meta">Go to settings</span>
+              </button>
+              <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">
+                <span class="button-title">Trigger placeholder</span>
+                <span class="button-meta">Trigger placeholder for other tasks</span>
+              </button>
+            </div>
 
-          <div class="subgroup">
-            <h4>Global Controls</h4>
-            <button data-id="GO_BACK" data-context="global">
-              <span class="button-title">Go back to the previous screen in the flow.</span>
-              <span class="button-meta">Go back</span>
-            </button>
-            <button data-id="SAY_NEED_MORE_TIME" data-context="global">
-              <span class="button-title">Do you need more time?</span>
-              <span class="button-meta">Speak more-time prompt</span>
-            </button>
-            <button data-id="SAY_DIDNT_CATCH" data-context="global">
-              <span class="button-title">I didn't catch that.</span>
-              <span class="button-meta">Speak did-not-catch prompt</span>
-            </button>
-            <button data-id="GO_HOME" data-context="global">
-              <span class="button-title">Return to the home screen.</span>
-              <span class="button-meta">Go home</span>
-            </button>
-          </div>
+            <div class="subgroup">
+              <h4>Global Controls</h4>
+              <button data-id="GO_BACK" data-context="global">
+                <span class="button-title">Go back to the previous screen in the flow.</span>
+                <span class="button-meta">Go back</span>
+              </button>
+              <button data-id="SAY_NEED_MORE_TIME" data-context="global">
+                <span class="button-title">Do you need more time?</span>
+                <span class="button-meta">Speak more-time prompt</span>
+              </button>
+              <button data-id="SAY_DIDNT_CATCH" data-context="global">
+                <span class="button-title">I didn't catch that.</span>
+                <span class="button-meta">Speak did-not-catch prompt</span>
+              </button>
+              <button data-id="GO_HOME" data-context="global">
+                <span class="button-title">Return to the home screen.</span>
+                <span class="button-meta">Go home</span>
+              </button>
+            </div>
 
             <div class="subgroup">
               <h4>Close Flow</h4>

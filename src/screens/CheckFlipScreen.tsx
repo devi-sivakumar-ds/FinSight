@@ -35,6 +35,8 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     capturedSide,
     nextSide,
     frontImageUri,
+    reviewPending,
+    reviewText,
     accountId,
     accountType,
     amount,
@@ -53,7 +55,17 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
   // Announce instructions on mount
   useEffect(() => {
-    setTimeout(() => {
+    if (reviewPending) {
+      if (!reviewText) return;
+
+      const timer = setTimeout(() => {
+        speakMedium(reviewText);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+
+    const timer = setTimeout(() => {
       speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured(capturedSide)));
       setTimeout(() => {
         speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction(nextSide)));
@@ -62,7 +74,9 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
         }, 2000);
       }, 1200);
     }, 400);
-  }, [capturedSide, nextSide, speakMedium, verbosity]);
+
+    return () => clearTimeout(timer);
+  }, [capturedSide, nextSide, reviewPending, speakMedium, verbosity]);
 
   const proceedToBackSide = () => {
     navigation.navigate('CheckCapture', {
@@ -106,9 +120,11 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Instruction */}
         <Text style={styles.instruction}>
-          {nextSide === 'back'
-            ? 'Now flip the check to show the back, where you would sign it.'
-            : 'Now flip the check to show the front of the check.'}
+          {reviewPending
+            ? 'Front capture is complete. Review the detected details, then continue when you are ready to capture the other side.'
+            : nextSide === 'back'
+              ? 'Now flip the check to show the back, where you would sign it.'
+              : 'Now flip the check to show the front of the check.'}
         </Text>
 
         {/* Thumbnail (optional) */}
@@ -136,11 +152,16 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
       {/* Footer */}
       <View style={styles.footer}>
         <AccessibleButton
-          label={`Capture ${nextSideLabel}`}
+          label={reviewPending ? 'Awaiting Review' : `Capture ${nextSideLabel}`}
           onPress={proceedToBackSide}
           size="large"
           style={styles.readyButton}
-          accessibilityHint={`Proceed to capture the ${nextSideLabel} side of the check`}
+          accessibilityHint={
+            reviewPending
+              ? 'Use the operator review controls before proceeding'
+              : `Proceed to capture the ${nextSideLabel} side of the check`
+          }
+          disabled={Boolean(reviewPending)}
         />
         <View style={styles.micWrap}>
           <VisualMic size="small" />

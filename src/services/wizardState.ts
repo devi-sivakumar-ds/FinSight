@@ -4,7 +4,7 @@
 // ============================================================================
 
 import type { CheckOCRResponse } from '@/types/index';
-import { WizardAccountType, WizardAppState, WizardCaptureOrder, WizardCaptureSide, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
+import { WizardAccountType, WizardAppState, WizardCaptureSide, WizardDepositState, WizardOcrOutcome } from '@/types/wizard';
 import type { DepositStackParamList } from '@/types/index';
 
 const DEFAULT_DEPOSIT_STATE: WizardDepositState = {
@@ -14,6 +14,12 @@ const DEFAULT_DEPOSIT_STATE: WizardDepositState = {
 
 class WizardStateService {
   private deposit: WizardDepositState = { ...DEFAULT_DEPOSIT_STATE };
+  private listeners = new Set<(state: WizardDepositState) => void>();
+
+  private emit(): void {
+    const snapshot = this.getDepositState();
+    this.listeners.forEach(listener => listener(snapshot));
+  }
 
   public getDepositState(): WizardDepositState {
     return { ...this.deposit };
@@ -21,6 +27,12 @@ class WizardStateService {
 
   public resetDeposit(): void {
     this.deposit = { ...DEFAULT_DEPOSIT_STATE };
+    this.emit();
+  }
+
+  public subscribe(listener: (state: WizardDepositState) => void): () => void {
+    this.listeners.add(listener);
+    return () => this.listeners.delete(listener);
   }
 
   public setAccount(accountType: WizardAccountType, accountId: string): void {
@@ -29,6 +41,7 @@ class WizardStateService {
       accountType,
       accountId,
     };
+    this.emit();
   }
 
   public setAmount(amount: number): void {
@@ -36,13 +49,7 @@ class WizardStateService {
       ...this.deposit,
       amount,
     };
-  }
-
-  public setCaptureOrder(captureOrder: WizardCaptureOrder): void {
-    this.deposit = {
-      ...this.deposit,
-      captureOrder,
-    };
+    this.emit();
   }
 
   public setCurrentCaptureSide(currentCaptureSide: WizardCaptureSide): void {
@@ -50,6 +57,7 @@ class WizardStateService {
       ...this.deposit,
       currentCaptureSide,
     };
+    this.emit();
   }
 
   public setCaptureState(
@@ -65,6 +73,7 @@ class WizardStateService {
       frontImageUri: frontImageUri ?? this.deposit.frontImageUri,
       backImageUri: backImageUri ?? this.deposit.backImageUri,
     };
+    this.emit();
   }
 
   public setOcrOutcome(
@@ -76,6 +85,7 @@ class WizardStateService {
       ocrOutcome,
       ocrData,
     };
+    this.emit();
   }
 
   public setConfirmationNumber(confirmationNumber?: string): void {
@@ -83,6 +93,7 @@ class WizardStateService {
       ...this.deposit,
       confirmationNumber,
     };
+    this.emit();
   }
 
   public setRetryScreen(retryScreen?: keyof DepositStackParamList): void {
@@ -90,6 +101,7 @@ class WizardStateService {
       ...this.deposit,
       retryScreen,
     };
+    this.emit();
   }
 
   public updateFromAppState(state: WizardAppState): void {
@@ -97,6 +109,7 @@ class WizardStateService {
       ...DEFAULT_DEPOSIT_STATE,
       ...state.deposit,
     };
+    this.emit();
   }
 }
 

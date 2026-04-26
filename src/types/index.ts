@@ -63,6 +63,7 @@ export interface Account {
   accountNumber: string;      // Full number
   displayNumber: string;       // Last 4 digits
   balance: number;
+  dailyLimit?: number;
   currency: 'USD';
 }
 
@@ -159,6 +160,8 @@ export type DepositStackParamList = {
     nextSide: 'front' | 'back';
     frontImageUri?: string;
     backImageUri?: string;
+    reviewPending?: boolean;
+    reviewText?: string;
   };
   OCRProcessing: {
     frontImageUri: string;

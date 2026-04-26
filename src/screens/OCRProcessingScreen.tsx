@@ -61,11 +61,6 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
 
     if (isPureWozMode()) {
       setStatusText('Waiting for operator review…');
-      setTimeout(() => {
-        if (!cancelled) {
-          speakMedium(v(verbosity, ttsStrings.ocrProcessing.waitingForOperator));
-        }
-      }, 1000);
       return () => { cancelled = true; };
     }
 

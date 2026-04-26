@@ -85,8 +85,6 @@ export const wizardCommands = {
     cmd('SELECT_CHECKING', 'Select Checking', 'AccountSelect', 'accountType'),
     cmd('SELECT_SAVINGS', 'Select Savings', 'AccountSelect', 'accountType'),
     cmd('REPEAT_ACCOUNT_LIMIT', 'Repeat Account Limit', 'AccountSelect'),
-    cmd('SET_CAPTURE_ORDER_FRONT_FIRST', 'Front Then Back', 'AccountSelect'),
-    cmd('SET_CAPTURE_ORDER_BACK_FIRST', 'Back Then Front', 'AccountSelect'),
     cmd('START_PRE_CAPTURE_OVERVIEW', 'Start Pre-Capture Overview', 'AccountSelect'),
     cmd('REPEAT_PRE_CAPTURE_OVERVIEW', 'Repeat Pre-Capture Overview', 'AccountSelect'),
     cmd('CONTINUE_FROM_ACCOUNT_SELECT', 'Continue', 'AccountSelect'),

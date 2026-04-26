@@ -14,6 +14,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
+import { isPureWozMode } from '@/config/studyMode';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
@@ -35,6 +36,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
+  const pureWozMode = isPureWozMode();
   const expectedDate = deposit.expectedAvailability
     ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
         month: 'long',
@@ -48,12 +50,27 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     year: 'numeric',
   });
 
+  const handleDone = () => {
+    navigation.getParent()?.goBack();
+  };
+
   // Announce success on mount — haptic burst first, then voice
   useEffect(() => {
     // Immediate haptic celebration: three quick pulses
     trigger(HapticPattern.SUCCESS);
     setTimeout(() => trigger(HapticPattern.SUCCESS), 250);
     setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
+
+    if (pureWozMode) {
+      const timer = setTimeout(() => {
+        speakMedium(v(verbosity, ttsStrings.success.exitPrompt));
+        setTimeout(() => {
+          handleDone();
+        }, 1800);
+      }, 10000);
+
+      return () => clearTimeout(timer);
+    }
 
     setTimeout(() => {
       speakHigh(v(verbosity, ttsStrings.success.received(formatAmountDisplay(deposit.amount), submittedDate)));
@@ -75,13 +92,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
-  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, speakHigh, speakMedium, submittedDate, trigger, verbosity]);
-
-  const handleDone = () => {
-    // DepositFlow is a modal on RootStack — one goBack() dismisses it entirely
-    // and returns to TabNavigator (MainScreen).
-    navigation.getParent()?.goBack();
-  };
+  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, handleDone, pureWozMode, speakHigh, speakMedium, submittedDate, trigger, verbosity]);
 
   // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(

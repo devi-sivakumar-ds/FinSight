@@ -13,6 +13,7 @@ import ttsService from '@services/ttsService';
 import wizardState from '@services/wizardState';
 import { DEPOSIT_LIMITS } from '@utils/constants';
 import { formatAmountForSpeech } from '@utils/amountParser';
+import { getAccountProfileById, getAccountProfileByType } from '@/data/accountProfiles';
 
 interface WizardExecutorDeps {
   navigationRef: NavigationContainerRefWithCurrent<RootStackParamList>;
@@ -171,6 +172,10 @@ function getPaceValueLabel(pace: Pace): '0.5x' | '1.0x' | '1.5x' {
   }
 }
 
+function createWizardCaptureUri(side: 'front' | 'back'): string {
+  return `wizard://${side}-${Date.now()}`;
+}
+
 export function executeWizardCommand(
   command: WizardOperatorCommand,
   deps: WizardExecutorDeps
@@ -206,8 +211,9 @@ export function executeWizardCommand(
   };
 
   const speakSelectedAccountLimit = (accountType: 'checking' | 'savings') => {
+    const account = getAccountProfileByType(accountType);
     const typeLabel = accountType === 'checking' ? 'Checking' : 'Savings';
-    const limit = formatAmountForSpeech(DEPOSIT_LIMITS.DAILY_LIMIT);
+    const limit = formatAmountForSpeech(account?.dailyLimit ?? DEPOSIT_LIMITS.DAILY_LIMIT);
     ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.dailyLimitSelected(typeLabel, limit)));
     setTimeout(() => {
       ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.readyPrompt));
@@ -417,12 +423,12 @@ export function executeWizardCommand(
       return;
 
     case 'SELECT_CHECKING':
-      wizardState.setAccount('checking', 'acc_1');
+      wizardState.setAccount('checking', getAccountProfileByType('checking')?.id ?? 'acc_1');
       speakSelectedAccountLimit('checking');
       return;
 
     case 'SELECT_SAVINGS':
-      wizardState.setAccount('savings', 'acc_2');
+      wizardState.setAccount('savings', getAccountProfileByType('savings')?.id ?? 'acc_2');
       speakSelectedAccountLimit('savings');
       return;
 
@@ -463,7 +469,7 @@ export function executeWizardCommand(
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
-      const firstSide = deposit.captureOrder === 'back_first' ? 'back' : 'front';
+      const firstSide = 'front';
       wizardState.setCurrentCaptureSide(firstSide);
       (navigationRef.navigate as any)('DepositFlow', {
         screen: 'CheckCapture',
@@ -483,14 +489,6 @@ export function executeWizardCommand(
 
     case 'CLOSE_FROM_ACCOUNT_SELECT':
       if (navigationRef.canGoBack()) navigationRef.goBack();
-      return;
-
-    case 'SET_CAPTURE_ORDER_FRONT_FIRST':
-      wizardState.setCaptureOrder('front_first');
-      return;
-
-    case 'SET_CAPTURE_ORDER_BACK_FIRST':
-      wizardState.setCaptureOrder('back_first');
       return;
 
     case 'BACK_FROM_CHECK_CAPTURE':
@@ -579,19 +577,45 @@ export function executeWizardCommand(
 
     case 'CAPTURE_FRONT_SUCCESS': {
       const deposit = wizardState.getDepositState();
-      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
+      const frontImageUri = deposit.frontImageUri ?? createWizardCaptureUri('front');
       if (deposit.backCaptured) {
         const accountType = deposit.accountType ?? 'checking';
         const accountId = deposit.accountId ?? 'acc_1';
         const amount = deposit.amount ?? 0;
         const backImageUri = deposit.backImageUri ?? 'wizard://back';
-        wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
-        (navigationRef.navigate as any)('DepositFlow', {
-          screen: 'OCRProcessing',
-          params: { frontImageUri, backImageUri, accountId, accountType, amount },
-        });
+        setTimeout(() => {
+          wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
+          (navigationRef.navigate as any)('DepositFlow', {
+            screen: 'OCRProcessing',
+            params: { frontImageUri, backImageUri, accountId, accountType, amount },
+          });
+        }, 450);
       } else {
-        wizardState.setCaptureState(true, false, frontImageUri, deposit.backImageUri);
+        const reviewText =
+          command.payload && 'text' in command.payload && command.payload.text.trim()
+            ? command.payload.text.trim()
+            : '';
+        setTimeout(() => {
+          wizardState.setCaptureState(true, false, frontImageUri, deposit.backImageUri);
+          wizardState.setCurrentCaptureSide('front');
+          const accountType = deposit.accountType ?? 'checking';
+          const accountId = deposit.accountId ?? 'acc_1';
+          const amount = deposit.amount ?? 0;
+          (navigationRef.navigate as any)('DepositFlow', {
+            screen: 'CheckFlip',
+            params: {
+              capturedImageUri: frontImageUri,
+            capturedSide: 'front',
+            nextSide: 'back',
+            accountId,
+            accountType,
+            amount,
+            frontImageUri,
+            reviewPending: true,
+            reviewText,
+          },
+        });
+        }, 450);
       }
       return;
     }
@@ -605,27 +629,8 @@ export function executeWizardCommand(
 
     case 'CONFIRM_FRONT_DETAILS': {
       const deposit = wizardState.getDepositState();
-      const accountType = deposit.accountType ?? 'checking';
-      const accountId = deposit.accountId ?? 'acc_1';
-      const amount = deposit.amount ?? 0;
-      const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
 
       ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.proceedToBackCapture));
-
-      setTimeout(() => {
-        (navigationRef.navigate as any)('DepositFlow', {
-          screen: 'CheckFlip',
-          params: {
-            capturedImageUri: frontImageUri,
-            capturedSide: 'front',
-            nextSide: 'back',
-            accountId,
-            accountType,
-            amount,
-            frontImageUri,
-          },
-        });
-      }, 900);
       return;
     }
 
@@ -654,6 +659,7 @@ export function executeWizardCommand(
           accountType,
           amount,
           side: nextSide,
+          autoStart: true,
         },
       });
       return;
@@ -664,28 +670,35 @@ export function executeWizardCommand(
       const accountType = deposit.accountType ?? 'checking';
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
-      const backImageUri = deposit.backImageUri ?? 'wizard://back';
+      const backImageUri = deposit.backImageUri ?? createWizardCaptureUri('back');
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.capturingNow));
       if (deposit.frontCaptured) {
         const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
-        wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
-        (navigationRef.navigate as any)('DepositFlow', {
-          screen: 'OCRProcessing',
-          params: { frontImageUri, backImageUri, accountId, accountType, amount },
-        });
+        setTimeout(() => {
+          wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
+          ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured('back')));
+          (navigationRef.navigate as any)('DepositFlow', {
+            screen: 'OCRProcessing',
+            params: { frontImageUri, backImageUri, accountId, accountType, amount },
+          });
+        }, 450);
       } else {
-        wizardState.setCaptureState(false, true, deposit.frontImageUri, backImageUri);
-        (navigationRef.navigate as any)('DepositFlow', {
-          screen: 'CheckFlip',
-          params: {
-            capturedImageUri: backImageUri,
-            capturedSide: 'back',
-            nextSide: 'front',
-            accountId,
-            accountType,
-            amount,
-            backImageUri,
-          },
-        });
+        setTimeout(() => {
+          wizardState.setCaptureState(false, true, deposit.frontImageUri, backImageUri);
+          ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured('back')));
+          (navigationRef.navigate as any)('DepositFlow', {
+            screen: 'CheckFlip',
+            params: {
+              capturedImageUri: backImageUri,
+              capturedSide: 'back',
+              nextSide: 'front',
+              accountId,
+              accountType,
+              amount,
+              backImageUri,
+            },
+          });
+        }, 450);
       }
       return;
     }

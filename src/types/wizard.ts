@@ -13,7 +13,6 @@ import type {
 
 export type WizardAccountType = 'checking' | 'savings';
 export type WizardOcrOutcome = 'success' | 'partial' | 'fail';
-export type WizardCaptureOrder = 'front_first' | 'back_first';
 export type WizardCaptureSide = 'front' | 'back';
 
 export type WizardCommandPayload =
@@ -66,7 +65,6 @@ export interface WizardDepositState {
   accountType?: WizardAccountType;
   accountId?: string;
   amount?: number;
-  captureOrder?: WizardCaptureOrder;
   currentCaptureSide?: WizardCaptureSide;
   frontCaptured: boolean;
   backCaptured: boolean;
