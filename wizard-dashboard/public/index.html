@@ -1,0 +1,111 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FinSight Wizard Dashboard</title>
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <main class="page">
+      <header class="header">
+        <div>
+          <h1>FinSight Wizard Dashboard</h1>
+          <p>Android over USB + adb reverse</p>
+        </div>
+        <div class="status">
+          <span id="dashboard-status" class="pill">Dashboard connecting</span>
+          <span id="app-status" class="pill muted">App disconnected</span>
+        </div>
+      </header>
+
+      <section class="panel grid-two">
+        <div>
+          <h2>Session</h2>
+          <div id="session-info" class="kv"></div>
+        </div>
+        <div>
+          <h2>App State</h2>
+          <div id="app-state" class="kv"></div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Quick Actions</h2>
+        <div class="groups">
+          <div class="group">
+            <h3>Home</h3>
+            <button data-id="OPEN_DEPOSIT_FLOW" data-context="MainScreen">Open Deposit Flow</button>
+            <button data-id="OPEN_SETTINGS" data-context="MainScreen">Open Settings</button>
+            <button data-id="SHOW_CHECK_BALANCE" data-context="MainScreen">Check Balance</button>
+          </div>
+
+          <div class="group">
+            <h3>Deposit Intro</h3>
+            <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">Continue Overview</button>
+            <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">Continue Privacy</button>
+            <button data-id="BACK_FROM_PRIVACY" data-context="DepositPrivacy">Back Privacy</button>
+          </div>
+
+          <div class="group">
+            <h3>Account</h3>
+            <button data-id="SELECT_CHECKING" data-context="AccountSelect">Select Checking</button>
+            <button data-id="SELECT_SAVINGS" data-context="AccountSelect">Select Savings</button>
+            <button data-id="CONTINUE_FROM_ACCOUNT_SELECT" data-context="AccountSelect">Continue Account</button>
+          </div>
+
+          <div class="group">
+            <h3>Amount</h3>
+            <label class="input-label">
+              Amount
+              <input id="amount-input" type="number" min="0" step="0.01" value="25.00" />
+            </label>
+            <button id="set-amount-btn">Set Amount</button>
+            <button data-id="CONFIRM_AMOUNT" data-context="AmountInput">Confirm Amount</button>
+          </div>
+
+          <div class="group">
+            <h3>Confirmation</h3>
+            <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">Confirm Deposit</button>
+            <button data-id="EDIT_AMOUNT" data-context="Confirmation">Edit Amount</button>
+            <button data-id="EDIT_ACCOUNT" data-context="Confirmation">Edit Account</button>
+          </div>
+
+          <div class="group">
+            <h3>Settings</h3>
+            <button data-id="SET_VERBOSITY_LOW" data-context="Settings">Verbosity Low</button>
+            <button data-id="SET_VERBOSITY_MEDIUM" data-context="Settings">Verbosity Medium</button>
+            <button data-id="SET_VERBOSITY_HIGH" data-context="Settings">Verbosity High</button>
+            <button data-id="SET_PACE_SLOW" data-context="Settings">Pace Slow</button>
+            <button data-id="SET_PACE_NORMAL" data-context="Settings">Pace Normal</button>
+            <button data-id="SET_PACE_FAST" data-context="Settings">Pace Fast</button>
+            <button data-id="RETURN_HOME_FROM_SETTINGS" data-context="Settings">Return Home</button>
+          </div>
+
+          <div class="group">
+            <h3>Global</h3>
+            <button data-id="GO_HOME" data-context="global">Go Home</button>
+            <button data-id="GO_BACK" data-context="global">Go Back</button>
+            <button data-id="CLOSE_FLOW" data-context="global">Close Flow</button>
+            <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">Finish Success</button>
+          </div>
+        </div>
+      </section>
+
+      <section class="panel">
+        <h2>Event Log</h2>
+        <div class="note-bar">
+          <label class="input-label grow">
+            Operator Note
+            <input id="note-input" type="text" placeholder="Add a note to the current session log" />
+          </label>
+          <button id="save-note-btn" class="secondary">Save Note</button>
+        </div>
+        <p id="log-path" class="log-path">Session log file: waiting for app session</p>
+        <ul id="event-log" class="log"></ul>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+  </html>

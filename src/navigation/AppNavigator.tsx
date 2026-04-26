@@ -19,6 +19,7 @@ import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { isPureWozMode } from '@/config/studyMode';
 import wizardClient from '@services/wizardClient';
 import { executeWizardCommand } from '@services/wizardExecutor';
+import wizardState from '@services/wizardState';
 import type { WizardAppState, WizardLogEvent } from '@/types/wizard';
 import type { WizardCommandContext } from '@utils/wizardCommands';
 import { COLORS } from '@utils/constants';
@@ -152,10 +153,7 @@ export const AppNavigator: React.FC = () => {
       currentDepositRoute: currentDepositRoute as any,
       currentScreenTitle: currentRoute,
       lastCommandId,
-      deposit: {
-        frontCaptured: false,
-        backCaptured: false,
-      },
+      deposit: wizardState.getDepositState(),
       settings: {
         verbosity,
         pace,
