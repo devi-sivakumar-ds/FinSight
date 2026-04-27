@@ -32,6 +32,9 @@ export type WizardCommandPayload =
     }
   | {
       text: string;
+      amountText?: string;
+      accountLabel?: string;
+      accountDigits?: string;
     }
   | {
       pace: Pace;
@@ -65,6 +68,9 @@ export interface WizardDepositState {
   accountType?: WizardAccountType;
   accountId?: string;
   amount?: number;
+  reviewedAmountText?: string;
+  reviewedAccountLabel?: string;
+  reviewedAccountDigits?: string;
   currentCaptureSide?: WizardCaptureSide;
   frontCaptured: boolean;
   backCaptured: boolean;

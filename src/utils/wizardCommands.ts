@@ -144,6 +144,7 @@ export const wizardCommands = {
 
   success: [
     cmd('SPEAK_SUCCESS_SUMMARY', 'Speak Success Summary', 'Success', 'text'),
+    cmd('SPEAK_SUCCESS_EXIT', 'Speak Success Exit', 'Success'),
     cmd('FINISH_SUCCESS_FLOW', 'Done', 'Success'),
     cmd('RETURN_HOME_FROM_SUCCESS', 'Go Home', 'Success'),
   ],

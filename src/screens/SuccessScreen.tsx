@@ -32,7 +32,7 @@ type Props = {
 };
 
 export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { deposit } = route.params;
+  const { deposit, summaryText } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
@@ -62,12 +62,13 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
 
     if (pureWozMode) {
+      if (!summaryText) {
+        return undefined;
+      }
+
       const timer = setTimeout(() => {
-        speakMedium(v(verbosity, ttsStrings.success.exitPrompt));
-        setTimeout(() => {
-          handleDone();
-        }, 1800);
-      }, 10000);
+        speakHigh(summaryText);
+      }, 400);
 
       return () => clearTimeout(timer);
     }
@@ -92,7 +93,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
-  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, handleDone, pureWozMode, speakHigh, speakMedium, submittedDate, trigger, verbosity]);
+  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, handleDone, pureWozMode, speakHigh, speakMedium, submittedDate, summaryText, trigger, verbosity]);
 
   // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(

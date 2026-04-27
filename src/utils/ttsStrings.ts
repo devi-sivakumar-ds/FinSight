@@ -497,6 +497,15 @@ export const ttsStrings = {
       medium: `To your ${label} account.`,
       high:   `This will be deposited to your ${label} account.`,
     }),
+    finalConfirmPrompt: (amount: string, accountLabel: string, accountDigits?: string): VStr => ({
+      low: 'Confirm or cancel?',
+      medium: accountDigits
+        ? `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account ending in ${accountDigits}. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`
+        : `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+      high: accountDigits
+        ? `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account ending in ${accountDigits}. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`
+        : `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+    }),
     confirmPrompt: {
       low:    'Confirm or cancel?',
       medium: `Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,

@@ -45,10 +45,10 @@
                 <span class="button-title">Replay deposit overview.</span>
                 <span class="button-meta">Replay the overview script without changing screens</span>
               </button>
-              <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">
+              <!-- <button data-id="CONTINUE_FROM_OVERVIEW" data-context="DepositOverview">
                 <span class="button-title">To privacy overview</span>
                 <span class="button-meta">Finished Check overview</span>
-              </button>
+              </button> -->
               <button data-id="CONTINUE_FROM_PRIVACY" data-context="DepositPrivacy">
                 <span class="button-title">To account selection</span>
                 <span class="button-meta">Choose account</span>
@@ -281,9 +281,10 @@
             <div class="subgroup">
               <h4>Final Confirmation</h4>
               <button data-id="SPEAK_FINAL_CONFIRM_PROMPT" data-context="Confirmation">
-                <span class="button-title">Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to
-                  respond. If no response is detected, the deposit will proceed.</span>
-                <span class="button-meta">Speak final confirm prompt</span>
+                <span class="button-title">Speak final confirm prompt</span>
+                <span class="button-meta">I'm about to deposit $ into your checking account ending in . Say “confirm” to
+                  proceed, or “cancel” to stop. You have 10 seconds to respond.  If no response is detected, the deposit
+                  will proceed.</span>
               </button>
               <button data-id="SPEAK_COUNTDOWN_10" data-context="Confirmation">
                 <span class="button-title">10 seconds left</span>
@@ -294,9 +295,9 @@
                 <span class="button-meta">Countdown cue</span>
               </button>
               <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">
-                <span class="button-title">Say confirm to proceed, or cancel to stop. You have 10 seconds to
-                  respond.</span>
-                <span class="button-meta">Submit deposit</span>
+                <span class="button-title">Submit deposit and speak receipt summary</span>
+                <span class="button-meta">We have received your check. Your deposit of the reviewed amount was submitted. Immediate
+                  and remaining funds will be available soon.</span>
               </button>
               <button data-id="EDIT_AMOUNT" data-context="Confirmation">
                 <span class="button-title">Returning to amount entry.</span>
@@ -323,17 +324,23 @@
                 <input id="success-available-by" type="text" value="April 19th, 2026" />
               </label>
               <button id="success-summary-btn">
-                <span class="button-title">We have received your check. Your deposit was submitted. Immediate and
-                  remaining funds will be available soon.</span>
-                <span class="button-meta">Speak success summary</span>
+                <span class="button-title">Replay success summary</span>
+                <span class="button-meta">
+                  We have received your check. Your deposit was submitted. Immediate and
+                  remaining funds will be available soon.
+                </span>
               </button>
-              <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">
+              <button data-id="SPEAK_SUCCESS_EXIT" data-context="Success">
+                <span class="button-title">Your session is complete. Returning to home.</span>
+                <span class="button-meta">Speak session complete line and return home</span>
+              </button>
+              <!-- <button data-id="FINISH_SUCCESS_FLOW" data-context="Success">
                 <span class="button-title">Your session is complete. Say done to return to the home screen.</span>
                 <span class="button-meta">Finish success flow</span>
               </button>
               <button data-id="RETURN_HOME_FROM_SUCCESS" data-context="Success">
                 <span class="button-title">Return to the home screen after the summary is complete.</span>
-                <span class="button-meta">Return home from success</span>
+                <span class="button-meta">Return home from success</span> -->
               </button>
             </div>
           </div>

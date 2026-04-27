@@ -176,6 +176,14 @@ function createWizardCaptureUri(side: 'front' | 'back'): string {
   return `wizard://${side}-${Date.now()}`;
 }
 
+function parseCurrencyAmount(text?: string): number | undefined {
+  if (!text) return undefined;
+  const normalized = text.replace(/[^0-9.-]/g, '');
+  if (!normalized) return undefined;
+  const parsed = Number.parseFloat(normalized);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 export function executeWizardCommand(
   command: WizardOperatorCommand,
   deps: WizardExecutorDeps
@@ -771,12 +779,53 @@ export function executeWizardCommand(
 
     case 'SPEAK_POST_CAPTURE_SUMMARY':
       if (command.payload && 'text' in command.payload && command.payload.text.trim()) {
+        const amountValue = parseCurrencyAmount(command.payload.amountText);
+        if (typeof amountValue === 'number') {
+          wizardState.setAmount(amountValue);
+        }
+        wizardState.setReviewedSummary(
+          command.payload.amountText,
+          command.payload.accountLabel,
+          command.payload.accountDigits
+        );
         ttsService.speakMedium(command.payload.text.trim());
       }
       return;
 
     case 'SPEAK_FINAL_CONFIRM_PROMPT':
-      ttsService.speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
+      {
+        const depositState = wizardState.getDepositState();
+        const amount = depositState.reviewedAmountText
+          ? (() => {
+              const parsed = parseCurrencyAmount(depositState.reviewedAmountText) ?? 0;
+              return new Intl.NumberFormat('en-US', {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              }).format(parsed);
+            })()
+          : new Intl.NumberFormat('en-US', {
+              style: 'currency',
+              currency: 'USD',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            }).format(depositState.amount ?? 0);
+        const accountProfile = getAccountProfileById(depositState.accountId ?? 'acc_1');
+        const accountLabel =
+          depositState.reviewedAccountLabel
+          ?? (depositState.accountType === 'savings' ? 'Savings' : 'Checking');
+        ttsService.speakMedium(
+          v(
+            verbosity,
+            ttsStrings.confirmation.finalConfirmPrompt(
+              amount,
+              accountLabel,
+              depositState.reviewedAccountDigits || accountProfile?.displayNumber
+            )
+          )
+        );
+      }
       return;
 
     case 'SPEAK_COUNTDOWN_10':
@@ -791,6 +840,10 @@ export function executeWizardCommand(
       const depositState = wizardState.getDepositState();
       const amount = depositState.amount ?? 0;
       const accountId = depositState.accountId ?? 'acc_1';
+      const successSummaryText =
+        command.payload && 'text' in command.payload && command.payload.text.trim()
+          ? command.payload.text.trim()
+          : undefined;
 
       void (async () => {
         const deposit = await mockBankingAPI.submitDeposit(
@@ -806,7 +859,7 @@ export function executeWizardCommand(
         wizardState.setRetryScreen(undefined);
         (navigationRef.navigate as any)('DepositFlow', {
           screen: 'Success',
-          params: { deposit },
+          params: { deposit, summaryText: successSummaryText },
         });
       })();
       return;
@@ -816,6 +869,13 @@ export function executeWizardCommand(
       if (command.payload && 'text' in command.payload && command.payload.text.trim()) {
         ttsService.speakMedium(command.payload.text.trim());
       }
+      return;
+
+    case 'SPEAK_SUCCESS_EXIT':
+      ttsService.speakMedium(v(verbosity, ttsStrings.success.exitPrompt));
+      setTimeout(() => {
+        goHome(navigationRef);
+      }, 1800);
       return;
 
     case 'EDIT_AMOUNT': {

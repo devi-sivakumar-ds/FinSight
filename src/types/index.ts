@@ -180,7 +180,10 @@ export type DepositStackParamList = {
     backImageUri: string;
     ocrData?: CheckOCRResponse['data'];
   };
-  Success: { deposit: Deposit };
+  Success: {
+    deposit: Deposit;
+    summaryText?: string;
+  };
   Error: { error: string; canRetry: boolean; retryScreen?: keyof DepositStackParamList };
 };
 

@@ -52,6 +52,20 @@ class WizardStateService {
     this.emit();
   }
 
+  public setReviewedSummary(
+    reviewedAmountText?: string,
+    reviewedAccountLabel?: string,
+    reviewedAccountDigits?: string
+  ): void {
+    this.deposit = {
+      ...this.deposit,
+      reviewedAmountText,
+      reviewedAccountLabel,
+      reviewedAccountDigits,
+    };
+    this.emit();
+  }
+
   public setCurrentCaptureSide(currentCaptureSide: WizardCaptureSide): void {
     this.deposit = {
       ...this.deposit,
