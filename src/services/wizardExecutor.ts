@@ -670,15 +670,24 @@ export function executeWizardCommand(
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
       const backImageUri = deposit.backImageUri ?? createWizardCaptureUri('back');
-      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.capturingNow));
       if (deposit.frontCaptured) {
         const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
         setTimeout(() => {
           wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
-          ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured('back')));
           (navigationRef.navigate as any)('DepositFlow', {
-            screen: 'OCRProcessing',
-            params: { frontImageUri, backImageUri, accountId, accountType, amount },
+            screen: 'CheckFlip',
+            params: {
+              capturedImageUri: backImageUri,
+              capturedSide: 'back',
+              nextSide: 'front',
+              accountId,
+              accountType,
+              amount,
+              frontImageUri,
+              backImageUri,
+              completedCapture: true,
+              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+            },
           });
         }, 450);
       } else {

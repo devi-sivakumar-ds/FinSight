@@ -37,6 +37,8 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     frontImageUri,
     reviewPending,
     reviewText,
+    completedCapture,
+    completionText,
     accountId,
     accountType,
     amount,
@@ -55,6 +57,16 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
   // Announce instructions on mount
   useEffect(() => {
+    if (completedCapture) {
+      if (!completionText) return;
+
+      const timer = setTimeout(() => {
+        speakMedium(completionText);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+
     if (reviewPending) {
       if (!reviewText) return;
 
@@ -76,9 +88,11 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [capturedSide, nextSide, reviewPending, speakMedium, verbosity]);
+  }, [capturedSide, completedCapture, completionText, nextSide, reviewPending, reviewText, speakMedium, verbosity]);
 
   const proceedToBackSide = () => {
+    if (completedCapture) return;
+
     navigation.navigate('CheckCapture', {
       accountId,
       accountType,
@@ -120,7 +134,9 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Instruction */}
         <Text style={styles.instruction}>
-          {reviewPending
+          {completedCapture
+            ? 'Capture is complete. You can rotate your phone back to portrait mode while the deposit details are prepared.'
+            : reviewPending
             ? 'Front capture is complete. Review the detected details, then continue when you are ready to capture the other side.'
             : nextSide === 'back'
               ? 'Now flip the check to show the back, where you would sign it.'
@@ -145,23 +161,27 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Flip animation hint */}
         <View style={styles.flipHint}>
-          <Text style={styles.flipText}>↻ Flip Check Over</Text>
+          <Text style={styles.flipText}>
+            {completedCapture ? '✓ Capture Complete' : '↻ Flip Check Over'}
+          </Text>
         </View>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
         <AccessibleButton
-          label={reviewPending ? 'Awaiting Review' : `Capture ${nextSideLabel}`}
+          label={completedCapture ? 'Capture Complete' : reviewPending ? 'Awaiting Review' : `Capture ${nextSideLabel}`}
           onPress={proceedToBackSide}
           size="large"
           style={styles.readyButton}
           accessibilityHint={
-            reviewPending
+            completedCapture
+              ? 'Use the operator controls to continue the deposit flow'
+              : reviewPending
               ? 'Use the operator review controls before proceeding'
               : `Proceed to capture the ${nextSideLabel} side of the check`
           }
-          disabled={Boolean(reviewPending)}
+          disabled={Boolean(reviewPending || completedCapture)}
         />
         <View style={styles.micWrap}>
           <VisualMic size="small" />
