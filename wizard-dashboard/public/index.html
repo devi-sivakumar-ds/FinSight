@@ -159,7 +159,7 @@
             <div class="subgroup">
               <h4>Capture Outcome</h4>
               <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
-                <span class="button-title">Mark the front of the check as captured.</span>
+                <span class="button-title">To front captured screen and give details.</span>
                 <span class="button-meta">Stay in capture flow and prepare front review</span>
               </button>
               <div class="subgroup">
@@ -177,9 +177,9 @@
                 <input id="front-review-date" type="text" value="April 15th" />
               </label>
               <button id="front-review-btn">
-                <span class="button-title">I've detected the front of your check. The amount is the entered amount,
+                <span class="button-title"> Replay front side review</span>
+                <span class="button-meta">I've detected the front of your check. The amount is the entered amount,
                   issued by the entered issuer on the entered date. Are these details correct?</span>
-                <span class="button-meta">Speak front-side review</span>
               </button>
               <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
                 <span class="button-title">Thank you. We'll now proceed to capturing the back side.</span>
@@ -189,16 +189,27 @@
             <div class="subgroup">
               <h4>Back Capture</h4>
               <button data-id="REPEAT_BACK_CAPTURE_INTRO" data-context="CheckFlip">
-                <span class="button-title">Please flip the check over. Before proceeding, ensure you have signed the
+                <span class="button-title">Back side intro(no screen change; can replay)</span>
+                <span class="button-meta">Please flip the check over. Before proceeding, ensure you have signed the
                   back. Say continue when you are ready.</span>
-                <span class="button-meta">Replay back-side intro</span>
               </button>
               <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
-                <span class="button-title">Say continue when you are ready.</span>
-                <span class="button-meta">Continue from flip screen</span>
+                <span class="button-title">Open the camera for the next side of the check.</span>
+                <span class="button-meta">Open next-side capture screen and give 2 steps of guidance</span>
               </button>
-            </div>
-            Use Capture Guidance buttons to simulate the capture process.
+              <!-- <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
+                <span class="button-title">Rotate your phone horizontally so the charging port is on your right.</span>
+                <span class="button-meta">Replay capture orientation</span>
+              </button>
+              <button data-id="REPEAT_CAPTURE_PLACEMENT" data-context="CheckCapture">
+                <span class="button-title">Perfect. Now place your phone at the bottom left corner of the check. Say continue when you are ready.</span>
+                <span class="button-meta">Replay capture placement</span>
+              </button> -->
+              <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
+                <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
+                <span class="button-meta">Start live capture guidance</span>
+              </button>
+              <p class="helper-text">Use Capture Guidance buttons below to simulate the back-side capture process.</p>
               <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
                 <span class="button-title">The back of your check has been captured successfully.</span>
                 <span class="button-meta">Mark back captured</span>
@@ -212,10 +223,6 @@
                 <span class="button-meta">Open capture error screen</span>
               </button>
             </div>
-
-            
-
-            
 
             <div class="subgroup">
               <h4>Post-Capture Review</h4>

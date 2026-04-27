@@ -659,7 +659,6 @@ export function executeWizardCommand(
           accountType,
           amount,
           side: nextSide,
-          autoStart: true,
         },
       });
       return;
