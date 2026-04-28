@@ -92,6 +92,7 @@ export const wizardCommands = {
     cmd('CONTINUE_TO_CAMERA', 'Continue To Camera', 'AccountSelect'),
     cmd('SPEAK_DIFFERENT_ACCOUNT_OR_HOME', 'Speak Different Account Or Home', 'AccountSelect'),
     cmd('SPEAK_START_OVER_OR_HOME', 'Speak Start Over Or Home', 'AccountSelect'),
+    cmd('START_OVER_CHECK_DEPOSIT', 'Start Over Check Deposit', 'AccountSelect'),
     cmd('BACK_FROM_ACCOUNT_SELECT', 'Back', 'AccountSelect'),
     cmd('CLOSE_FROM_ACCOUNT_SELECT', 'Close', 'AccountSelect'),
   ],

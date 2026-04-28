@@ -505,6 +505,12 @@ export function executeWizardCommand(
       ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.startOverOrHome));
       return;
 
+    case 'START_OVER_CHECK_DEPOSIT':
+      wizardState.resetDeposit();
+      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.startingOverCheckDeposit));
+      (navigationRef.navigate as any)('DepositFlow', { screen: 'DepositOverview' });
+      return;
+
     case 'BACK_FROM_ACCOUNT_SELECT':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;

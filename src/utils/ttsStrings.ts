@@ -266,6 +266,11 @@ export const ttsStrings = {
       medium: 'No problem. Would you like to start over or go back to the Home page?',
       high:   'No problem. Would you like to start over or go back to the Home page?',
     } as VStr,
+    startingOverCheckDeposit: {
+      low:    'Starting over.',
+      medium: 'Starting over check deposit.',
+      high:   'Starting over check deposit.',
+    } as VStr,
   },
 
   // ── Amount input ───────────────────────────────────────────────────────────
