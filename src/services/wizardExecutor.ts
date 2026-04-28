@@ -607,6 +607,7 @@ export function executeWizardCommand(
       void (async () => {
         await ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.guidance.holdSteady));
         await captureSoundService.playCaptureSequence();
+        await ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.guidance.processingAfterCapture));
       })();
       return;
 

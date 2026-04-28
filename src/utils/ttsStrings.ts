@@ -468,6 +468,11 @@ export const ttsStrings = {
         medium: 'Perfect. Hold steady.',
         high:   'Perfect. Hold steady.',
       } as VStr,
+      processingAfterCapture: {
+        low:    'Processing.',
+        medium: 'Processing.',
+        high:   'Processing.',
+      } as VStr,
     },
   },
 
