@@ -654,56 +654,31 @@ export function executeWizardCommand(
     case 'CAPTURE_FRONT_SUCCESS': {
       const deposit = wizardState.getDepositState();
       const frontImageUri = deposit.frontImageUri ?? createWizardCaptureUri('front');
-      if (deposit.backCaptured) {
+      const reviewText =
+        command.payload && 'text' in command.payload && command.payload.text.trim()
+          ? command.payload.text.trim()
+          : '';
+      setTimeout(() => {
+        wizardState.setCaptureState(true, false, frontImageUri, deposit.backImageUri);
+        wizardState.setCurrentCaptureSide('front');
         const accountType = deposit.accountType ?? 'checking';
         const accountId = deposit.accountId ?? 'acc_1';
         const amount = deposit.amount ?? 0;
-        const backImageUri = deposit.backImageUri ?? 'wizard://back';
-        setTimeout(() => {
-          wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
-          (navigationRef.navigate as any)('DepositFlow', {
-            screen: 'CheckFlip',
-            params: {
-              capturedImageUri: frontImageUri,
-              capturedSide: 'front',
-              nextSide: 'back',
-              accountId,
-              accountType,
-              amount,
-              frontImageUri,
-              backImageUri,
-              completedCapture: true,
-              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
-            },
-          });
-        }, 450);
-      } else {
-        const reviewText =
-          command.payload && 'text' in command.payload && command.payload.text.trim()
-            ? command.payload.text.trim()
-            : '';
-        setTimeout(() => {
-          wizardState.setCaptureState(true, false, frontImageUri, deposit.backImageUri);
-          wizardState.setCurrentCaptureSide('front');
-          const accountType = deposit.accountType ?? 'checking';
-          const accountId = deposit.accountId ?? 'acc_1';
-          const amount = deposit.amount ?? 0;
-          (navigationRef.navigate as any)('DepositFlow', {
-            screen: 'CheckFlip',
-            params: {
-              capturedImageUri: frontImageUri,
-            capturedSide: 'front',
-            nextSide: 'back',
-            accountId,
-            accountType,
-            amount,
-            frontImageUri,
-            reviewPending: true,
-            reviewText,
-          },
-        });
-        }, 450);
-      }
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'CheckFlip',
+          params: {
+            capturedImageUri: frontImageUri,
+          capturedSide: 'front',
+          nextSide: 'back',
+          accountId,
+          accountType,
+          amount,
+          frontImageUri,
+          reviewPending: true,
+          reviewText,
+        },
+      });
+      }, 450);
       return;
     }
 
