@@ -189,6 +189,8 @@ export function executeWizardCommand(
   command: WizardOperatorCommand,
   deps: WizardExecutorDeps
 ): void {
+  void ttsService.reset();
+
   const {
     navigationRef,
     verbosity,
