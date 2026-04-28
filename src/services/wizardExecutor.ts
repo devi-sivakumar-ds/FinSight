@@ -10,6 +10,7 @@ import { WizardOperatorCommand } from '@/types/wizard';
 import { Verbosity, ttsStrings, v } from '@utils/ttsStrings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import ttsService from '@services/ttsService';
+import captureSoundService from '@services/captureSoundService';
 import wizardState from '@services/wizardState';
 import { DEPOSIT_LIMITS } from '@utils/constants';
 import { formatAmountForSpeech } from '@utils/amountParser';
@@ -580,7 +581,10 @@ export function executeWizardCommand(
       return;
 
     case 'GUIDE_HOLD_STEADY':
-      speakCaptureGuidance('holdSteady');
+      void (async () => {
+        await ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.guidance.holdSteady));
+        await captureSoundService.playCaptureSequence();
+      })();
       return;
 
     case 'CAPTURE_FRONT_SUCCESS': {
