@@ -133,6 +133,15 @@ export const ttsStrings = {
     }),
   },
 
+  // ── Global controls ───────────────────────────────────────────────────────
+  global: {
+    goBack: {
+      low:    'Going back.',
+      medium: 'No problem. Let’s go back.',
+      high:   'No problem. Let’s go back.',
+    } as VStr,
+  },
+
   // ── Main screen ────────────────────────────────────────────────────────────
   main: {
     welcome: {

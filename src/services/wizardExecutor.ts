@@ -293,6 +293,7 @@ export function executeWizardCommand(
       return;
 
     case 'GO_BACK':
+      ttsService.speakMedium(v(verbosity, ttsStrings.global.goBack));
       if (navigationRef.canGoBack()) {
         navigationRef.goBack();
       }
