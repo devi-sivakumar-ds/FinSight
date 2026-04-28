@@ -66,6 +66,7 @@ export const wizardCommands = {
     cmd('SHOW_SEND_MONEY', 'Send Money', 'MainScreen', 'none', 'Trigger the send money placeholder response.'),
     cmd('SHOW_CHECK_BALANCE', 'Check Balance', 'MainScreen', 'none', 'Trigger the check balance placeholder response.'),
     cmd('SHOW_TRANSFER_MONEY', 'Transfer Money', 'MainScreen', 'none', 'Trigger the transfer money placeholder response.'),
+    cmd('SPEAK_DEPOSIT_ONLY_PROMPT', 'Speak Deposit Only Prompt', 'MainScreen', 'none', 'Speak the prompt that check deposit is the only available feature right now.'),
   ],
 
   depositOverview: [

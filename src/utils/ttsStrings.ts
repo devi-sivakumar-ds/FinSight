@@ -140,6 +140,11 @@ export const ttsStrings = {
       medium: 'What would you like to do today? You can say a specific banking task in mind, ask me to read menu for all possible tasks, or you can adjust voice setting.',
       high:   'What would you like to do today? You can say a specific banking task in mind, ask me to read menu for all possible tasks, or you can adjust voice setting.',
     } as VStr,
+    depositOnlyPrompt: {
+      low:    `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
+      medium: `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
+      high:   `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
+    } as VStr,
     featureComingSoon: (feature: string): VStr => ({
       low:    'Coming soon.',
       medium: `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,

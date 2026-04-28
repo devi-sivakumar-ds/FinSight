@@ -327,6 +327,10 @@ export function executeWizardCommand(
       ttsService.speakMedium(v(verbosity, ttsStrings.main.featureComingSoon('Transfer money')));
       return;
 
+    case 'SPEAK_DEPOSIT_ONLY_PROMPT':
+      ttsService.speakMedium(v(verbosity, ttsStrings.main.depositOnlyPrompt));
+      return;
+
     case 'SETTINGS_REPEAT_INTRO':
       speakSettings(ttsStrings.settings.entry);
       return;
