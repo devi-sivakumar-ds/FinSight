@@ -101,7 +101,7 @@
 
             <div class="subgroup">
               <h4>Capture Setup</h4>
-              <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
+              <!-- <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
                 <span class="button-title">Replay Capture orientation)</span>
                 <span class="button-meta">Rotate your phone horizontally so the charging port is on your right.</span>
               </button>
@@ -109,7 +109,7 @@
                 <span class="button-title">Replay Capture placement</span>
                 <span class="button-meta">Perfect. Now place your phone at the bottom left corner of the check. Say
                   continue when you're ready.</span>
-              </button>
+              </button> -->
               <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
                 <span class="button-title">Start live capture guidance</span>
                 <span class="button-meta">Slowly lift your phone up. I'll guide you in real time.</span>
@@ -267,7 +267,7 @@
                       your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
                       shortly.</span>
                   </button>
-                  <button id="ocr-success-btn" data-action="ocr-success">
+                  <!-- <button id="ocr-success-btn" data-action="ocr-success">
                     <span class="button-title">Check details found. Reviewing now.</span>
                     <span class="button-meta">OCR success</span>
                   </button>
@@ -278,7 +278,7 @@
                   <button id="ocr-fail-btn" data-action="ocr-fail">
                     <span class="button-title">Could not connect to the check reading service. Please try again.</span>
                     <span class="button-meta">OCR fail</span>
-                  </button>
+                  </button> -->
                 </div>
               </section>
 
@@ -383,7 +383,7 @@
                       your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
                       shortly.</span>
                   </button>
-                  <button id="ocr-success-btn-reverse" data-action="ocr-success">
+                  <!-- <button id="ocr-success-btn-reverse" data-action="ocr-success">
                     <span class="button-title">Check details found. Reviewing now.</span>
                     <span class="button-meta">OCR success</span>
                   </button>
@@ -394,7 +394,7 @@
                   <button id="ocr-fail-btn-reverse" data-action="ocr-fail">
                     <span class="button-title">Could not connect to the check reading service. Please try again.</span>
                     <span class="button-meta">OCR fail</span>
-                  </button>
+                  </button> -->
                 </div>
               </section>
             </div>
@@ -424,9 +424,17 @@
                 <span class="button-title">Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.</span>
                 <span class="button-meta">Warn before leaving the current confirmation flow</span>
               </button>
-              <button data-id="EDIT_ACCOUNT" data-context="Confirmation">
-                <span class="button-title">Returning to account selection.</span>
-                <span class="button-meta">Edit account</span>
+              <button data-id="NO_PROBLEM_GO_HOME" data-context="AccountSelect" style="background-color: lightpink;">
+                <span class="button-title">Go Home</span>
+                <span class="button-meta">Say "No problem." and navigate home</span>
+              </button>
+              <button data-id="NO_PROBLEM_GO_TO_OVERVIEW" data-context="AccountSelect" style="background-color: lightpink;">
+                <span class="button-title">Go to check deposit overview</span>
+                <span class="button-meta">Say "No problem." and navigate to the deposit overview screen</span>
+              </button>
+              <button data-id="NO_PROBLEM_GO_TO_CAPTURE" data-context="AccountSelect" style="background-color: lightpink;">
+                <span class="button-title">Go to capture</span>
+                <span class="button-meta">Say "No problem." and navigate to capture</span>
               </button>
             </div>
 

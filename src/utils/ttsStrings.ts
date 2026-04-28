@@ -41,7 +41,7 @@ export const ttsStrings = {
   settings: {
     entry: {
       low:    'Settings.',
-      medium: 'In Settings, you can adjust how much detail you hear in each prompt, and control the speed and timing of my voice. What do you want to adjust?',
+      medium: 'In Settings, you can adjust how much detail you hear in each prompt, and control the pacing and timing of my voice. Would you like to change the verbosity or pacing?',
       high:   'In Settings, you can adjust how much detail you hear in each prompt, and control the speed and timing of my voice. What do you want to adjust?',
     } as VStr,
     screenAnnounce: (currentVerbosity: string, currentPace: number): VStr => ({
@@ -135,6 +135,11 @@ export const ttsStrings = {
 
   // ── Global controls ───────────────────────────────────────────────────────
   global: {
+    noProblem: {
+      low:    'No problem.',
+      medium: 'No problem.',
+      high:   'No problem.',
+    } as VStr,
     goBack: {
       low:    'Going back.',
       medium: 'No problem. Let’s go back.',
@@ -415,22 +420,22 @@ export const ttsStrings = {
       } as VStr,
       moveLeft: {
         low:    'Left.',
-        medium: 'Move slightly to the left.',
+        medium: 'Move it (slightly) to the left.',
         high:   'Move slightly to the left.',
       } as VStr,
       moveRight: {
         low:    'Right.',
-        medium: 'Move slightly to the right.',
+        medium: 'Move it (slightly) to the right.',
         high:   'Move slightly to the right.',
       } as VStr,
       moveUp: {
         low:    'Top.',
-        medium: 'Move slightly forward.',
+        medium: 'Move it (slightly) closer to you.',
         high:   'Move slightly forward.',
       } as VStr,
       moveDown: {
         low:    'Bottom.',
-        medium: 'Move slightly back.',
+        medium: 'Move it (slightly) away from you.',
         high:   'Move slightly back.',
       } as VStr,
       raisePhone: {

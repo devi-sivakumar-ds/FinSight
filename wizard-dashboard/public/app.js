@@ -15,8 +15,10 @@ const ocrFailButtons = document.querySelectorAll('[data-action="ocr-fail"]');
 const noteInput = document.getElementById('note-input');
 const saveNoteBtn = document.getElementById('save-note-btn');
 const logPathEl = document.getElementById('log-path');
+const postCaptureScopes = document.querySelectorAll('[data-post-capture-scope]');
 
 let currentSessionId = 'local_dashboard_session';
+let activePostCaptureScope = postCaptureScopes[0] || null;
 
 function renderLogPath(sessionLogPath) {
   logPathEl.textContent = sessionLogPath
@@ -116,7 +118,7 @@ socket.addEventListener('message', event => {
 });
 
 function getPostCaptureValues(trigger) {
-  const scope = trigger?.closest('[data-post-capture-scope]');
+  const scope = trigger?.closest('[data-post-capture-scope]') || activePostCaptureScope;
   const query = field => scope?.querySelector(`[data-field="${field}"]`) || document.querySelector(`[data-field="${field}"]`);
 
   const checkNumberInput = query('ocr-check-number');
@@ -196,8 +198,7 @@ function sendSuccessSummaryCommand() {
   const availableNow = successAvailableNowInput.value.trim() || '$100.00';
   const remaining = successRemainingInput.value.trim() || '$900.00';
   const availableBy = successAvailableByInput.value.trim() || 'April 19th, 2026';
-  const amount = summaryAmountInput.value.trim() || '$1,000.00';
-  const date = summaryDateInput.value.trim() || 'April 15th, 2026';
+  const { amount, checkDate: date } = getPostCaptureValues();
 
   sendCommand('SPEAK_SUCCESS_SUMMARY', 'Success', 'text', {
     text: `We have received your check. Your deposit of ${amount} was submitted on ${date}. A total of ${availableNow} is available immediately. The remaining ${remaining} will be available by ${availableBy}.`,
@@ -208,11 +209,23 @@ function sendConfirmDepositCommand() {
   const availableNow = successAvailableNowInput.value.trim() || '$100.00';
   const remaining = successRemainingInput.value.trim() || '$900.00';
   const availableBy = successAvailableByInput.value.trim() || 'April 19th, 2026';
-  const amount = summaryAmountInput.value.trim() || '$1,000.00';
-  const date = summaryDateInput.value.trim() || 'April 15th, 2026';
+  const { amount, checkDate: date } = getPostCaptureValues();
 
   sendCommand('CONFIRM_DEPOSIT', 'Confirmation', 'text', {
     text: `We have received your check. Your deposit of ${amount} was submitted on ${date}. A total of ${availableNow} is available immediately. The remaining ${remaining} will be available by ${availableBy}.`,
+  });
+}
+
+function sendFinalConfirmPromptCommand() {
+  const { amount, account } = getPostCaptureValues();
+  const accountDigitsMatch = account.match(/(\d[\d-\s]*)$/);
+  const accountDigits = accountDigitsMatch ? accountDigitsMatch[1].replace(/\D/g, '') : '';
+  const accountLabel = account.toLowerCase().includes('savings') ? 'Savings' : 'Checking';
+
+  sendCommand('SPEAK_FINAL_CONFIRM_PROMPT', 'Confirmation', 'text', {
+    amountText: amount,
+    accountLabel,
+    accountDigits,
   });
 }
 
@@ -220,6 +233,11 @@ document.querySelectorAll('button[data-id]').forEach(button => {
   button.addEventListener('click', () => {
     if (button.dataset.id === 'CAPTURE_FRONT_SUCCESS') {
       sendFrontCaptureSuccessCommand(button);
+      return;
+    }
+
+    if (button.dataset.id === 'SPEAK_FINAL_CONFIRM_PROMPT') {
+      sendFinalConfirmPromptCommand();
       return;
     }
 
@@ -247,6 +265,15 @@ ocrPartialButtons.forEach(button => {
 ocrFailButtons.forEach(button => {
   button.addEventListener('click', () => {
     sendOcrCommand('OCR_FAIL', 'fail', button);
+  });
+});
+
+postCaptureScopes.forEach(scope => {
+  scope.addEventListener('focusin', () => {
+    activePostCaptureScope = scope;
+  });
+  scope.addEventListener('click', () => {
+    activePostCaptureScope = scope;
   });
 });
 

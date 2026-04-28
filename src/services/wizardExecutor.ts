@@ -497,6 +497,46 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'NO_PROBLEM_GO_HOME':
+      void (async () => {
+        await ttsService.speakMedium(v(verbosity, ttsStrings.global.noProblem));
+        goHome(navigationRef);
+      })();
+      return;
+
+    case 'NO_PROBLEM_GO_TO_OVERVIEW':
+      void (async () => {
+        await ttsService.speakMedium(v(verbosity, ttsStrings.global.noProblem));
+        (navigationRef.navigate as any)('DepositFlow', { screen: 'DepositOverview' });
+      })();
+      return;
+
+    case 'NO_PROBLEM_GO_TO_CAPTURE': {
+      const deposit = wizardState.getDepositState();
+      if (!hasSelectedAccount()) {
+        ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.noAccount));
+        return;
+      }
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const firstSide = 'front';
+      wizardState.setCurrentCaptureSide(firstSide);
+      void (async () => {
+        await ttsService.speakMedium(v(verbosity, ttsStrings.global.noProblem));
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'CheckCapture',
+          params: {
+            accountId,
+            accountType,
+            amount,
+            side: firstSide,
+          },
+        });
+      })();
+      return;
+    }
+
     case 'SPEAK_DIFFERENT_ACCOUNT_OR_HOME':
       ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.differentAccountOrHome));
       return;
@@ -622,8 +662,19 @@ export function executeWizardCommand(
         setTimeout(() => {
           wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
           (navigationRef.navigate as any)('DepositFlow', {
-            screen: 'OCRProcessing',
-            params: { frontImageUri, backImageUri, accountId, accountType, amount },
+            screen: 'CheckFlip',
+            params: {
+              capturedImageUri: frontImageUri,
+              capturedSide: 'front',
+              nextSide: 'back',
+              accountId,
+              accountType,
+              amount,
+              frontImageUri,
+              backImageUri,
+              completedCapture: true,
+              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+            },
           });
         }, 450);
       } else {
@@ -830,9 +881,29 @@ export function executeWizardCommand(
     case 'SPEAK_FINAL_CONFIRM_PROMPT':
       {
         const depositState = wizardState.getDepositState();
-        const amount = depositState.reviewedAmountText
+        const payloadAmountText =
+          command.payload && 'amountText' in command.payload ? command.payload.amountText : undefined;
+        const payloadAccountLabel =
+          command.payload && 'accountLabel' in command.payload ? command.payload.accountLabel : undefined;
+        const payloadAccountDigits =
+          command.payload && 'accountDigits' in command.payload ? command.payload.accountDigits : undefined;
+
+        if (payloadAmountText || payloadAccountLabel || payloadAccountDigits) {
+          const amountValue = parseCurrencyAmount(payloadAmountText);
+          if (typeof amountValue === 'number') {
+            wizardState.setAmount(amountValue);
+          }
+          wizardState.setReviewedSummary(
+            payloadAmountText || depositState.reviewedAmountText,
+            payloadAccountLabel || depositState.reviewedAccountLabel,
+            payloadAccountDigits || depositState.reviewedAccountDigits
+          );
+        }
+
+        const latestDepositState = wizardState.getDepositState();
+        const amount = latestDepositState.reviewedAmountText
           ? (() => {
-              const parsed = parseCurrencyAmount(depositState.reviewedAmountText) ?? 0;
+              const parsed = parseCurrencyAmount(latestDepositState.reviewedAmountText) ?? 0;
               return new Intl.NumberFormat('en-US', {
                 style: 'currency',
                 currency: 'USD',
@@ -845,18 +916,18 @@ export function executeWizardCommand(
               currency: 'USD',
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
-            }).format(depositState.amount ?? 0);
-        const accountProfile = getAccountProfileById(depositState.accountId ?? 'acc_1');
+            }).format(latestDepositState.amount ?? 0);
+        const accountProfile = getAccountProfileById(latestDepositState.accountId ?? 'acc_1');
         const accountLabel =
-          depositState.reviewedAccountLabel
-          ?? (depositState.accountType === 'savings' ? 'Savings' : 'Checking');
+          latestDepositState.reviewedAccountLabel
+          ?? (latestDepositState.accountType === 'savings' ? 'Savings' : 'Checking');
         ttsService.speakMedium(
           v(
             verbosity,
             ttsStrings.confirmation.finalConfirmPrompt(
               amount,
               accountLabel,
-              depositState.reviewedAccountDigits || accountProfile?.displayNumber
+              latestDepositState.reviewedAccountDigits || accountProfile?.displayNumber
             )
           )
         );

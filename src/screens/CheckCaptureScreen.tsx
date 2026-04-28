@@ -181,13 +181,28 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       if (side === 'front') {
         if (route.params.backImageUri) {
           wizardState.setCaptureState(true, true, normalizedPhotoUri, route.params.backImageUri);
-          navigation.navigate('OCRProcessing', {
-            frontImageUri: normalizedPhotoUri,
-            backImageUri: route.params.backImageUri,
-            accountId,
-            accountType,
-            amount,
-          });
+          if (isPureWozMode()) {
+            navigation.navigate('CheckFlip', {
+              capturedImageUri: normalizedPhotoUri,
+              capturedSide: 'front',
+              nextSide: 'back',
+              accountId,
+              accountType,
+              amount,
+              frontImageUri: normalizedPhotoUri,
+              backImageUri: route.params.backImageUri,
+              completedCapture: true,
+              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+            });
+          } else {
+            navigation.navigate('OCRProcessing', {
+              frontImageUri: normalizedPhotoUri,
+              backImageUri: route.params.backImageUri,
+              accountId,
+              accountType,
+              amount,
+            });
+          }
         } else {
           wizardState.setCaptureState(true, false, normalizedPhotoUri, route.params.frontImageUri);
           navigation.navigate('CheckFlip', {
@@ -204,13 +219,28 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
         const frontUri = route.params.frontImageUri ?? '';
         if (frontUri) {
           wizardState.setCaptureState(true, true, frontUri, normalizedPhotoUri);
-          navigation.navigate('OCRProcessing', {
-            frontImageUri: frontUri,
-            backImageUri: normalizedPhotoUri,
-            accountId,
-            accountType,
-            amount,
-          });
+          if (isPureWozMode()) {
+            navigation.navigate('CheckFlip', {
+              capturedImageUri: normalizedPhotoUri,
+              capturedSide: 'back',
+              nextSide: 'front',
+              accountId,
+              accountType,
+              amount,
+              frontImageUri: frontUri,
+              backImageUri: normalizedPhotoUri,
+              completedCapture: true,
+              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+            });
+          } else {
+            navigation.navigate('OCRProcessing', {
+              frontImageUri: frontUri,
+              backImageUri: normalizedPhotoUri,
+              accountId,
+              accountType,
+              amount,
+            });
+          }
         } else {
           wizardState.setCaptureState(false, true, undefined, normalizedPhotoUri);
           navigation.navigate('CheckFlip', {
