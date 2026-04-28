@@ -164,118 +164,239 @@
               </button>
             </div>
 
-            <div class="subgroup">
-              <h4>Capture Outcome</h4>
-              <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
-                <span class="button-title">To front captured screen and give details.</span>
-                <span class="button-meta">Stay in capture flow and prepare front review</span>
-              </button>
-            </div>
+            <div class="flow-branch-grid">
+              <section class="flow-branch-card">
+                <h4 class="flow-branch-title">Front to Back Flow</h4>
 
-            <div class="subgroup">
-              <h4>Front Review</h4>
-              <label class="input-label">
-                Front Amount
-                <input id="front-review-amount" type="text" value="$1,000" />
-              </label>
-              <label class="input-label">
-                Issuer
-                <input id="front-review-issuer" type="text" value="University of California" />
-              </label>
-              <label class="input-label">
-                Date
-                <input id="front-review-date" type="text" value="April 15th" />
-              </label>
-              <button id="front-review-btn">
-                <span class="button-title"> Replay front side review</span>
-                <span class="button-meta">I've detected the front of your check. The amount is the entered amount,
-                  issued by the entered issuer on the entered date. Are these details correct?</span>
-              </button>
-              <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
-                <span class="button-title">Thank you. We'll now proceed to capturing the back side.</span>
-                <span class="button-meta">Confirm front details and move to back capture</span>
-              </button>
-            </div>
+                <div class="subgroup">
+                  <h4>Capture Outcome</h4>
+                  <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
+                    <span class="button-title">To front captured screen and give details.</span>
+                    <span class="button-meta">Stay in capture flow and prepare front review</span>
+                  </button>
+                </div>
 
-            <div class="subgroup">
-              <h4>Back Capture</h4>
-              <button data-id="REPEAT_BACK_CAPTURE_INTRO" data-context="CheckFlip">
-                <span class="button-title">Back side intro(no screen change; can replay)</span>
-                <span class="button-meta">Please flip the check over. Before proceeding, ensure you have signed the
-                  back. Say continue when you are ready.</span>
-              </button>
-              <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
-                <span class="button-title">Open the camera for the next side of the check.</span>
-                <span class="button-meta">Open next-side capture screen and give 2 steps of guidance</span>
-              </button>
-              <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
-                <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
-                <span class="button-meta">Start live capture guidance</span>
-              </button>
-              <p class="helper-text">Use Capture Guidance buttons below to simulate the back-side capture process.</p>
-              <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
-                <span class="button-title">The back of your check has been captured successfully.</span>
-                <span class="button-meta">Mark back captured</span>
-              </button>
-              <button data-id="CAPTURE_RETRY" data-context="CheckCapture" style="background-color: lightpink;">
-                <span class="button-title">Let us try that capture again.</span>
-                <span class="button-meta">Replay retry capture prompt</span>
-              </button>
-              <button data-id="CAPTURE_FAIL" data-context="CheckCapture" style="background-color: lightpink;">
-                <span class="button-title">Failed to capture check image. Please try again.</span>
-                <span class="button-meta">Open capture error screen</span>
-              </button>
-            </div>
+                <div class="subgroup" data-front-review-scope>
+                  <h4>Front Review</h4>
+                  <label class="input-label">
+                    Front Amount
+                    <input id="front-review-amount" data-field="front-review-amount" type="text" value="$1,000" />
+                  </label>
+                  <label class="input-label">
+                    Issuer
+                    <input id="front-review-issuer" data-field="front-review-issuer" type="text" value="University of California" />
+                  </label>
+                  <label class="input-label">
+                    Date
+                    <input id="front-review-date" data-field="front-review-date" type="text" value="April 15th" />
+                  </label>
+                  <button id="front-review-btn" data-action="front-review">
+                    <span class="button-title"> Replay front side review</span>
+                    <span class="button-meta">I've detected the front of your check. The amount is the entered amount,
+                      issued by the entered issuer on the entered date. Are these details correct?</span>
+                  </button>
+                  <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
+                    <span class="button-title">Thank you. We'll now proceed to capturing the back side.</span>
+                    <span class="button-meta">Confirm front details and move to back capture</span>
+                  </button>
+                </div>
 
-            <div class="subgroup">
-              <h4>Post-Capture Review</h4>
-              <label class="input-label">
-                Check Number
-                <input id="ocr-check-number" type="text" value="1024" />
-              </label>
-              <label class="input-label">
-                Routing Number
-                <input id="ocr-routing-number" type="text" value="021000021" />
-              </label>
-              <label class="input-label">
-                Account Number
-                <input id="ocr-account-number" type="text" value="1234567890" />
-              </label>
-              <label class="input-label">
-                Summary Amount
-                <input id="summary-amount" type="text" value="$1,000" />
-              </label>
-              <label class="input-label">
-                Deposit Account
-                <input id="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
-              </label>
-              <label class="input-label">
-                Issuer
-                <input id="summary-issuer" type="text" value="University of California" />
-              </label>
-              <label class="input-label">
-                Check Date
-                <input id="summary-date" type="text" value="April 15th" />
-              </label>
-              <button id="post-capture-summary-btn">
-                <span class="button-title">Speak detailed post-capture summary</span>
-                <span class="button-meta">Your check has been successfully captured. Your image has been submitted to
-                  your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
-                  shortly.</span>
-              </button>
-              <button id="ocr-success-btn">
-                <span class="button-title">Check details found. Reviewing now.</span>
-                <span class="button-meta">OCR success</span>
-              </button>
-              <button id="ocr-partial-btn">
-                <span class="button-title">Could not read all check details. Using your entered amount.</span>
-                <span class="button-meta">OCR partial</span>
-              </button>
-              <button id="ocr-fail-btn">
-                <span class="button-title">Could not connect to the check reading service. Please try again.</span>
-                <span class="button-meta">OCR fail</span>
-              </button>
+                <div class="subgroup">
+                  <h4>Back Capture</h4>
+                  <button data-id="REPEAT_BACK_CAPTURE_INTRO" data-context="CheckFlip">
+                    <span class="button-title">Back side intro(no screen change; can replay)</span>
+                    <span class="button-meta">Please flip the check over. Before proceeding, ensure you have signed the
+                      back. Say continue when you are ready.</span>
+                  </button>
+                  <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
+                    <span class="button-title">Open the camera for the next side of the check.</span>
+                    <span class="button-meta">Open next-side capture screen and give 2 steps of guidance</span>
+                  </button>
+                  <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
+                    <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
+                    <span class="button-meta">Start live capture guidance</span>
+                  </button>
+                  <p class="helper-text">Use Capture Guidance buttons below to simulate the back-side capture process.</p>
+                  <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
+                    <span class="button-title">The back of your check has been captured successfully.</span>
+                    <span class="button-meta">Mark back captured</span>
+                  </button>
+                  <button data-id="CAPTURE_RETRY" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Let us try that capture again.</span>
+                    <span class="button-meta">Replay retry capture prompt</span>
+                  </button>
+                  <button data-id="CAPTURE_FAIL" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Failed to capture check image. Please try again.</span>
+                    <span class="button-meta">Open capture error screen</span>
+                  </button>
+                </div>
 
+                <div class="subgroup" data-post-capture-scope>
+                  <h4>Post-Capture Review</h4>
+                  <label class="input-label">
+                    Check Number
+                    <input id="ocr-check-number" data-field="ocr-check-number" type="text" value="1024" />
+                  </label>
+                  <label class="input-label">
+                    Routing Number
+                    <input id="ocr-routing-number" data-field="ocr-routing-number" type="text" value="021000021" />
+                  </label>
+                  <label class="input-label">
+                    Account Number
+                    <input id="ocr-account-number" data-field="ocr-account-number" type="text" value="1234567890" />
+                  </label>
+                  <label class="input-label">
+                    Summary Amount
+                    <input id="summary-amount" data-field="summary-amount" type="text" value="$1,000" />
+                  </label>
+                  <label class="input-label">
+                    Deposit Account
+                    <input id="summary-account" data-field="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
+                  </label>
+                  <label class="input-label">
+                    Issuer
+                    <input id="summary-issuer" data-field="summary-issuer" type="text" value="University of California" />
+                  </label>
+                  <label class="input-label">
+                    Check Date
+                    <input id="summary-date" data-field="summary-date" type="text" value="April 15th" />
+                  </label>
+                  <button id="post-capture-summary-btn" data-action="post-capture-summary">
+                    <span class="button-title">Speak detailed post-capture summary</span>
+                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted to
+                      your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
+                      shortly.</span>
+                  </button>
+                  <button id="ocr-success-btn" data-action="ocr-success">
+                    <span class="button-title">Check details found. Reviewing now.</span>
+                    <span class="button-meta">OCR success</span>
+                  </button>
+                  <button id="ocr-partial-btn" data-action="ocr-partial">
+                    <span class="button-title">Could not read all check details. Using your entered amount.</span>
+                    <span class="button-meta">OCR partial</span>
+                  </button>
+                  <button id="ocr-fail-btn" data-action="ocr-fail">
+                    <span class="button-title">Could not connect to the check reading service. Please try again.</span>
+                    <span class="button-meta">OCR fail</span>
+                  </button>
+                </div>
+              </section>
+
+              <section class="flow-branch-card">
+                <h4 class="flow-branch-title">Back to Front Flow</h4>
+
+                <div class="subgroup">
+                  <h4>Capture Outcome</h4>
+                  <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
+                    <span class="button-title">To back captured screen and prepare front capture.</span>
+                    <span class="button-meta">Stay in capture flow and move toward front capture</span>
+                  </button>
+                </div>
+
+                <div class="subgroup">
+                  <h4>Front Capture</h4>
+                  <button data-id="REPEAT_FRONT_CAPTURE_INTRO" data-context="CheckFlip">
+                    <span class="button-title">Front side intro(no screen change; can replay)</span>
+                    <span class="button-meta">Please flip the check back to the front. Say continue when you are ready.</span>
+                  </button>
+                  <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
+                    <span class="button-title">Open the camera for the next side of the check.</span>
+                    <span class="button-meta">Open next-side capture screen and give 2 steps of guidance</span>
+                  </button>
+                  <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
+                    <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
+                    <span class="button-meta">Start live capture guidance</span>
+                  </button>
+                  <p class="helper-text">Use Capture Guidance buttons below to simulate the front-side capture process.</p>
+                  <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
+                    <span class="button-title">The front of your check has been captured successfully.</span>
+                    <span class="button-meta">Mark front captured and prepare front review</span>
+                  </button>
+                  <button data-id="CAPTURE_RETRY" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Let us try that capture again.</span>
+                    <span class="button-meta">Replay retry capture prompt</span>
+                  </button>
+                  <button data-id="CAPTURE_FAIL" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Failed to capture check image. Please try again.</span>
+                    <span class="button-meta">Open capture error screen</span>
+                  </button>
+                </div>
+
+                <div class="subgroup" data-front-review-scope>
+                  <h4>Front Review</h4>
+                  <label class="input-label">
+                    Front Amount
+                    <input id="front-review-amount-reverse" data-field="front-review-amount" type="text" value="$1,000" />
+                  </label>
+                  <label class="input-label">
+                    Issuer
+                    <input id="front-review-issuer-reverse" data-field="front-review-issuer" type="text" value="University of California" />
+                  </label>
+                  <label class="input-label">
+                    Date
+                    <input id="front-review-date-reverse" data-field="front-review-date" type="text" value="April 15th" />
+                  </label>
+                  <button id="front-review-btn-reverse" data-action="front-review">
+                    <span class="button-title">Replay front side review</span>
+                    <span class="button-meta">I've detected the front of your check. The amount is the entered amount,
+                      issued by the entered issuer on the entered date. Are these details correct?</span>
+                  </button>
+                  <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
+                    <span class="button-title">Thank you. The front side looks good.</span>
+                    <span class="button-meta">Confirm front details after the reverse flow</span>
+                  </button>
+                </div>
+
+                <div class="subgroup" data-post-capture-scope>
+                  <h4>Post-Capture Review</h4>
+                  <label class="input-label">
+                    Check Number
+                    <input id="ocr-check-number-reverse" data-field="ocr-check-number" type="text" value="1024" />
+                  </label>
+                  <label class="input-label">
+                    Routing Number
+                    <input id="ocr-routing-number-reverse" data-field="ocr-routing-number" type="text" value="021000021" />
+                  </label>
+                  <label class="input-label">
+                    Account Number
+                    <input id="ocr-account-number-reverse" data-field="ocr-account-number" type="text" value="1234567890" />
+                  </label>
+                  <label class="input-label">
+                    Summary Amount
+                    <input id="summary-amount-reverse" data-field="summary-amount" type="text" value="$1,000" />
+                  </label>
+                  <label class="input-label">
+                    Deposit Account
+                    <input id="summary-account-reverse" data-field="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
+                  </label>
+                  <label class="input-label">
+                    Issuer
+                    <input id="summary-issuer-reverse" data-field="summary-issuer" type="text" value="University of California" />
+                  </label>
+                  <label class="input-label">
+                    Check Date
+                    <input id="summary-date-reverse" data-field="summary-date" type="text" value="April 15th" />
+                  </label>
+                  <button id="post-capture-summary-btn-reverse" data-action="post-capture-summary">
+                    <span class="button-title">Speak detailed post-capture summary</span>
+                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted to
+                      your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
+                      shortly.</span>
+                  </button>
+                  <button id="ocr-success-btn-reverse" data-action="ocr-success">
+                    <span class="button-title">Check details found. Reviewing now.</span>
+                    <span class="button-meta">OCR success</span>
+                  </button>
+                  <button id="ocr-partial-btn-reverse" data-action="ocr-partial">
+                    <span class="button-title">Could not read all check details. Using your entered amount.</span>
+                    <span class="button-meta">OCR partial</span>
+                  </button>
+                  <button id="ocr-fail-btn-reverse" data-action="ocr-fail">
+                    <span class="button-title">Could not connect to the check reading service. Please try again.</span>
+                    <span class="button-meta">OCR fail</span>
+                  </button>
+                </div>
+              </section>
             </div>
 
             <div class="subgroup">
@@ -299,9 +420,9 @@
                 <span class="button-meta">We have received your check. Your deposit of the reviewed amount was submitted. Immediate
                   and remaining funds will be available soon.</span>
               </button>
-              <button data-id="EDIT_AMOUNT" data-context="Confirmation">
-                <span class="button-title">Returning to amount entry.</span>
-                <span class="button-meta">Edit amount</span>
+              <button data-id="EDIT_AMOUNT" data-context="Confirmation" style="background-color: lightpink;">
+                <span class="button-title">Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.</span>
+                <span class="button-meta">Warn before leaving the current confirmation flow</span>
               </button>
               <button data-id="EDIT_ACCOUNT" data-context="Confirmation">
                 <span class="button-title">Returning to account selection.</span>

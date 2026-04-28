@@ -571,9 +571,9 @@ export const ttsStrings = {
       high:   'There was a problem submitting your deposit. Please check your connection and try again.',
     } as VStr,
     editAmount: {
-      low:    'Editing amount.',
-      medium: 'Returning to amount entry.',
-      high:   'Taking you back to the amount entry screen.',
+      low:    'You may lose progress.',
+      medium: 'Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.',
+      high:   'Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.',
     } as VStr,
     editAccount: {
       low:    'Editing account.',

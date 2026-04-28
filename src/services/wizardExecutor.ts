@@ -677,6 +677,13 @@ export function executeWizardCommand(
       }, 1400);
       return;
 
+    case 'REPEAT_FRONT_CAPTURE_INTRO':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction('front')));
+      setTimeout(() => {
+        ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.continuePrompt));
+      }, 1400);
+      return;
+
     case 'CONTINUE_FROM_CHECK_FLIP': {
       const deposit = wizardState.getDepositState();
       const accountType = deposit.accountType ?? 'checking';
@@ -907,7 +914,7 @@ export function executeWizardCommand(
       return;
 
     case 'EDIT_AMOUNT': {
-      (navigationRef.navigate as any)('DepositFlow', { screen: 'AccountSelect' });
+      ttsService.speakMedium(v(verbosity, ttsStrings.confirmation.editAmount));
       return;
     }
 

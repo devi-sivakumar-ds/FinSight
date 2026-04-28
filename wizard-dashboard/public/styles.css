@@ -108,6 +108,26 @@ body {
   font-weight: 700;
 }
 
+.flow-branch-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.flow-branch-card {
+  border: 1px solid #2a2a2a;
+  border-radius: 12px;
+  padding: 14px;
+  background: #141414;
+}
+
+.flow-branch-title {
+  margin: 0 0 10px;
+  color: #f3f4f6;
+  font-size: 15px;
+  font-weight: 700;
+}
+
 .group-note {
   margin: -4px 0 12px;
   color: #9ca3af;
@@ -242,6 +262,10 @@ input {
   }
 
   .flow-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .flow-branch-grid {
     grid-template-columns: 1fr;
   }
 

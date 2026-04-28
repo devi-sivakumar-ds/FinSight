@@ -3,25 +3,15 @@ const appStatus = document.getElementById('app-status');
 const sessionInfoEl = document.getElementById('session-info');
 const appStateEl = document.getElementById('app-state');
 const eventLogEl = document.getElementById('event-log');
-const ocrCheckNumberInput = document.getElementById('ocr-check-number');
-const ocrRoutingNumberInput = document.getElementById('ocr-routing-number');
-const ocrAccountNumberInput = document.getElementById('ocr-account-number');
-const summaryAmountInput = document.getElementById('summary-amount');
-const summaryAccountInput = document.getElementById('summary-account');
-const summaryIssuerInput = document.getElementById('summary-issuer');
-const summaryDateInput = document.getElementById('summary-date');
-const postCaptureSummaryBtn = document.getElementById('post-capture-summary-btn');
-const frontReviewAmountInput = document.getElementById('front-review-amount');
-const frontReviewIssuerInput = document.getElementById('front-review-issuer');
-const frontReviewDateInput = document.getElementById('front-review-date');
-const frontReviewBtn = document.getElementById('front-review-btn');
+const frontReviewButtons = document.querySelectorAll('[data-action="front-review"]');
+const postCaptureSummaryButtons = document.querySelectorAll('[data-action="post-capture-summary"]');
 const successAvailableNowInput = document.getElementById('success-available-now');
 const successRemainingInput = document.getElementById('success-remaining');
 const successAvailableByInput = document.getElementById('success-available-by');
 const successSummaryBtn = document.getElementById('success-summary-btn');
-const ocrSuccessBtn = document.getElementById('ocr-success-btn');
-const ocrPartialBtn = document.getElementById('ocr-partial-btn');
-const ocrFailBtn = document.getElementById('ocr-fail-btn');
+const ocrSuccessButtons = document.querySelectorAll('[data-action="ocr-success"]');
+const ocrPartialButtons = document.querySelectorAll('[data-action="ocr-partial"]');
+const ocrFailButtons = document.querySelectorAll('[data-action="ocr-fail"]');
 const noteInput = document.getElementById('note-input');
 const saveNoteBtn = document.getElementById('save-note-btn');
 const logPathEl = document.getElementById('log-path');
@@ -125,42 +115,71 @@ socket.addEventListener('message', event => {
   }
 });
 
-function sendOcrCommand(id, outcome) {
+function getPostCaptureValues(trigger) {
+  const scope = trigger?.closest('[data-post-capture-scope]');
+  const query = field => scope?.querySelector(`[data-field="${field}"]`) || document.querySelector(`[data-field="${field}"]`);
+
+  const checkNumberInput = query('ocr-check-number');
+  const routingNumberInput = query('ocr-routing-number');
+  const accountNumberInput = query('ocr-account-number');
+  const summaryAmountInput = query('summary-amount');
+  const summaryAccountInput = query('summary-account');
+  const summaryIssuerInput = query('summary-issuer');
+  const summaryDateInput = query('summary-date');
+
+  return {
+    checkNumber: checkNumberInput?.value.trim() || '',
+    routingNumber: routingNumberInput?.value.trim() || '',
+    accountNumber: accountNumberInput?.value.trim() || '',
+    amount: summaryAmountInput?.value.trim() || '$1,000',
+    account: summaryAccountInput?.value.trim() || 'Checking account ending in 7-7-4-9',
+    issuer: summaryIssuerInput?.value.trim() || 'University of California',
+    checkDate: summaryDateInput?.value.trim() || 'April 15th',
+  };
+}
+
+function sendOcrCommand(id, outcome, trigger) {
+  const { checkNumber, routingNumber, accountNumber } = getPostCaptureValues(trigger);
+
   sendCommand(id, 'OCRProcessing', 'ocrOutcome', {
     outcome,
-    checkNumber: ocrCheckNumberInput.value.trim(),
-    routingNumber: ocrRoutingNumberInput.value.trim(),
-    accountNumber: ocrAccountNumberInput.value.trim(),
+    checkNumber,
+    routingNumber,
+    accountNumber,
   });
 }
 
-function sendFrontReviewCommand() {
-  const amount = frontReviewAmountInput.value.trim() || 'the entered amount';
-  const issuer = frontReviewIssuerInput.value.trim() || 'the entered issuer';
-  const checkDate = frontReviewDateInput.value.trim() || 'the entered date';
+function getFrontReviewValues(trigger) {
+  const scope = trigger?.closest('[data-front-review-scope]');
+  const amountInput = scope?.querySelector('[data-field="front-review-amount"]') || document.getElementById('front-review-amount');
+  const issuerInput = scope?.querySelector('[data-field="front-review-issuer"]') || document.getElementById('front-review-issuer');
+  const dateInput = scope?.querySelector('[data-field="front-review-date"]') || document.getElementById('front-review-date');
+
+  return {
+    amount: amountInput?.value.trim() || 'the entered amount',
+    issuer: issuerInput?.value.trim() || 'the entered issuer',
+    checkDate: dateInput?.value.trim() || 'the entered date',
+  };
+}
+
+function sendFrontReviewCommand(trigger) {
+  const { amount, issuer, checkDate } = getFrontReviewValues(trigger);
 
   sendCommand('SPEAK_FRONT_REVIEW', 'CheckCapture', 'text', {
     text: `I've detected the front of your check. The amount is ${amount}, issued by ${issuer} on ${checkDate}. Are these details correct?`,
   });
 }
 
-function sendFrontCaptureSuccessCommand() {
-  const amount = frontReviewAmountInput.value.trim() || '$1,000';
-  const issuer = frontReviewIssuerInput.value.trim() || 'University of California';
-  const checkDate = frontReviewDateInput.value.trim() || 'April 15th';
+function sendFrontCaptureSuccessCommand(trigger) {
+  const { amount, issuer, checkDate } = getFrontReviewValues(trigger);
 
   sendCommand('CAPTURE_FRONT_SUCCESS', 'CheckCapture', 'text', {
     text: `I've detected the front of your check. The amount is ${amount}, issued by ${issuer} on ${checkDate}. Are these details correct?`,
   });
 }
 
-function sendPostCaptureSummaryCommand() {
-  const amount = summaryAmountInput.value.trim() || '$1,000';
-  const account = summaryAccountInput.value.trim() || 'Checking account ending in 7-7-4-9';
-  const issuer = summaryIssuerInput.value.trim() || 'University of California';
-  const checkDate = summaryDateInput.value.trim() || 'April 15th';
-  const routing = ocrRoutingNumberInput.value.trim() || '021000021';
-  const accountNumber = ocrAccountNumberInput.value.trim() || '123456789';
+function sendPostCaptureSummaryCommand(trigger) {
+  const { amount, account, issuer, checkDate, routingNumber: routing, accountNumber } = getPostCaptureValues(trigger);
   const accountDigitsMatch = account.match(/(\d[\d-\s]*)$/);
   const accountDigits = accountDigitsMatch ? accountDigitsMatch[1].replace(/\D/g, '') : '';
   const accountLabel = account.toLowerCase().includes('savings') ? 'Savings' : 'Checking';
@@ -200,7 +219,7 @@ function sendConfirmDepositCommand() {
 document.querySelectorAll('button[data-id]').forEach(button => {
   button.addEventListener('click', () => {
     if (button.dataset.id === 'CAPTURE_FRONT_SUCCESS') {
-      sendFrontCaptureSuccessCommand();
+      sendFrontCaptureSuccessCommand(button);
       return;
     }
 
@@ -213,20 +232,30 @@ document.querySelectorAll('button[data-id]').forEach(button => {
   });
 });
 
-ocrSuccessBtn.addEventListener('click', () => {
-  sendOcrCommand('OCR_SUCCESS', 'success');
+ocrSuccessButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    sendOcrCommand('OCR_SUCCESS', 'success', button);
+  });
 });
 
-ocrPartialBtn.addEventListener('click', () => {
-  sendOcrCommand('OCR_PARTIAL', 'partial');
+ocrPartialButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    sendOcrCommand('OCR_PARTIAL', 'partial', button);
+  });
 });
 
-ocrFailBtn.addEventListener('click', () => {
-  sendCommand('OCR_FAIL', 'OCRProcessing', 'ocrOutcome', { outcome: 'fail' });
+ocrFailButtons.forEach(button => {
+  button.addEventListener('click', () => {
+    sendOcrCommand('OCR_FAIL', 'fail', button);
+  });
 });
 
-frontReviewBtn.addEventListener('click', sendFrontReviewCommand);
-postCaptureSummaryBtn.addEventListener('click', sendPostCaptureSummaryCommand);
+frontReviewButtons.forEach(button => {
+  button.addEventListener('click', () => sendFrontReviewCommand(button));
+});
+postCaptureSummaryButtons.forEach(button => {
+  button.addEventListener('click', () => sendPostCaptureSummaryCommand(button));
+});
 successSummaryBtn.addEventListener('click', sendSuccessSummaryCommand);
 
 saveNoteBtn.addEventListener('click', sendNote);

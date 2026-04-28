@@ -128,6 +128,7 @@ export const wizardCommands = {
 
   checkFlip: [
     cmd('REPEAT_BACK_CAPTURE_INTRO', 'Repeat Back Capture Intro', 'CheckFlip'),
+    cmd('REPEAT_FRONT_CAPTURE_INTRO', 'Repeat Front Capture Intro', 'CheckFlip'),
     cmd('CONTINUE_FROM_CHECK_FLIP', 'Ready For Back Capture', 'CheckFlip'),
     cmd('BACK_FROM_CHECK_FLIP', 'Back', 'CheckFlip'),
     cmd('CLOSE_FROM_CHECK_FLIP', 'Close', 'CheckFlip'),
