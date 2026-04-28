@@ -651,6 +651,10 @@ export function executeWizardCommand(
       })();
       return;
 
+    case 'CAPTURE_RETRY_PLACEMENT':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.retryPlacementPrompt));
+      return;
+
     case 'CAPTURE_FRONT_SUCCESS': {
       const deposit = wizardState.getDepositState();
       const frontImageUri = deposit.frontImageUri ?? createWizardCaptureUri('front');

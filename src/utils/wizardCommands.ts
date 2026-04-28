@@ -119,6 +119,7 @@ export const wizardCommands = {
     cmd('GUIDE_TOO_MUCH_LIGHT', 'Guide Too Much Light', 'CheckCapture'),
     cmd('GUIDE_NOT_ENOUGH_LIGHT', 'Guide Not Enough Light', 'CheckCapture'),
     cmd('GUIDE_HOLD_STEADY', 'Guide Hold Steady', 'CheckCapture'),
+    cmd('CAPTURE_RETRY_PLACEMENT', 'Capture Retry Placement', 'CheckCapture'),
     cmd('CAPTURE_FRONT_SUCCESS', 'Front Captured', 'CheckCapture'),
     cmd('SPEAK_FRONT_REVIEW', 'Speak Front Review', 'CheckCapture', 'text'),
     cmd('CONFIRM_FRONT_DETAILS', 'Confirm Front Details', 'CheckCapture'),

@@ -376,6 +376,11 @@ export const ttsStrings = {
       medium: 'Say continue when you are ready.',
       high:   'Say continue when you are ready.',
     } as VStr,
+    retryPlacementPrompt: {
+      low:    'Try again. Bottom left. Say ready.',
+      medium: "Let's try again. Place your phone at the bottom left corner of the check. Say 'ready' when you're done.",
+      high:   "Let's try again. Place your phone at the bottom left corner of the check. Say 'ready' when you're done.",
+    } as VStr,
     liveGuidanceStart: (side: 'front' | 'back'): VStr => ({
       low:    'Guiding now.',
       medium:

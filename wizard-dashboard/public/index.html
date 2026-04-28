@@ -81,19 +81,24 @@
                 <span class="button-title">Go to Capture. Open camera.</span>
                 <span class="button-meta">Go to Capture. Open camera</span>
               </button>
-              <button data-id="SPEAK_DIFFERENT_ACCOUNT_OR_HOME" data-context="AccountSelect" style="background-color: lightpink;">
-                <span class="button-title">No problem. Would you like to choose a different account or go back to home?</span>
+              <button data-id="SPEAK_DIFFERENT_ACCOUNT_OR_HOME" data-context="AccountSelect"
+                style="background-color: lightpink;">
+                <span class="button-title">No problem. Would you like to choose a different account or go back to
+                  home?</span>
                 <span class="button-meta">Offer a different account or return home</span>
               </button>
               <button data-id="SPEAK_AMOUNT_OVER_LIMIT" data-context="AmountInput" style="background-color: lightpink;">
                 <span class="button-title">That amount is over the mobile deposit limit.</span>
-                <span class="button-meta">You can visit a bank branch, use an ATM, or I can help connect you to your bank.</span>
+                <span class="button-meta">You can visit a bank branch, use an ATM, or I can help connect you to your
+                  bank.</span>
               </button>
-              <button data-id="SPEAK_START_OVER_OR_HOME" data-context="AccountSelect" style="background-color: lightpink;">
+              <button data-id="SPEAK_START_OVER_OR_HOME" data-context="AccountSelect"
+                style="background-color: lightpink;">
                 <span class="button-title">No problem. Would you like to start over or go back to the Home page?</span>
                 <span class="button-meta">Offer to restart or return home</span>
               </button>
-              <button data-id="START_OVER_CHECK_DEPOSIT" data-context="AccountSelect" style="background-color: lightpink;">
+              <button data-id="START_OVER_CHECK_DEPOSIT" data-context="AccountSelect"
+                style="background-color: lightpink;">
                 <span class="button-title">Starting over check deposit</span>
                 <span class="button-meta">Restart the deposit flow from the overview screen</span>
               </button>
@@ -184,7 +189,8 @@
                   </label>
                   <label class="input-label">
                     Issuer
-                    <input id="front-review-issuer" data-field="front-review-issuer" type="text" value="University of California" />
+                    <input id="front-review-issuer" data-field="front-review-issuer" type="text"
+                      value="University of California" />
                   </label>
                   <label class="input-label">
                     Date
@@ -198,6 +204,13 @@
                   <button data-id="CONFIRM_FRONT_DETAILS" data-context="CheckCapture">
                     <span class="button-title">Thank you. We'll now proceed to capturing the back side.</span>
                     <span class="button-meta">Confirm front details and move to back capture</span>
+                  </button>
+                  <button data-id="CAPTURE_RETRY_PLACEMENT" data-context="CheckCapture"
+                    style="background-color: lightpink;">
+                    <span class="button-title">If Rescan, go to capsture(Retry placement and readiness prompt) </span>
+                    <span class="button-meta">
+                      Let's try again.Place your phone at the bottom left corner of the check. Say 'ready' when you're
+                      done.</span>
                   </button>
                 </div>
 
@@ -216,7 +229,8 @@
                     <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
                     <span class="button-meta">Start live capture guidance</span>
                   </button>
-                  <p class="helper-text">Use Capture Guidance buttons below to simulate the back-side capture process.</p>
+                  <p class="helper-text">Use Capture Guidance buttons below to simulate the back-side capture process.
+                  </p>
                   <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
                     <span class="button-title">The back of your check has been captured successfully.</span>
                     <span class="button-meta">Mark back captured</span>
@@ -251,11 +265,13 @@
                   </label>
                   <label class="input-label">
                     Deposit Account
-                    <input id="summary-account" data-field="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
+                    <input id="summary-account" data-field="summary-account" type="text"
+                      value="Checking account ending in 7-7-4-9" />
                   </label>
                   <label class="input-label">
                     Issuer
-                    <input id="summary-issuer" data-field="summary-issuer" type="text" value="University of California" />
+                    <input id="summary-issuer" data-field="summary-issuer" type="text"
+                      value="University of California" />
                   </label>
                   <label class="input-label">
                     Check Date
@@ -263,8 +279,10 @@
                   </label>
                   <button id="post-capture-summary-btn" data-action="post-capture-summary">
                     <span class="button-title">Speak detailed post-capture summary</span>
-                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted to
-                      your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
+                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted
+                      to
+                      your bank for processing. You can rotate your phone back to portrait mode. I'll read you the
+                      details
                       shortly.</span>
                   </button>
                   <!-- <button id="ocr-success-btn" data-action="ocr-success">
@@ -297,7 +315,8 @@
                   <h4>Front Capture</h4>
                   <button data-id="REPEAT_FRONT_CAPTURE_INTRO" data-context="CheckFlip">
                     <span class="button-title">Front side intro(no screen change; can replay)</span>
-                    <span class="button-meta">Please flip the check back to the front. Say continue when you are ready.</span>
+                    <span class="button-meta">Please flip the check back to the front. Say continue when you are
+                      ready.</span>
                   </button>
                   <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
                     <span class="button-title">Open the camera for the next side of the check.</span>
@@ -307,7 +326,8 @@
                     <span class="button-title">Slowly lift your phone up. I'll guide you in real time.</span>
                     <span class="button-meta">Start live capture guidance</span>
                   </button>
-                  <p class="helper-text">Use Capture Guidance buttons below to simulate the front-side capture process.</p>
+                  <p class="helper-text">Use Capture Guidance buttons below to simulate the front-side capture process.
+                  </p>
                   <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
                     <span class="button-title">The front of your check has been captured successfully.</span>
                     <span class="button-meta">Mark front captured and prepare front review</span>
@@ -326,15 +346,18 @@
                   <h4>Front Review</h4>
                   <label class="input-label">
                     Front Amount
-                    <input id="front-review-amount-reverse" data-field="front-review-amount" type="text" value="$1,000" />
+                    <input id="front-review-amount-reverse" data-field="front-review-amount" type="text"
+                      value="$1,000" />
                   </label>
                   <label class="input-label">
                     Issuer
-                    <input id="front-review-issuer-reverse" data-field="front-review-issuer" type="text" value="University of California" />
+                    <input id="front-review-issuer-reverse" data-field="front-review-issuer" type="text"
+                      value="University of California" />
                   </label>
                   <label class="input-label">
                     Date
-                    <input id="front-review-date-reverse" data-field="front-review-date" type="text" value="April 15th" />
+                    <input id="front-review-date-reverse" data-field="front-review-date" type="text"
+                      value="April 15th" />
                   </label>
                   <button id="front-review-btn-reverse" data-action="front-review">
                     <span class="button-title">Replay front side review</span>
@@ -355,11 +378,13 @@
                   </label>
                   <label class="input-label">
                     Routing Number
-                    <input id="ocr-routing-number-reverse" data-field="ocr-routing-number" type="text" value="021000021" />
+                    <input id="ocr-routing-number-reverse" data-field="ocr-routing-number" type="text"
+                      value="021000021" />
                   </label>
                   <label class="input-label">
                     Account Number
-                    <input id="ocr-account-number-reverse" data-field="ocr-account-number" type="text" value="1234567890" />
+                    <input id="ocr-account-number-reverse" data-field="ocr-account-number" type="text"
+                      value="1234567890" />
                   </label>
                   <label class="input-label">
                     Summary Amount
@@ -367,11 +392,13 @@
                   </label>
                   <label class="input-label">
                     Deposit Account
-                    <input id="summary-account-reverse" data-field="summary-account" type="text" value="Checking account ending in 7-7-4-9" />
+                    <input id="summary-account-reverse" data-field="summary-account" type="text"
+                      value="Checking account ending in 7-7-4-9" />
                   </label>
                   <label class="input-label">
                     Issuer
-                    <input id="summary-issuer-reverse" data-field="summary-issuer" type="text" value="University of California" />
+                    <input id="summary-issuer-reverse" data-field="summary-issuer" type="text"
+                      value="University of California" />
                   </label>
                   <label class="input-label">
                     Check Date
@@ -379,8 +406,10 @@
                   </label>
                   <button id="post-capture-summary-btn-reverse" data-action="post-capture-summary">
                     <span class="button-title">Speak detailed post-capture summary</span>
-                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted to
-                      your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details
+                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted
+                      to
+                      your bank for processing. You can rotate your phone back to portrait mode. I'll read you the
+                      details
                       shortly.</span>
                   </button>
                   <!-- <button id="ocr-success-btn-reverse" data-action="ocr-success">
@@ -417,22 +446,26 @@
               </button>
               <button data-id="CONFIRM_DEPOSIT" data-context="Confirmation">
                 <span class="button-title">Submit deposit and speak receipt summary</span>
-                <span class="button-meta">We have received your check. Your deposit of the reviewed amount was submitted. Immediate
+                <span class="button-meta">We have received your check. Your deposit of the reviewed amount was
+                  submitted. Immediate
                   and remaining funds will be available soon.</span>
               </button>
               <button data-id="EDIT_AMOUNT" data-context="Confirmation" style="background-color: lightpink;">
-                <span class="button-title">Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.</span>
+                <span class="button-title">Are you sure? If you stop now, you may lose your progress. You can scan the
+                  check again, start over, or exit to go home.</span>
                 <span class="button-meta">Warn before leaving the current confirmation flow</span>
               </button>
               <button data-id="NO_PROBLEM_GO_HOME" data-context="AccountSelect" style="background-color: lightpink;">
                 <span class="button-title">Go Home</span>
                 <span class="button-meta">Say "No problem." and navigate home</span>
               </button>
-              <button data-id="NO_PROBLEM_GO_TO_OVERVIEW" data-context="AccountSelect" style="background-color: lightpink;">
+              <button data-id="NO_PROBLEM_GO_TO_OVERVIEW" data-context="AccountSelect"
+                style="background-color: lightpink;">
                 <span class="button-title">Go to check deposit overview</span>
                 <span class="button-meta">Say "No problem." and navigate to the deposit overview screen</span>
               </button>
-              <button data-id="NO_PROBLEM_GO_TO_CAPTURE" data-context="AccountSelect" style="background-color: lightpink;">
+              <button data-id="NO_PROBLEM_GO_TO_CAPTURE" data-context="AccountSelect"
+                style="background-color: lightpink;">
                 <span class="button-title">Go to capture</span>
                 <span class="button-meta">Say "No problem." and navigate to capture</span>
               </button>
@@ -578,7 +611,8 @@
               </button>
               <button data-id="SPEAK_DEPOSIT_ONLY_PROMPT" data-context="MainScreen">
                 <span class="button-title">List Features; Trigger placeholder</span>
-                <span class="button-meta">Currently, you can only 'deposit a check'. We’re working on more features. Do you want to deposit a check?</span>
+                <span class="button-meta">Currently, you can only 'deposit a check'. We’re working on more features. Do
+                  you want to deposit a check?</span>
               </button>
             </div>
 
