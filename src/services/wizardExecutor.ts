@@ -497,12 +497,24 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'SPEAK_DIFFERENT_ACCOUNT_OR_HOME':
+      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.differentAccountOrHome));
+      return;
+
+    case 'SPEAK_START_OVER_OR_HOME':
+      ttsService.speakMedium(v(verbosity, ttsStrings.accountSelect.startOverOrHome));
+      return;
+
     case 'BACK_FROM_ACCOUNT_SELECT':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;
 
     case 'CLOSE_FROM_ACCOUNT_SELECT':
       if (navigationRef.canGoBack()) navigationRef.goBack();
+      return;
+
+    case 'SPEAK_AMOUNT_OVER_LIMIT':
+      ttsService.speakMedium(v(verbosity, ttsStrings.amountInput.overMobileDepositLimit));
       return;
 
     case 'BACK_FROM_CHECK_CAPTURE':

@@ -90,8 +90,14 @@ export const wizardCommands = {
     cmd('REPEAT_PRE_CAPTURE_OVERVIEW', 'Repeat Pre-Capture Overview', 'AccountSelect'),
     cmd('CONTINUE_FROM_ACCOUNT_SELECT', 'Continue', 'AccountSelect'),
     cmd('CONTINUE_TO_CAMERA', 'Continue To Camera', 'AccountSelect'),
+    cmd('SPEAK_DIFFERENT_ACCOUNT_OR_HOME', 'Speak Different Account Or Home', 'AccountSelect'),
+    cmd('SPEAK_START_OVER_OR_HOME', 'Speak Start Over Or Home', 'AccountSelect'),
     cmd('BACK_FROM_ACCOUNT_SELECT', 'Back', 'AccountSelect'),
     cmd('CLOSE_FROM_ACCOUNT_SELECT', 'Close', 'AccountSelect'),
+  ],
+
+  amountInput: [
+    cmd('SPEAK_AMOUNT_OVER_LIMIT', 'Speak Amount Over Limit', 'AmountInput'),
   ],
 
   checkCapture: [
@@ -181,6 +187,7 @@ export const wizardCommandList: WizardCommandDef[] = [
   ...wizardCommands.depositOverview,
   ...wizardCommands.depositPrivacy,
   ...wizardCommands.accountSelect,
+  ...wizardCommands.amountInput,
   ...wizardCommands.checkCapture,
   ...wizardCommands.checkFlip,
   ...wizardCommands.ocrProcessing,

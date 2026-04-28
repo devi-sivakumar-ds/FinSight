@@ -256,6 +256,16 @@ export const ttsStrings = {
       medium: `Only the amount you confirm at the time of deposit will be retained.`,
       high:   `Only the amount you confirm at the time of deposit will be retained.`,
     } as VStr,
+    differentAccountOrHome: {
+      low:    'Different account or home?',
+      medium: 'No problem. Would you like to choose a different account or go back to home?',
+      high:   'No problem. Would you like to choose a different account or go back to home?',
+    } as VStr,
+    startOverOrHome: {
+      low:    'Start over or home?',
+      medium: 'No problem. Would you like to start over or go back to the Home page?',
+      high:   'No problem. Would you like to start over or go back to the Home page?',
+    } as VStr,
   },
 
   // ── Amount input ───────────────────────────────────────────────────────────
@@ -279,6 +289,11 @@ export const ttsStrings = {
       low:    'Try again.',
       medium: 'Let us try that again. Please say the deposit amount.',
       high:   'Let us try that again. Please say the deposit amount.',
+    } as VStr,
+    overMobileDepositLimit: {
+      low:    'Amount is over the limit.',
+      medium: 'That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.',
+      high:   'That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.',
     } as VStr,
     didntCatch: {
       low:    "Didn't catch that.",
