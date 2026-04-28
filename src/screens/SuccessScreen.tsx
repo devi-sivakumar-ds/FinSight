@@ -14,7 +14,6 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
-import { isPureWozMode } from '@/config/studyMode';
 import { AccessibleButton } from '@components/AccessibleButton';
 import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
@@ -32,11 +31,10 @@ type Props = {
 };
 
 export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { deposit, summaryText } = route.params;
+  const { deposit } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
-  const pureWozMode = isPureWozMode();
   const expectedDate = deposit.expectedAvailability
     ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
         month: 'long',
@@ -61,18 +59,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     setTimeout(() => trigger(HapticPattern.SUCCESS), 250);
     setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
 
-    if (pureWozMode) {
-      if (!summaryText) {
-        return undefined;
-      }
-
-      const timer = setTimeout(() => {
-        speakHigh(summaryText);
-      }, 400);
-
-      return () => clearTimeout(timer);
-    }
-
     setTimeout(() => {
       speakHigh(v(verbosity, ttsStrings.success.received(formatAmountDisplay(deposit.amount), submittedDate)));
       setTimeout(() => {
@@ -93,7 +79,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
-  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, handleDone, pureWozMode, speakHigh, speakMedium, submittedDate, summaryText, trigger, verbosity]);
+  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, handleDone, speakHigh, speakMedium, submittedDate, trigger, verbosity]);
 
   // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(

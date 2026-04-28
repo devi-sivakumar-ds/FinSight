@@ -206,14 +206,7 @@ function sendSuccessSummaryCommand() {
 }
 
 function sendConfirmDepositCommand() {
-  const availableNow = successAvailableNowInput.value.trim() || '$100.00';
-  const remaining = successRemainingInput.value.trim() || '$900.00';
-  const availableBy = successAvailableByInput.value.trim() || 'April 19th, 2026';
-  const { amount, checkDate: date } = getPostCaptureValues();
-
-  sendCommand('CONFIRM_DEPOSIT', 'Confirmation', 'text', {
-    text: `We have received your check. Your deposit of ${amount} was submitted on ${date}. A total of ${availableNow} is available immediately. The remaining ${remaining} will be available by ${availableBy}.`,
-  });
+  sendCommand('CONFIRM_DEPOSIT', 'Confirmation');
 }
 
 function sendFinalConfirmPromptCommand() {
