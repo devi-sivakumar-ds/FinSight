@@ -640,6 +640,10 @@ export function executeWizardCommand(
       ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.checkNotDetected));
       return;
 
+    case 'SPEAK_CHECK_NOT_SIGNED':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.checkNotSigned));
+      return;
+
     case 'BACK_FROM_CHECK_CAPTURE':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;

@@ -126,6 +126,7 @@ export const wizardCommands = {
     cmd('SPEAK_GLARE_DETECTED', 'Speak Glare Detected', 'CheckCapture'),
     cmd('SPEAK_INSUFFICIENT_LIGHTING', 'Speak Insufficient Lighting', 'CheckCapture'),
     cmd('SPEAK_CHECK_NOT_DETECTED', 'Speak Check Not Detected', 'CheckCapture'),
+    cmd('SPEAK_CHECK_NOT_SIGNED', 'Speak Check Not Signed', 'CheckCapture'),
     cmd('CAPTURE_FRONT_SUCCESS', 'Front Captured', 'CheckCapture'),
     cmd('SPEAK_FRONT_REVIEW', 'Speak Front Review', 'CheckCapture', 'text'),
     cmd('CONFIRM_FRONT_DETAILS', 'Confirm Front Details', 'CheckCapture'),

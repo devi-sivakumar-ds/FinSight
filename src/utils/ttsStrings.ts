@@ -450,6 +450,11 @@ export const ttsStrings = {
       medium: "I was unable to detect a check. Please follow the guide again. Say 'Try again' whenever you're ready.",
       high:   "I was unable to detect a check. Please follow the guide again. Say 'Try again' whenever you're ready.",
     } as VStr,
+    checkNotSigned: {
+      low:    'Check not signed. Please sign the back and continue.',
+      medium: "I've detected the back of your check. But, I was unable to detect an endorsement. Please sign the back of the check before continuing. And let me know whenever you're ready.",
+      high:   "I've detected the back of your check. But, I was unable to detect an endorsement. Please sign the back of the check before continuing. And let me know whenever you're ready.",
+    } as VStr,
     liveGuidanceStart: (side: 'front' | 'back'): VStr => ({
       low:    'Guiding now.',
       medium:
