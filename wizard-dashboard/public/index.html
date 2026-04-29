@@ -328,8 +328,8 @@
                 <div class="subgroup">
                   <h4>Capture Outcome</h4>
                   <button data-id="CAPTURE_BACK_SUCCESS" data-context="CheckCapture">
-                    <span class="button-title">To back captured screen and prepare front capture.</span>
-                    <span class="button-meta">Stay in capture flow and move toward front capture</span>
+                    <span class="button-title">Back Captured successfully.</span>
+                    <span class="button-meta">I've detected the back of your check. Say 'continue' to move on.</span>
                   </button>
                 </div>
 
@@ -337,8 +337,8 @@
                   <h4>Front Capture</h4>
                   <button data-id="REPEAT_FRONT_CAPTURE_INTRO" data-context="CheckFlip">
                     <span class="button-title">Front side intro(no screen change; can replay)</span>
-                    <span class="button-meta">Please flip the check back to the front. Say continue when you are
-                      ready.</span>
+                    <span class="button-meta">Thank you. We'll now proceed to capturing the front. Please flip the check over. Before
+                      proceeding, ensure you have signed the back. Say 'continue' when you are prepared to continue</span>
                   </button>
                   <button data-id="CONTINUE_FROM_CHECK_FLIP" data-context="CheckFlip">
                     <span class="button-title">Open the camera for the next side of the check.</span>
@@ -350,9 +350,11 @@
                   </button>
                   <p class="helper-text">Use Capture Guidance buttons below to simulate the front-side capture process.
                   </p>
-                  <button data-id="CAPTURE_FRONT_SUCCESS" data-context="CheckCapture">
-                    <span class="button-title">The front of your check has been captured successfully.</span>
-                    <span class="button-meta">Mark front captured and prepare front review</span>
+                  <button data-id="CAPTURE_FRONT_SUCCESS_PROCESSING" data-context="CheckCapture">
+                    <span class="button-title">Front capture succes</span>
+                    <span class="button-meta">Your check has been successfully captured. Your image has been submitted to your bank for
+                      processing. You can rotate your phone back to portrait mode. I'll read you the details shortly.
+                    </span>
                   </button>
                   <button data-id="CAPTURE_RETRY" data-context="CheckCapture" style="background-color: lightpink;">
                     <span class="button-title">Let us try that capture again.</span>
@@ -364,7 +366,7 @@
                   </button>
                 </div>
 
-                <div class="subgroup" data-front-review-scope>
+                <!-- <div class="subgroup" data-front-review-scope>
                   <h4>Front Review</h4>
                   <label class="input-label">
                     Front Amount
@@ -390,7 +392,7 @@
                     <span class="button-title">Thank you. The front side looks good.</span>
                     <span class="button-meta">Confirm front details after the reverse flow</span>
                   </button>
-                </div>
+                </div> -->
 
                 <div class="subgroup" data-post-capture-scope>
                   <h4>Post-Capture Review</h4>

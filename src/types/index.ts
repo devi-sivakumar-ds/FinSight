@@ -166,6 +166,7 @@ export type DepositStackParamList = {
     reviewText?: string;
     completedCapture?: boolean;
     completionText?: string;
+    skipIntroSpeech?: boolean;
   };
   OCRProcessing: {
     frontImageUri: string;

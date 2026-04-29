@@ -772,6 +772,36 @@ export function executeWizardCommand(
       return;
     }
 
+    case 'CAPTURE_FRONT_SUCCESS_PROCESSING': {
+      const deposit = wizardState.getDepositState();
+      const frontImageUri = deposit.frontImageUri ?? createWizardCaptureUri('front');
+      const accountType = deposit.accountType ?? 'checking';
+      const accountId = deposit.accountId ?? 'acc_1';
+      const amount = deposit.amount ?? 0;
+      const processingText = v(verbosity, ttsStrings.ocrProcessing.processing);
+      void (async () => {
+        await ttsService.speakMedium(processingText);
+        wizardState.setCaptureState(true, true, frontImageUri, deposit.backImageUri);
+        wizardState.setCurrentCaptureSide('front');
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'CheckFlip',
+          params: {
+            capturedImageUri: frontImageUri,
+            capturedSide: 'front',
+            nextSide: 'back',
+            accountId,
+            accountType,
+            amount,
+            frontImageUri,
+            backImageUri: deposit.backImageUri,
+            completedCapture: true,
+            skipIntroSpeech: true,
+          },
+        });
+      })();
+      return;
+    }
+
     case 'SPEAK_FRONT_REVIEW': {
       if (command.payload && 'text' in command.payload && command.payload.text.trim()) {
         ttsService.speakMedium(command.payload.text.trim());
@@ -794,10 +824,7 @@ export function executeWizardCommand(
       return;
 
     case 'REPEAT_FRONT_CAPTURE_INTRO':
-      ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction('front')));
-      setTimeout(() => {
-        ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.continuePrompt));
-      }, 1400);
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.frontCaptureIntro));
       return;
 
     case 'CONTINUE_FROM_CHECK_FLIP': {
@@ -829,9 +856,11 @@ export function executeWizardCommand(
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
       const backImageUri = deposit.backImageUri ?? createWizardCaptureUri('back');
+      const backDetectedContinue = v(verbosity, ttsStrings.checkFlip.backDetectedContinue);
       if (deposit.frontCaptured) {
         const frontImageUri = deposit.frontImageUri ?? 'wizard://front';
-        setTimeout(() => {
+        void (async () => {
+          await ttsService.speakMedium(backDetectedContinue);
           wizardState.setCaptureState(true, true, frontImageUri, backImageUri);
           (navigationRef.navigate as any)('DepositFlow', {
             screen: 'CheckFlip',
@@ -845,14 +874,14 @@ export function executeWizardCommand(
               frontImageUri,
               backImageUri,
               completedCapture: true,
-              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+              skipIntroSpeech: true,
             },
           });
-        }, 450);
+        })();
       } else {
-        setTimeout(() => {
+        void (async () => {
+          await ttsService.speakMedium(backDetectedContinue);
           wizardState.setCaptureState(false, true, deposit.frontImageUri, backImageUri);
-          ttsService.speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured('back')));
           (navigationRef.navigate as any)('DepositFlow', {
             screen: 'CheckFlip',
             params: {
@@ -863,9 +892,10 @@ export function executeWizardCommand(
               accountType,
               amount,
               backImageUri,
+              skipIntroSpeech: true,
             },
           });
-        }, 450);
+        })();
       }
       return;
     }

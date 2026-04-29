@@ -39,6 +39,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     reviewText,
     completedCapture,
     completionText,
+    skipIntroSpeech,
     accountId,
     accountType,
     amount,
@@ -57,6 +58,10 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
   // Announce instructions on mount
   useEffect(() => {
+    if (skipIntroSpeech) {
+      return;
+    }
+
     if (completedCapture) {
       if (!completionText) return;
 
@@ -88,7 +93,7 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
     }, 400);
 
     return () => clearTimeout(timer);
-  }, [capturedSide, completedCapture, completionText, nextSide, reviewPending, reviewText, speakMedium, verbosity]);
+  }, [capturedSide, completedCapture, completionText, nextSide, reviewPending, reviewText, skipIntroSpeech, speakMedium, verbosity]);
 
   const proceedToBackSide = () => {
     if (completedCapture) return;

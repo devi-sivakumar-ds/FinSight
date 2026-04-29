@@ -379,6 +379,16 @@ export const ttsStrings = {
           ? 'The front of your check has been captured successfully.'
           : 'The back of your check has been captured successfully.',
     }),
+    backDetectedContinue: {
+      low:    'Back detected. Say continue.',
+      medium: "I've detected the back of your check. Say 'continue' to move on.",
+      high:   "I've detected the back of your check. Say 'continue' to move on.",
+    } as VStr,
+    frontCaptureIntro: {
+      low:    'Proceed to front capture. Flip the check. Say continue when ready.',
+      medium: "Thank you. We'll now proceed to capturing the front. Please flip the check over. Before proceeding, ensure you have signed the back. Say 'continue' when you are prepared to continue.",
+      high:   "Thank you. We'll now proceed to capturing the front. Please flip the check over. Before proceeding, ensure you have signed the back. Say 'continue' when you are prepared to continue.",
+    } as VStr,
     flipInstruction: (nextSide: 'front' | 'back'): VStr => ({
       low:    nextSide === 'back' ? 'Flip to show the back.' : 'Flip to show the front.',
       medium:
