@@ -106,7 +106,7 @@
 
             <div class="subgroup">
               <h4>Capture Setup</h4>
-              <!-- <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
+              <button data-id="REPEAT_CAPTURE_ORIENTATION" data-context="CheckCapture">
                 <span class="button-title">Replay Capture orientation)</span>
                 <span class="button-meta">Rotate your phone horizontally so the charging port is on your right.</span>
               </button>
@@ -114,7 +114,7 @@
                 <span class="button-title">Replay Capture placement</span>
                 <span class="button-meta">Perfect. Now place your phone at the bottom left corner of the check. Say
                   continue when you're ready.</span>
-              </button> -->
+              </button>
               <button data-id="START_CAPTURE_GUIDANCE" data-context="CheckCapture">
                 <span class="button-title">Start live capture guidance</span>
                 <span class="button-meta">Slowly lift your phone up. I'll guide you in real time.</span>
@@ -212,6 +212,31 @@
                       Let's try again.Place your phone at the bottom left corner of the check. Say 'ready' when you're
                       done.</span>
                   </button>
+                  <button data-id="SPEAK_DETECTED_AMOUNT_OVER_LIMIT" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">I detected an amount of $XXX. That amount is over the mobile deposit limit.</span>
+                    <span class="button-meta">You can visit a bank branch, use an ATM, or I can help connect you to your bank.</span>
+                  </button>
+                  <button data-id="SPEAK_CHECK_OUT_OF_FRAME" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Check out of frame</span>
+                    <span class="button-meta">The check is not fully visible. Please follow the guide again. Say ‘Try again’ whenever you’re ready.</span>
+                  </button>
+                  <button data-id="SPEAK_IMAGE_BLURRED" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Image blurred</span>
+                    <span class="button-meta">The image is not clear due to movement. Please follow the guide again. Say ‘Try again’ whenever you’re ready.</span>
+                  </button>
+                  <button data-id="SPEAK_GLARE_DETECTED" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Glare detected</span>
+                    <span class="button-meta">There is too much glare on the check. Please follow the guide again. Say ‘Try again’ whenever you’re ready.</span>
+                  </button>
+                  <button data-id="SPEAK_INSUFFICIENT_LIGHTING" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Insufficient lighting</span>
+                    <span class="button-meta">The lighting is insufficient to read the check. Please follow the guide again. Say ‘Try again’ whenever you’re ready.</span>
+                  </button>
+                  <button data-id="SPEAK_CHECK_NOT_DETECTED" data-context="CheckCapture" style="background-color: lightpink;">
+                    <span class="button-title">Check not detected</span>
+                    <span class="button-meta">I was unable to detect a check. Please follow the guide again. Say ‘Try again’ whenever you’re ready.</span>
+                  </button>
+                  
                 </div>
 
                 <div class="subgroup">

@@ -609,6 +609,37 @@ export function executeWizardCommand(
       ttsService.speakMedium(v(verbosity, ttsStrings.amountInput.overMobileDepositLimit));
       return;
 
+    case 'SPEAK_DETECTED_AMOUNT_OVER_LIMIT': {
+      const amountText =
+        command.payload && 'amountText' in command.payload && command.payload.amountText
+          ? command.payload.amountText
+          : '$XXX';
+      ttsService.speakMedium(
+        v(verbosity, ttsStrings.amountInput.detectedAmountOverMobileDepositLimit(amountText))
+      );
+      return;
+    }
+
+    case 'SPEAK_CHECK_OUT_OF_FRAME':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.checkOutOfFrame));
+      return;
+
+    case 'SPEAK_IMAGE_BLURRED':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.imageBlurred));
+      return;
+
+    case 'SPEAK_GLARE_DETECTED':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.glareDetected));
+      return;
+
+    case 'SPEAK_INSUFFICIENT_LIGHTING':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.insufficientLighting));
+      return;
+
+    case 'SPEAK_CHECK_NOT_DETECTED':
+      ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.checkNotDetected));
+      return;
+
     case 'BACK_FROM_CHECK_CAPTURE':
       if (navigationRef.canGoBack()) navigationRef.goBack();
       return;

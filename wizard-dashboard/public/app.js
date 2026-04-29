@@ -180,6 +180,14 @@ function sendFrontCaptureSuccessCommand(trigger) {
   });
 }
 
+function sendDetectedAmountOverLimitCommand(trigger) {
+  const { amount } = getFrontReviewValues(trigger);
+
+  sendCommand('SPEAK_DETECTED_AMOUNT_OVER_LIMIT', 'CheckCapture', 'text', {
+    amountText: amount,
+  });
+}
+
 function sendPostCaptureSummaryCommand(trigger) {
   const { amount, account, issuer, checkDate, routingNumber: routing, accountNumber } = getPostCaptureValues(trigger);
   const accountDigitsMatch = account.match(/(\d[\d-\s]*)$/);
@@ -226,6 +234,11 @@ document.querySelectorAll('button[data-id]').forEach(button => {
   button.addEventListener('click', () => {
     if (button.dataset.id === 'CAPTURE_FRONT_SUCCESS') {
       sendFrontCaptureSuccessCommand(button);
+      return;
+    }
+
+    if (button.dataset.id === 'SPEAK_DETECTED_AMOUNT_OVER_LIMIT') {
+      sendDetectedAmountOverLimitCommand(button);
       return;
     }
 

@@ -344,6 +344,11 @@ export const ttsStrings = {
       medium: 'That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.',
       high:   'That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.',
     } as VStr,
+    detectedAmountOverMobileDepositLimit: (amount: string): VStr => ({
+      low:    `${amount} is over the limit.`,
+      medium: `I detected an amount of ${amount}. That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.`,
+      high:   `I detected an amount of ${amount}. That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.`,
+    }),
     didntCatch: {
       low:    "Didn't catch that.",
       medium: "Sorry, I did not catch that. Please say an amount like one hundred fifty dollars.",
@@ -419,6 +424,31 @@ export const ttsStrings = {
       low:    'Try again. Bottom left. Say ready.',
       medium: "Let's try again. Place your phone at the bottom left corner of the check. Say 'ready' when you're done.",
       high:   "Let's try again. Place your phone at the bottom left corner of the check. Say 'ready' when you're done.",
+    } as VStr,
+    checkOutOfFrame: {
+      low:    'Check out of frame. Try again.',
+      medium: "The check is not fully visible. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "The check is not fully visible. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    imageBlurred: {
+      low:    'Image blurred. Try again.',
+      medium: "The image is not clear due to movement. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "The image is not clear due to movement. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    glareDetected: {
+      low:    'Glare detected. Try again.',
+      medium: "There is too much glare on the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "There is too much glare on the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    insufficientLighting: {
+      low:    'Insufficient lighting. Try again.',
+      medium: "The lighting is insufficient to read the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "The lighting is insufficient to read the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    checkNotDetected: {
+      low:    'Check not detected. Try again.',
+      medium: "I was unable to detect a check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "I was unable to detect a check. Please follow the guide again. Say 'Try again' whenever you're ready.",
     } as VStr,
     liveGuidanceStart: (side: 'front' | 'back'): VStr => ({
       low:    'Guiding now.',
