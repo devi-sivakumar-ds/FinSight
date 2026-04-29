@@ -55,24 +55,44 @@ export const ttsStrings = {
       high:   "Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.",
     } as VStr,
     verbosityExampleLow: {
-      low:    'Low example.',
-      medium: "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another example.",
-      high:   "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking. Sonic sound. Say choose Low to select this, or say Medium or High to hear another example.",
-    } as VStr,
+      before: {
+        low:    'Low example.',
+        medium: "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking.",
+        high:   "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking.",
+      } as VStr,
+      after: {
+        low:    'Choose low.',
+        medium: 'Say choose Low to select this, or say Medium or High to hear another example.',
+        high:   'Say choose Low to select this, or say Medium or High to hear another example.',
+      } as VStr,
+    },
     verbosityExampleMedium: {
-      low:    'Medium example.',
-      medium: `You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for everyday
-              banking, designed for blind and low-vision users.(Sonic Sound) Say choose Medium to select this, or say Low or High
-              to hear another example.`,
-      high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.] Sonic sound. Say choose Medium to select this, or say Low or High to hear another example.",
-    } as VStr,
+      before: {
+        low:    'Medium example.',
+        medium: `You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for everyday
+              banking, designed for blind and low-vision users.`,
+        high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.]",
+      } as VStr,
+      after: {
+        low:    'Choose medium.',
+        medium: 'Say choose Medium to select this, or say Low or High to hear another example.',
+        high:   'Say choose Medium to select this, or say Low or High to hear another example.',
+      } as VStr,
+    },
     verbosityExampleHigh: {
-      low:    'High example.',
-      medium: `You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking assistant
+      before: {
+        low:    'High example.',
+        medium: `You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking assistant
               designed for blind and low-vision users, helping you complete everyday banking tasks independently and with
-              confidence.(Sonic Sound) Say 'choose High to select this, or say Low or Medium to hear another example.`,
-      high:   "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.] Sonic sound. Say choose High to select this, or say Low or Medium to hear another example.",
-    } as VStr,
+              confidence.`,
+        high:   "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.]",
+      } as VStr,
+      after: {
+        low:    'Choose high.',
+        medium: "Say choose High to select this, or say Low or Medium to hear another example.",
+        high:   "Say choose High to select this, or say Low or Medium to hear another example.",
+      } as VStr,
+    },
     verbosityChanged: (label: string): VStr => ({
       low:    `${label}.`,
       medium: `Verbosity set to ${label}.`,
@@ -104,23 +124,42 @@ export const ttsStrings = {
       high:   "Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.",
     } as VStr,
     pacingExampleSlow: {
-      low:    'Slow example.',
-      medium: `You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
-              'choose 0.5x' to select this, or say '1.0x' or '1.5x' to hear another example.`,
-      high:   "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.] Sonic sound. Say choose Slow to select this, or say Medium or High to hear another example.",
-    } as VStr,
+      before: {
+        low:    'Slow example.',
+        medium: `You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'`,
+        high:   "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.]",
+      } as VStr,
+      after: {
+        low:    'Choose 0.5x.',
+        medium: "Say 'choose 0.5x' to select this, or say '1.0x' or '1.5x' to hear another example.",
+        high:   'Say choose Slow to select this, or say Medium or High to hear another example.',
+      } as VStr,
+    },
     pacingExampleMedium: {
-      low:    'Medium pace example.',
-      medium: `You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'(Sonic Sound) Say
-              'choose 1.0x' to select this, or say '0.5x' or '1.5x' to hear another example.`,
-      high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.] Sonic sound. Say choose Medium to select this, or say Slow or High to hear another example.",
-    } as VStr,
+      before: {
+        low:    'Medium pace example.',
+        medium: `You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'`,
+        high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.]",
+      } as VStr,
+      after: {
+        low:    'Choose 1.0x.',
+        medium: "Say 'choose 1.0x' to select this, or say '0.5x' or '1.5x' to hear another example.",
+        high:   'Say choose Medium to select this, or say Slow or High to hear another example.',
+      } as VStr,
+    },
     pacingExampleHigh: {
-      low:    'High pace example.',
-      medium: `You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for everyday
-              banking.' (Sonic Sound) Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another example.`,
-      high:   "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.] Sonic sound. Say choose High to select this, or say Slow or Medium to hear another example.",
-    } as VStr,
+      before: {
+        low:    'High pace example.',
+        medium: `You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for everyday
+              banking.'`,
+        high:   "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.]",
+      } as VStr,
+      after: {
+        low:    'Choose 1.5x.',
+        medium: "Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another example.",
+        high:   'Say choose High to select this, or say Slow or Medium to hear another example.',
+      } as VStr,
+    },
     paceChanged: (pace: number): VStr => ({
       low:    `${pace}x.`,
       medium: `Speech pace set to ${pace}x.`,

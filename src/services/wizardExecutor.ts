@@ -11,6 +11,7 @@ import { Verbosity, ttsStrings, v } from '@utils/ttsStrings';
 import mockBankingAPI from '@services/mockBankingAPI';
 import ttsService from '@services/ttsService';
 import captureSoundService from '@services/captureSoundService';
+import settingsSoundService from '@services/settingsSoundService';
 import wizardState from '@services/wizardState';
 import { DEPOSIT_LIMITS } from '@utils/constants';
 import { formatAmountForSpeech } from '@utils/amountParser';
@@ -190,6 +191,8 @@ export function executeWizardCommand(
   deps: WizardExecutorDeps
 ): void {
   void ttsService.reset();
+  void captureSoundService.stop();
+  void settingsSoundService.stop();
 
   const {
     navigationRef,
@@ -202,6 +205,26 @@ export function executeWizardCommand(
 
   const speakSettings = (entry: { low: string; medium: string; high: string }) => {
     ttsService.speakMedium(v(verbosity, entry));
+  };
+
+  const speakSettingsExample = (
+    before: { low: string; medium: string; high: string },
+    after: { low: string; medium: string; high: string },
+    rate?: number
+  ) => {
+    void (async () => {
+      if (typeof rate === 'number') {
+        await ttsService.speakMediumAtRate(v(verbosity, before), rate);
+      } else {
+        await ttsService.speakMedium(v(verbosity, before));
+      }
+      await settingsSoundService.playBeep();
+      if (typeof rate === 'number') {
+        await ttsService.speakMediumAtRate(v(verbosity, after), rate);
+      } else {
+        await ttsService.speakMedium(v(verbosity, after));
+      }
+    })();
   };
 
   const speakDepositOverview = () => {
@@ -348,17 +371,26 @@ export function executeWizardCommand(
 
     case 'SETTINGS_VERBOSITY_EXAMPLE_LOW':
       setVisualVerbosity('low');
-      speakSettings(ttsStrings.settings.verbosityExampleLow);
+      speakSettingsExample(
+        ttsStrings.settings.verbosityExampleLow.before,
+        ttsStrings.settings.verbosityExampleLow.after
+      );
       return;
 
     case 'SETTINGS_VERBOSITY_EXAMPLE_MEDIUM':
       setVisualVerbosity('medium');
-      speakSettings(ttsStrings.settings.verbosityExampleMedium);
+      speakSettingsExample(
+        ttsStrings.settings.verbosityExampleMedium.before,
+        ttsStrings.settings.verbosityExampleMedium.after
+      );
       return;
 
     case 'SETTINGS_VERBOSITY_EXAMPLE_HIGH':
       setVisualVerbosity('high');
-      speakSettings(ttsStrings.settings.verbosityExampleHigh);
+      speakSettingsExample(
+        ttsStrings.settings.verbosityExampleHigh.before,
+        ttsStrings.settings.verbosityExampleHigh.after
+      );
       return;
 
     case 'SETTINGS_CHOOSE_VERBOSITY': {
@@ -377,17 +409,29 @@ export function executeWizardCommand(
 
     case 'SETTINGS_PACING_EXAMPLE_SLOW':
       setVisualPace(0.5);
-      ttsService.speakMediumAtRate(v(verbosity, ttsStrings.settings.pacingExampleSlow), 0.5);
+      speakSettingsExample(
+        ttsStrings.settings.pacingExampleSlow.before,
+        ttsStrings.settings.pacingExampleSlow.after,
+        0.5
+      );
       return;
 
     case 'SETTINGS_PACING_EXAMPLE_MEDIUM':
       setVisualPace(1.0);
-      ttsService.speakMediumAtRate(v(verbosity, ttsStrings.settings.pacingExampleMedium), 1.0);
+      speakSettingsExample(
+        ttsStrings.settings.pacingExampleMedium.before,
+        ttsStrings.settings.pacingExampleMedium.after,
+        1.0
+      );
       return;
 
     case 'SETTINGS_PACING_EXAMPLE_HIGH':
       setVisualPace(1.5);
-      ttsService.speakMediumAtRate(v(verbosity, ttsStrings.settings.pacingExampleHigh), 1.5);
+      speakSettingsExample(
+        ttsStrings.settings.pacingExampleHigh.before,
+        ttsStrings.settings.pacingExampleHigh.after,
+        1.5
+      );
       return;
 
     case 'SETTINGS_CHOOSE_PACING':
