@@ -150,6 +150,8 @@ export type DepositStackParamList = {
     frontImageUri?: string; // Present when capturing back side
     backImageUri?: string; // Present when capturing front side second
     autoStart?: boolean;
+    autoStartToken?: string;
+    skipAutoStartSpeech?: boolean;
   };
   CheckFlip: {
     capturedImageUri: string;

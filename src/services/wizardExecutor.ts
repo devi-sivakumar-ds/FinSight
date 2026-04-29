@@ -665,18 +665,23 @@ export function executeWizardCommand(
       const accountId = deposit.accountId ?? 'acc_1';
       const amount = deposit.amount ?? 0;
       const side = deposit.currentCaptureSide ?? (deposit.backCaptured ? 'front' : 'back');
-      (navigationRef.navigate as any)('DepositFlow', {
-        screen: 'CheckCapture',
-        params: {
-          accountId,
-          accountType,
-          amount,
-          side,
-          frontImageUri: deposit.frontImageUri,
-          backImageUri: deposit.backImageUri,
-          autoStart: true,
-        },
-      });
+      void (async () => {
+        await ttsService.speakMedium(v(verbosity, ttsStrings.checkCapture.liveGuidanceStart(side)));
+        (navigationRef.navigate as any)('DepositFlow', {
+          screen: 'CheckCapture',
+          params: {
+            accountId,
+            accountType,
+            amount,
+            side,
+            frontImageUri: deposit.frontImageUri,
+            backImageUri: deposit.backImageUri,
+            autoStart: true,
+            autoStartToken: `${Date.now()}`,
+            skipAutoStartSpeech: true,
+          },
+        });
+      })();
       return;
     }
 

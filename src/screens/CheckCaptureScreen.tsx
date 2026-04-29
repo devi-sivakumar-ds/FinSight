@@ -88,7 +88,15 @@ type GuidanceCue =
   | 'capturing';
 
 export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { accountId, accountType, amount, side, autoStart } = route.params;
+  const {
+    accountId,
+    accountType,
+    amount,
+    side,
+    autoStart,
+    autoStartToken,
+    skipAutoStartSpeech,
+  } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
@@ -375,7 +383,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   useEffect(() => { runSnapshotLoopRef.current = runSnapshotLoop; }, [runSnapshotLoop]);
 
   // ── Transition: setup → analyzing ────────────────────────────────────────
-  const handleReady = useCallback(() => {
+  const handleReady = useCallback((options?: { skipSpeech?: boolean }) => {
     setPhase('analyzing');
     phaseRef.current = 'analyzing';
     lastGuidanceRef.current = null;
@@ -385,7 +393,9 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     lastCueRef.current = null;
     setAnalysisResult(null);
 
-    speakMedium(v(verbosity, ttsStrings.checkCapture.liveGuidanceStart(side)));
+    if (!options?.skipSpeech) {
+      speakMedium(v(verbosity, ttsStrings.checkCapture.liveGuidanceStart(side)));
+    }
 
     if (pureWozMode) {
       return;
@@ -398,17 +408,30 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   }, [pureWozMode, side, speakMedium, verbosity]);
 
   useEffect(() => {
-    if (!autoStart || autoStartHandledRef.current || !hasPermission || phase !== 'setup') return;
+    if (!autoStart || !hasPermission) return;
     autoStartHandledRef.current = true;
+    setPhase('setup');
+    phaseRef.current = 'setup';
+    isCapturingRef.current = false;
+    lastGuidanceRef.current = null;
+    lastTTSTimeRef.current = 0;
+    stableSinceRef.current = null;
+    lastConfidenceRef.current = 0;
+    lastCueRef.current = null;
+    setAnalysisResult(null);
+    if (snapshotTimerRef.current) {
+      clearTimeout(snapshotTimerRef.current);
+      snapshotTimerRef.current = null;
+    }
     const timer = setTimeout(() => {
-      handleReady();
+      handleReady({ skipSpeech: skipAutoStartSpeech });
     }, 300);
     return () => clearTimeout(timer);
-  }, [autoStart, handleReady, hasPermission, phase]);
+  }, [autoStart, autoStartToken, handleReady, hasPermission, skipAutoStartSpeech]);
 
   // ── Setup phase: mount instructions ──────────────────────────────────────
   useEffect(() => {
-    if (!hasPermission) return;
+    if (!hasPermission || autoStart) return;
     autoStartHandledRef.current = false;
 
     const t1 = setTimeout(() => {
@@ -425,7 +448,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       clearTimeout(t1);
       if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
     };
-  }, [hasPermission, side, speakMedium, verbosity]);
+  }, [autoStart, hasPermission, side, speakMedium, verbosity]);
 
   // ── Voice commands ────────────────────────────────────────────────────────
   useVoiceCommands(
