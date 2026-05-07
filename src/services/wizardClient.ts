@@ -13,7 +13,8 @@ import {
   WizardSessionInfo,
 } from '@/types/wizard';
 
-const WIZARD_SOCKET_URL = 'ws://127.0.0.1:7007';
+// const WIZARD_SOCKET_URL = 'ws://127.0.0.1:7007'; // Local development
+const WIZARD_SOCKET_URL = 'wss://finsight-wizard-dashboard.onrender.com'; // Dashboard hosted on Render
 const RECONNECT_DELAY_MS = 2500;
 
 function createSessionId(): string {
