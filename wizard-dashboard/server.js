@@ -3,7 +3,7 @@ const fs = require('fs');
 const path = require('path');
 const WebSocket = require('ws');
 
-const PORT = 7007;
+const PORT = process.env.PORT || 7007;
 const PUBLIC_DIR = path.join(__dirname, 'public');
 const LOG_DIR = path.join(__dirname, 'logs');
 

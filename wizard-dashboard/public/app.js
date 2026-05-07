@@ -26,7 +26,8 @@ function renderLogPath(sessionLogPath) {
     : 'Session log file: waiting for app session';
 }
 
-const socket = new WebSocket(`ws://${window.location.host}`);
+const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+const socket = new WebSocket(`${wsProtocol}//${window.location.host}`);
 
 function renderKV(target, data) {
   if (!data) {
