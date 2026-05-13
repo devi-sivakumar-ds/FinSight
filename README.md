@@ -8,8 +8,8 @@ The prototype is built with React Native and Expo. It includes a mobile app for 
 
 Add your public links here before sharing the repository:
 
-- Android APK: [Add APK link here](#)
-- Wizard dashboard: [Add dashboard link here](#)
+- Android APK: [FinSight Prototype APK](https://drive.google.com/file/d/1sen2EGkLq0ymP_IWj-pMOBSmqf2TZSO8/view?usp=sharing)
+- Wizard dashboard: [Wizard of Oz Dashboard](https://finsight-4c4d.onrender.com)
 
 The APK is for trying the participant-facing mobile app. The dashboard is for the operator who controls the Wizard of Oz study session.
 
