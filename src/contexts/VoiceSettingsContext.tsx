@@ -6,6 +6,7 @@
 import React, { createContext, useState, useEffect, useCallback } from 'react';
 import * as FileSystem from 'expo-file-system/legacy';
 import ttsService from '@services/ttsService';
+import { isPureWozMode } from '@/config/studyMode';
 import type { Verbosity } from '@utils/ttsStrings';
 
 export type Pace = 0.5 | 1.0 | 1.5;
@@ -16,8 +17,12 @@ interface VoiceSettings {
 }
 
 interface VoiceSettingsContextValue extends VoiceSettings {
+  visualVerbosity: Verbosity;
+  visualPace: Pace;
   setVerbosity: (v: Verbosity) => void;
   setPace: (p: Pace) => void;
+  setVisualVerbosity: (v: Verbosity) => void;
+  setVisualPace: (p: Pace) => void;
 }
 
 const DEFAULTS: VoiceSettings = { verbosity: 'medium', pace: 1.0 };
@@ -25,16 +30,26 @@ const SETTINGS_FILE = (FileSystem.documentDirectory ?? '') + 'voice_settings.jso
 
 export const VoiceSettingsContext = createContext<VoiceSettingsContextValue>({
   ...DEFAULTS,
+  visualVerbosity: DEFAULTS.verbosity,
+  visualPace: DEFAULTS.pace,
   setVerbosity: () => {},
   setPace: () => {},
+  setVisualVerbosity: () => {},
+  setVisualPace: () => {},
 });
 
 export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [verbosity, setVerbosityState] = useState<Verbosity>(DEFAULTS.verbosity);
   const [pace, setPaceState] = useState<Pace>(DEFAULTS.pace);
+  const [visualVerbosity, setVisualVerbosityState] = useState<Verbosity>(DEFAULTS.verbosity);
+  const [visualPace, setVisualPaceState] = useState<Pace>(DEFAULTS.pace);
 
   // Load persisted settings on mount
   useEffect(() => {
+    if (isPureWozMode()) {
+      return;
+    }
+
     (async () => {
       try {
         const info = await FileSystem.getInfoAsync(SETTINGS_FILE);
@@ -54,6 +69,9 @@ export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   const persist = useCallback(async (settings: VoiceSettings) => {
+    if (isPureWozMode()) {
+      return;
+    }
     try {
       await FileSystem.writeAsStringAsync(SETTINGS_FILE, JSON.stringify(settings));
     } catch {
@@ -63,6 +81,7 @@ export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
 
   const setVerbosity = useCallback((v: Verbosity) => {
     setVerbosityState(v);
+    setVisualVerbosityState(v);
     setPaceState(prev => {
       persist({ verbosity: v, pace: prev });
       return prev;
@@ -72,6 +91,7 @@ export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   const setPace = useCallback((p: Pace) => {
     ttsService.setRate(p);
     setPaceState(p);
+    setVisualPaceState(p);
     setVerbosityState(prev => {
       persist({ verbosity: prev, pace: p });
       return prev;
@@ -79,7 +99,18 @@ export const VoiceSettingsProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [persist]);
 
   return (
-    <VoiceSettingsContext.Provider value={{ verbosity, pace, setVerbosity, setPace }}>
+    <VoiceSettingsContext.Provider
+      value={{
+        verbosity,
+        pace,
+        visualVerbosity,
+        visualPace,
+        setVerbosity,
+        setPace,
+        setVisualVerbosity: setVisualVerbosityState,
+        setVisualPace: setVisualPaceState,
+      }}
+    >
       {children}
     </VoiceSettingsContext.Provider>
   );

@@ -15,10 +15,9 @@ import { Ionicons } from '@expo/vector-icons';
 import { DepositStackParamList } from '@/types/index';
 import { ScreenHeader } from '@components/ScreenHeader';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { COLORS, DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
@@ -35,7 +34,6 @@ const STEPS = [
 
 export const DepositOverviewScreen: React.FC<Props> = ({ navigation }) => {
   const { speakMedium } = useTTS();
-  const { voiceState } = useAlwaysOnVoice();
   const { verbosity } = useVoiceSettings();
 
   useEffect(() => {
@@ -99,10 +97,6 @@ export const DepositOverviewScreen: React.FC<Props> = ({ navigation }) => {
       </View>
 
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say continue when you're ready."
-        />
         <AccessibleButton
           label="Continue"
           onPress={handleContinue}
@@ -110,6 +104,9 @@ export const DepositOverviewScreen: React.FC<Props> = ({ navigation }) => {
           style={styles.continueButton}
           accessibilityHint="Continue to the privacy information screen"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -180,6 +177,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 16,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   continueButton: {
     width: '100%',

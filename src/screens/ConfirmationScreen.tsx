@@ -17,16 +17,18 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList } from '@/types/index';
+import { isPureWozMode } from '@/config/studyMode';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import mockBankingAPI from '@services/mockBankingAPI';
+import wizardState from '@services/wizardState';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
+import { getAccountProfileById } from '@/data/accountProfiles';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'Confirmation'>;
@@ -40,7 +42,6 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [countdown, setCountdown] = useState(10);
-  const { voiceState } = useAlwaysOnVoice();
 
   // Countdown refs
   const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -55,31 +56,25 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
   }, []);
 
   const accountLabel = accountType === 'checking' ? 'Checking' : 'Savings';
+  const amountSpeech = formatAmountForSpeech(amount);
+  const accountDigits = getAccountProfileById(accountId)?.displayNumber;
+  const pureWozMode = isPureWozMode();
 
   // Announce details on mount, then start countdown
   useEffect(() => {
-    // Estimate TTS chain duration so countdown starts right after
-    const hasCkNum = !!ocrData?.checkNumber;
-    // Rough duration: intro(400+1000) + amount(1200) + [ckNum(1200)] + account(1200) + prompt(1200)
-    const ttsDuration = hasCkNum ? 7500 : 6300;
+    if (pureWozMode) {
+      return undefined;
+    }
+
+    const ttsDuration = 5000;
 
     setTimeout(() => {
       speakMedium(v(verbosity, ttsStrings.confirmation.intro));
       setTimeout(() => {
-        speakMedium(v(verbosity, ttsStrings.confirmation.depositAmount(formatAmountForSpeech(amount))));
-        if (hasCkNum) {
-          setTimeout(() => {
-            const digits = ocrData!.checkNumber.split('').join(' ');
-            const ckStr = v(verbosity, ttsStrings.confirmation.checkNumber(digits));
-            if (ckStr) speakMedium(ckStr);
-          }, 1200);
-        }
+        speakMedium(v(verbosity, ttsStrings.confirmation.reviewSummary(amountSpeech, accountDigits)));
         setTimeout(() => {
-          speakMedium(v(verbosity, ttsStrings.confirmation.toAccount(accountLabel)));
-          setTimeout(() => {
-            speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
-          }, 1200);
-        }, hasCkNum ? 2400 : 1200);
+          speakMedium(v(verbosity, ttsStrings.confirmation.confirmPrompt));
+        }, 1400);
       }, 1000);
     }, 400);
 
@@ -112,11 +107,12 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
       clearTimeout(countdownStart);
       stopCountdown();
     };
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [accountDigits, amountSpeech, progressAnim, pureWozMode, speakMedium, stopCountdown, verbosity]);
 
   const handleSubmit = useCallback(async () => {
     stopCountdown();
     setIsSubmitting(true);
+    wizardState.setRetryScreen('Confirmation');
     speakMedium(v(verbosity, ttsStrings.confirmation.submitting));
 
     try {
@@ -130,6 +126,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         ocrData?.accountNumber
       );
 
+      wizardState.setRetryScreen(undefined);
       navigation.replace('Success', { deposit });
     } catch (error) {
       console.error('Deposit submission error:', error);
@@ -139,6 +136,7 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
         navigation.navigate('Error', {
           error: 'Failed to submit deposit. Please try again.',
           canRetry: true,
+          retryScreen: 'Confirmation',
         });
       }, 2000);
     }
@@ -146,8 +144,8 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
   const handleEditAmount = useCallback(() => {
     speakMedium(v(verbosity, ttsStrings.confirmation.editAmount));
-    navigation.navigate('AmountInput', { accountId, accountType });
-  }, [accountId, accountType, navigation]);
+    navigation.navigate('AccountSelect');
+  }, [navigation, speakMedium, verbosity]);
 
   const handleEditAccount = useCallback(() => {
     speakMedium(v(verbosity, ttsStrings.confirmation.editAccount));
@@ -268,57 +266,74 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Footer — countdown auto-submit */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say 'confirm' to submit now, or 'cancel' to stop."
-        />
-
-        {/* Countdown card */}
-        <View
-          style={styles.countdownCard}
-          accessible
-          accessibilityLabel={
-            isSubmitting
-              ? 'Submitting your deposit'
-              : `Submitting in ${countdown} seconds`
-          }
-        >
-          <Text style={styles.countdownLabel}>
-            {isSubmitting ? 'Submitting…' : 'Submitting in'}
-          </Text>
-          {!isSubmitting && (
-            <Text style={styles.countdownNumber}>{countdown}</Text>
-          )}
-          {isSubmitting && (
-            <ActivityIndicator
-              size="large"
-              color={DARK_COLORS.BLUE}
-              style={{ marginVertical: 8 }}
-            />
-          )}
-          {!isSubmitting && (
-            <Text style={styles.countdownUnit}>seconds</Text>
-          )}
-
-          {/* Progress bar */}
-          <View style={styles.progressTrack}>
-            <Animated.View
-              style={[
-                styles.progressFill,
-                {
-                  width: progressAnim.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: ['0%', '100%'],
-                  }),
-                },
-              ]}
-            />
+        {pureWozMode ? (
+          <View
+            style={styles.countdownCard}
+            accessible
+            accessibilityLabel={isSubmitting ? 'Submitting your deposit' : 'Awaiting operator confirmation'}
+          >
+            <Text style={styles.countdownLabel}>
+              {isSubmitting ? 'Submitting…' : 'Awaiting Confirmation'}
+            </Text>
+            {isSubmitting ? (
+              <ActivityIndicator
+                size="large"
+                color={DARK_COLORS.BLUE}
+                style={{ marginVertical: 8 }}
+              />
+            ) : (
+              <Text style={styles.countdownNote}>
+                The operator will confirm or cancel this step.
+              </Text>
+            )}
           </View>
+        ) : (
+          <View
+            style={styles.countdownCard}
+            accessible
+            accessibilityLabel={
+              isSubmitting
+                ? 'Submitting your deposit'
+                : `Submitting in ${countdown} seconds`
+            }
+          >
+            <Text style={styles.countdownLabel}>
+              {isSubmitting ? 'Submitting…' : 'Submitting in'}
+            </Text>
+            {!isSubmitting && (
+              <Text style={styles.countdownNumber}>{countdown}</Text>
+            )}
+            {isSubmitting && (
+              <ActivityIndicator
+                size="large"
+                color={DARK_COLORS.BLUE}
+                style={{ marginVertical: 8 }}
+              />
+            )}
+            {!isSubmitting && (
+              <Text style={styles.countdownUnit}>seconds</Text>
+            )}
 
-          <Text style={styles.countdownNote}>
-            You can cancel during this countdown.
-          </Text>
-        </View>
+            {/* Progress bar */}
+            <View style={styles.progressTrack}>
+              <Animated.View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: progressAnim.interpolate({
+                      inputRange: [0, 1],
+                      outputRange: ['0%', '100%'],
+                    }),
+                  },
+                ]}
+              />
+            </View>
+
+            <Text style={styles.countdownNote}>
+              You can cancel during this countdown.
+            </Text>
+          </View>
+        )}
 
         <AccessibleButton
           label="Cancel"
@@ -328,6 +343,9 @@ export const ConfirmationScreen: React.FC<Props> = ({ navigation, route }) => {
           size="large"
           accessibilityHint="Cancel deposit and return to main screen"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -393,6 +411,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 12,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   countdownCard: {
     backgroundColor: DARK_COLORS.SURFACE,

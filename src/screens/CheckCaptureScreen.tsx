@@ -34,6 +34,7 @@ import {
 import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import ttsService from '@services/ttsService';
+import wizardState from '@services/wizardState';
 import {
   analyzeSnapshotUri,
   SNAPSHOT_GUIDANCE_TTS,
@@ -50,6 +51,7 @@ import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { COLORS, DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
+import { isPureWozMode } from '@/config/studyMode';
 
 type Props = {
   navigation: StackNavigationProp<DepositStackParamList, 'CheckCapture'>;
@@ -86,10 +88,19 @@ type GuidanceCue =
   | 'capturing';
 
 export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { accountId, accountType, amount, side } = route.params;
+  const {
+    accountId,
+    accountType,
+    amount,
+    side,
+    autoStart,
+    autoStartToken,
+    skipAutoStartSpeech,
+  } = route.params;
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
+  const pureWozMode = isPureWozMode();
 
   // ── Guide box — portrait-shaped (taller than wide) ───────────────────────
   // User holds phone in landscape. The check's long 6" side runs vertically
@@ -125,11 +136,16 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   const stableSinceRef        = useRef<number | null>(null);
   const lastConfidenceRef     = useRef(0);
   const lastCueRef            = useRef<GuidanceCue | null>(null);
+  const autoStartHandledRef   = useRef(false);
 
   // Keep phaseRef in sync
   useEffect(() => { phaseRef.current = phase; }, [phase]);
 
   const sideLabel = side === 'front' ? 'front' : 'back';
+
+  useEffect(() => {
+    wizardState.setCurrentCaptureSide(side);
+  }, [side]);
 
   // ── TTS drain on screen leave ─────────────────────────────────────────────
   useFocusEffect(
@@ -171,16 +187,80 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
       const normalizedPhotoUri = await normalizeImageToLandscape(photoUri);
 
       if (side === 'front') {
-        navigation.navigate('CheckFlip', { frontImageUri: normalizedPhotoUri, accountId, accountType, amount });
+        if (route.params.backImageUri) {
+          wizardState.setCaptureState(true, true, normalizedPhotoUri, route.params.backImageUri);
+          if (isPureWozMode()) {
+            navigation.navigate('CheckFlip', {
+              capturedImageUri: normalizedPhotoUri,
+              capturedSide: 'front',
+              nextSide: 'back',
+              accountId,
+              accountType,
+              amount,
+              frontImageUri: normalizedPhotoUri,
+              backImageUri: route.params.backImageUri,
+              completedCapture: true,
+              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+            });
+          } else {
+            navigation.navigate('OCRProcessing', {
+              frontImageUri: normalizedPhotoUri,
+              backImageUri: route.params.backImageUri,
+              accountId,
+              accountType,
+              amount,
+            });
+          }
+        } else {
+          wizardState.setCaptureState(true, false, normalizedPhotoUri, route.params.frontImageUri);
+          navigation.navigate('CheckFlip', {
+            capturedImageUri: normalizedPhotoUri,
+            capturedSide: 'front',
+            nextSide: 'back',
+            accountId,
+            accountType,
+            amount,
+            frontImageUri: normalizedPhotoUri,
+          });
+        }
       } else {
         const frontUri = route.params.frontImageUri ?? '';
-        navigation.navigate('OCRProcessing', {
-          frontImageUri: frontUri,
-          backImageUri: normalizedPhotoUri,
-          accountId,
-          accountType,
-          amount,
-        });
+        if (frontUri) {
+          wizardState.setCaptureState(true, true, frontUri, normalizedPhotoUri);
+          if (isPureWozMode()) {
+            navigation.navigate('CheckFlip', {
+              capturedImageUri: normalizedPhotoUri,
+              capturedSide: 'back',
+              nextSide: 'front',
+              accountId,
+              accountType,
+              amount,
+              frontImageUri: frontUri,
+              backImageUri: normalizedPhotoUri,
+              completedCapture: true,
+              completionText: v(verbosity, ttsStrings.ocrProcessing.processing),
+            });
+          } else {
+            navigation.navigate('OCRProcessing', {
+              frontImageUri: frontUri,
+              backImageUri: normalizedPhotoUri,
+              accountId,
+              accountType,
+              amount,
+            });
+          }
+        } else {
+          wizardState.setCaptureState(false, true, undefined, normalizedPhotoUri);
+          navigation.navigate('CheckFlip', {
+            capturedImageUri: normalizedPhotoUri,
+            capturedSide: 'back',
+            nextSide: 'front',
+            accountId,
+            accountType,
+            amount,
+            backImageUri: normalizedPhotoUri,
+          });
+        }
       }
     } catch (err) {
       console.error('[CheckCapture] takePhoto error:', err);
@@ -303,7 +383,7 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
   useEffect(() => { runSnapshotLoopRef.current = runSnapshotLoop; }, [runSnapshotLoop]);
 
   // ── Transition: setup → analyzing ────────────────────────────────────────
-  const handleReady = useCallback(() => {
+  const handleReady = useCallback((options?: { skipSpeech?: boolean }) => {
     setPhase('analyzing');
     phaseRef.current = 'analyzing';
     lastGuidanceRef.current = null;
@@ -313,34 +393,62 @@ export const CheckCaptureScreen: React.FC<Props> = ({ navigation, route }) => {
     lastCueRef.current = null;
     setAnalysisResult(null);
 
-    speakMedium(
-      side === 'front'
-        ? 'Lift the phone straight up slowly. Keep the check under the middle of the phone. I will say left, right, up, down, raise, lower, or hold steady.'
-        : 'Lift the phone straight up slowly from the back of the check. Keep the check under the middle of the phone. I will say left, right, up, down, raise, lower, or hold steady.'
-    );
+    if (!options?.skipSpeech) {
+      speakMedium(v(verbosity, ttsStrings.checkCapture.liveGuidanceStart(side)));
+    }
+
+    if (pureWozMode) {
+      return;
+    }
 
     // Give the TTS ~800 ms before first snapshot (phone still moving up)
     snapshotTimerRef.current = setTimeout(() => {
       runSnapshotLoopRef.current();
     }, 800);
-  }, []);
+  }, [pureWozMode, side, speakMedium, verbosity]);
+
+  useEffect(() => {
+    if (!autoStart || !hasPermission) return;
+    autoStartHandledRef.current = true;
+    setPhase('setup');
+    phaseRef.current = 'setup';
+    isCapturingRef.current = false;
+    lastGuidanceRef.current = null;
+    lastTTSTimeRef.current = 0;
+    stableSinceRef.current = null;
+    lastConfidenceRef.current = 0;
+    lastCueRef.current = null;
+    setAnalysisResult(null);
+    if (snapshotTimerRef.current) {
+      clearTimeout(snapshotTimerRef.current);
+      snapshotTimerRef.current = null;
+    }
+    const timer = setTimeout(() => {
+      handleReady({ skipSpeech: skipAutoStartSpeech });
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [autoStart, autoStartToken, handleReady, hasPermission, skipAutoStartSpeech]);
 
   // ── Setup phase: mount instructions ──────────────────────────────────────
   useEffect(() => {
-    if (!hasPermission) return;
+    if (!hasPermission || autoStart) return;
+    autoStartHandledRef.current = false;
 
-    const instruction =
-      side === 'front'
-        ? 'Place the phone flat on top of the front of the check. Center it by touch, then say ready.'
-        : 'Place the phone flat on the back of the check where you signed. Center it by touch, then say ready.';
-
-    const t1 = setTimeout(() => speakMedium(instruction), 600);
+    const t1 = setTimeout(() => {
+      speakMedium(v(verbosity, ttsStrings.checkCapture.setupOrientation));
+      setTimeout(() => {
+        speakMedium(v(verbosity, ttsStrings.checkCapture.setupPlacement(side)));
+        setTimeout(() => {
+          speakMedium(v(verbosity, ttsStrings.checkCapture.readyPrompt));
+        }, 1500);
+      }, 1400);
+    }, 600);
 
     return () => {
       clearTimeout(t1);
       if (snapshotTimerRef.current) clearTimeout(snapshotTimerRef.current);
     };
-  }, [hasPermission, side]);
+  }, [autoStart, hasPermission, side, speakMedium, verbosity]);
 
   // ── Voice commands ────────────────────────────────────────────────────────
   useVoiceCommands(
@@ -557,27 +665,27 @@ function getGuidanceCue(result: SnapshotAnalysisResult): GuidanceCue {
 function getCueText(cue: GuidanceCue, side: 'front' | 'back'): string {
   switch (cue) {
     case 'searching':
-      return 'Move the phone over the check.';
+      return ttsStrings.checkCapture.guidance.searching.medium;
     case 'check_found':
-      return 'Check found. Keep moving slowly.';
+      return ttsStrings.checkCapture.guidance.checkFound.medium;
     case 'move_left':
-      return 'Move left.';
+      return ttsStrings.checkCapture.guidance.moveLeft.medium;
     case 'move_right':
-      return 'Move right.';
+      return ttsStrings.checkCapture.guidance.moveRight.medium;
     case 'move_up':
-      return 'Move up.';
+      return ttsStrings.checkCapture.guidance.moveUp.medium;
     case 'move_down':
-      return 'Move down.';
+      return ttsStrings.checkCapture.guidance.moveDown.medium;
     case 'raise_phone':
-      return 'Raise the phone slightly.';
+      return ttsStrings.checkCapture.guidance.raisePhone.medium;
     case 'lower_phone':
-      return 'Lower the phone slightly.';
+      return ttsStrings.checkCapture.guidance.lowerPhone.medium;
     case 'hold':
-      return side === 'front' ? 'Hold steady. Capturing soon.' : 'Hold steady. Capturing soon.';
+      return ttsStrings.checkCapture.guidance.holdSteady.medium;
     case 'capturing':
       return 'Capturing now.';
     case 'setup':
-      return 'Center the phone on the check and say ready.';
+      return ttsStrings.checkCapture.readyPrompt.medium;
     default:
       return '';
   }

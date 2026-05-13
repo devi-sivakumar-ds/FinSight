@@ -15,11 +15,10 @@ import { StackNavigationProp } from '@react-navigation/stack';
 import { RouteProp } from '@react-navigation/native';
 import { DepositStackParamList, HapticPattern } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useHaptics } from '@hooks/useHaptics';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { formatAmountForSpeech, formatAmountDisplay } from '@utils/amountParser';
 import { DARK_COLORS } from '@utils/constants';
@@ -36,8 +35,22 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
   const { speakMedium, speakHigh } = useTTS();
   const { trigger } = useHaptics();
   const { verbosity } = useVoiceSettings();
+  const expectedDate = deposit.expectedAvailability
+    ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric',
+      })
+    : 'within 1-2 business days';
+  const submittedDate = new Date(deposit.createdAt).toLocaleDateString('en-US', {
+    month: 'long',
+    day: 'numeric',
+    year: 'numeric',
+  });
 
-  const { voiceState } = useAlwaysOnVoice();
+  const handleDone = () => {
+    navigation.getParent()?.goBack();
+  };
 
   // Announce success on mount — haptic burst first, then voice
   useEffect(() => {
@@ -47,9 +60,11 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     setTimeout(() => trigger(HapticPattern.SUCCESS), 500);
 
     setTimeout(() => {
-      speakHigh(v(verbosity, ttsStrings.success.submitted));
+      speakHigh(v(verbosity, ttsStrings.success.received(formatAmountDisplay(deposit.amount), submittedDate)));
       setTimeout(() => {
-        const availStr = v(verbosity, ttsStrings.success.availability);
+        const availStr = deposit.expectedAvailability
+          ? v(verbosity, ttsStrings.success.availableByDate(expectedDate))
+          : v(verbosity, ttsStrings.success.availability);
         if (availStr) speakMedium(availStr);
         const confirmNum = deposit.confirmationNumber;
         if (confirmNum) {
@@ -64,13 +79,7 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
         }, confirmNum ? 5500 : 3000);
       }, 1500);
     }, 400);
-  }, []);
-
-  const handleDone = () => {
-    // DepositFlow is a modal on RootStack — one goBack() dismisses it entirely
-    // and returns to TabNavigator (MainScreen).
-    navigation.getParent()?.goBack();
-  };
+  }, [deposit.amount, deposit.confirmationNumber, deposit.expectedAvailability, expectedDate, handleDone, speakHigh, speakMedium, submittedDate, trigger, verbosity]);
 
   // Voice commands — LLM maps natural speech to these action keys
   useVoiceCommands(
@@ -81,14 +90,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
     },
     { context: 'Success' }
   );
-
-  const expectedDate = deposit.expectedAvailability
-    ? new Date(deposit.expectedAvailability).toLocaleDateString('en-US', {
-        month: 'long',
-        day: 'numeric',
-        year: 'numeric',
-      })
-    : 'within 1-2 business days';
 
   return (
     <SafeAreaView style={styles.container}>
@@ -158,10 +159,6 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
 
       {/* Footer */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say 'done' to return to the home screen."
-        />
         <AccessibleButton
           label="Done"
           onPress={handleDone}
@@ -169,6 +166,9 @@ export const SuccessScreen: React.FC<Props> = ({ navigation, route }) => {
           style={styles.doneButton}
           accessibilityHint="Return to main screen"
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -248,6 +248,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 12,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   doneButton: { width: '100%' },
 });

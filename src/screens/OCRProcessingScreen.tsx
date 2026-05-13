@@ -27,6 +27,8 @@ import { useTTS } from '@hooks/useTTS';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import ttsService from '@services/ttsService';
 import { extractCheckData } from '@services/ocrService';
+import wizardState from '@services/wizardState';
+import { isPureWozMode } from '@/config/studyMode';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
 import { Ionicons } from '@expo/vector-icons';
@@ -57,6 +59,11 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
     ttsService.reset();
     speakMedium(v(verbosity, ttsStrings.ocrProcessing.processing));
 
+    if (isPureWozMode()) {
+      setStatusText('Waiting for operator review…');
+      return () => { cancelled = true; };
+    }
+
     async function runOCR() {
       try {
         setStatusText('Reading check details…');
@@ -71,15 +78,16 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
 
           if (hasData) {
             setStatusText('Check details extracted!');
-            speakMedium('Check details found. Reviewing now.');
+            speakMedium(v(verbosity, ttsStrings.ocrProcessing.detailsFound));
           } else {
             // Groq returned nulls for all fields — soft failure
             setStatusText('Proceeding with entered amount.');
-            speakMedium('Could not read all check details. Using your entered amount.');
+            speakMedium(v(verbosity, ttsStrings.ocrProcessing.usingEnteredAmount));
           }
 
           setTimeout(() => {
             if (cancelled) return;
+            wizardState.setRetryScreen(undefined);
             navigation.replace('Confirmation', {
               accountId,
               accountType,
@@ -96,20 +104,23 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
 
           if (isHardError(errors)) {
             // Surface to ErrorScreen so user can retry
-            speakMedium('Could not connect to check reading service. Please try again.');
+            speakMedium(v(verbosity, ttsStrings.ocrProcessing.serviceUnavailable));
+            wizardState.setRetryScreen('OCRProcessing');
             setTimeout(() => {
               if (cancelled) return;
               navigation.navigate('Error', {
                 error: errors[0] ?? 'OCR service unavailable',
                 canRetry: true,
+                retryScreen: 'OCRProcessing',
               });
             }, 2000);
           } else {
             // Soft failure — skip OCR, continue with user-entered amount
             setStatusText('Proceeding with entered amount.');
-            speakMedium('Could not read check. Using your entered amount.');
+            speakMedium(v(verbosity, ttsStrings.ocrProcessing.usingEnteredAmount));
             setTimeout(() => {
               if (cancelled) return;
+              wizardState.setRetryScreen(undefined);
               navigation.replace('Confirmation', {
                 accountId,
                 accountType,
@@ -125,6 +136,7 @@ export const OCRProcessingScreen: React.FC<Props> = ({ navigation, route }) => {
         if (cancelled) return;
         console.error('[OCRProcessingScreen] unexpected error:', e);
         // Unexpected crash — graceful degradation
+        wizardState.setRetryScreen(undefined);
         navigation.replace('Confirmation', {
           accountId,
           accountType,

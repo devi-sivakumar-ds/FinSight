@@ -34,6 +34,7 @@ export interface TTSMessage {
   text: string;
   priority: TTSPriority;
   interrupt?: boolean;
+  rateOverride?: number;
 }
 
 // Haptic Feedback System
@@ -62,6 +63,7 @@ export interface Account {
   accountNumber: string;      // Full number
   displayNumber: string;       // Last 4 digits
   balance: number;
+  dailyLimit?: number;
   currency: 'USD';
 }
 
@@ -146,12 +148,25 @@ export type DepositStackParamList = {
     amount: number;
     side: 'front' | 'back';
     frontImageUri?: string; // Present when capturing back side
+    backImageUri?: string; // Present when capturing front side second
+    autoStart?: boolean;
+    autoStartToken?: string;
+    skipAutoStartSpeech?: boolean;
   };
   CheckFlip: {
-    frontImageUri: string;
+    capturedImageUri: string;
     accountId: string;
     accountType: 'checking' | 'savings';
     amount: number;
+    capturedSide: 'front' | 'back';
+    nextSide: 'front' | 'back';
+    frontImageUri?: string;
+    backImageUri?: string;
+    reviewPending?: boolean;
+    reviewText?: string;
+    completedCapture?: boolean;
+    completionText?: string;
+    skipIntroSpeech?: boolean;
   };
   OCRProcessing: {
     frontImageUri: string;
@@ -168,7 +183,10 @@ export type DepositStackParamList = {
     backImageUri: string;
     ocrData?: CheckOCRResponse['data'];
   };
-  Success: { deposit: Deposit };
+  Success: {
+    deposit: Deposit;
+    summaryText?: string;
+  };
   Error: { error: string; canRetry: boolean; retryScreen?: keyof DepositStackParamList };
 };
 
@@ -178,6 +196,7 @@ export type TabParamList = {
 };
 
 export type RootStackParamList = {
+  Onboarding: undefined;
   TabNavigator: undefined;
   DepositFlow: undefined;
 };

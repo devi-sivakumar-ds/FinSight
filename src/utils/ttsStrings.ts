@@ -8,6 +8,8 @@
 // An empty string means "skip speaking" for that verbosity level.
 // ============================================================================
 
+import { isPureWozMode } from '@/config/studyMode';
+
 export type Verbosity = 'low' | 'medium' | 'high';
 
 export interface VStr {
@@ -18,40 +20,187 @@ export interface VStr {
 
 /** Pick the verbosity-appropriate string from a VStr. */
 export function v(verbosity: Verbosity, strings: VStr): string {
+  if (isPureWozMode()) {
+    return strings.medium;
+  }
   return strings[verbosity];
 }
 
 export const ttsStrings = {
 
+  // ── Onboarding ─────────────────────────────────────────────────────────────
+  onboarding: {
+    welcome: {
+      low:    'Welcome to FinSight.',
+      medium: 'Welcome to FinSight. FinSight is your AI voice assistant that helps you navigate your everyday banking tasks. I will guide you through everything by voice. Your voice is processed in real time to respond to your commands and is never recorded or stored.',
+      high:   'Welcome to FinSight. FinSight is your voice-guided banking assistant. I will guide you through your everyday banking tasks by voice. Your voice is processed in real time to respond to your commands and is never recorded or stored. Say continue when you are ready to go to the home page.',
+    } as VStr,
+  },
+
   // ── Settings ───────────────────────────────────────────────────────────────
   settings: {
+    entry: {
+      low:    'Settings.',
+      medium: 'In Settings, you can adjust how much detail you hear in each prompt, and control the pacing and timing of my voice. Would you like to change the verbosity or pacing?',
+      high:   'In Settings, you can adjust how much detail you hear in each prompt, and control the speed and timing of my voice. What do you want to adjust?',
+    } as VStr,
     screenAnnounce: (currentVerbosity: string, currentPace: number): VStr => ({
       low:    `Settings. Verbosity: ${currentVerbosity}. Pace: ${currentPace}x. Say a command to change.`,
       medium: `Settings. Verbosity is ${currentVerbosity}. Pace is ${currentPace}x. Say 'set verbosity low, medium, or high', or 'set pace slow, normal, or fast'.`,
       high:   `Settings screen. Your verbosity is ${currentVerbosity} and your speech pace is ${currentPace}x. To change verbosity, say 'set verbosity low', 'medium', or 'high'. To change speech pace, say 'set pace slow', 'normal', or 'fast'. To return home, say 'go home'.`,
     }),
+    verbosityIntro: {
+      low:    'Verbosity settings.',
+      medium: "Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.",
+      high:   "Let me help you adjust the verbosity settings. How much detail would you like me to give? There are three levels: Low, Medium, High. Say the level you'd like to hear an example of.",
+    } as VStr,
+    verbosityExampleLow: {
+      before: {
+        low:    'Low example.',
+        medium: "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking.",
+        high:   "You've selected LOW. It sounds like this: FinSight is a voice assistant for everyday banking.",
+      } as VStr,
+      after: {
+        low:    'Choose low.',
+        medium: 'Say choose Low to select this, or say Medium or High to hear another example.',
+        high:   'Say choose Low to select this, or say Medium or High to hear another example.',
+      } as VStr,
+    },
+    verbosityExampleMedium: {
+      before: {
+        low:    'Medium example.',
+        medium: `You’ve selected MEDIUM. It sounds like this: FinSight is a voice assistant for everyday
+              banking, designed for blind and low-vision users.`,
+        high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium verbosity example.]",
+      } as VStr,
+      after: {
+        low:    'Choose medium.',
+        medium: 'Say choose Medium to select this, or say Low or High to hear another example.',
+        high:   'Say choose Medium to select this, or say Low or High to hear another example.',
+      } as VStr,
+    },
+    verbosityExampleHigh: {
+      before: {
+        low:    'High example.',
+        medium: `You’ve selected HIGH. It sounds like this: FinSight is a voice-first banking assistant
+              designed for blind and low-vision users, helping you complete everyday banking tasks independently and with
+              confidence.`,
+        high:   "You've selected HIGH. It sounds like this: [Replace this with the high verbosity example.]",
+      } as VStr,
+      after: {
+        low:    'Choose high.',
+        medium: "Say choose High to select this, or say Low or Medium to hear another example.",
+        high:   "Say choose High to select this, or say Low or Medium to hear another example.",
+      } as VStr,
+    },
     verbosityChanged: (label: string): VStr => ({
       low:    `${label}.`,
       medium: `Verbosity set to ${label}.`,
       high:   `Verbosity updated to ${label}. The app will now speak with ${label} detail.`,
     }),
+    verbositySelected: (label: string): VStr => ({
+      low:    `${label}.`,
+      medium: `Verbosity has been set to ${label}.`,
+      high:   `Verbosity has been set to ${label}.`,
+    }),
+    preferencesSaved: (paceLabel: string, verbosityLabel: string): VStr => ({
+      low:    `${paceLabel}. ${verbosityLabel}.`,
+      medium: `Your preferences have been saved. I will speak at ${paceLabel} speed with ${verbosityLabel} detail. Say "verbosity" or "pacing" to make changes, or say "go home."`,
+      high:   `Your preferences have been saved. I will speak at ${paceLabel} speed with ${verbosityLabel} detail. Say "verbosity" or "pacing" to make changes, or say "go home."`,
+    }),
+    verbosityOffer: {
+      low:    'Adjust verbosity?',
+      medium: 'Do you want to adjust Verbosity?',
+      high:   'Do you want to adjust Verbosity?',
+    } as VStr,
+    pacingOffer: {
+      low:    'Adjust pacing?',
+      medium: 'Do you want to adjust Pacing?',
+      high:   'Do you want to adjust Pacing?',
+    } as VStr,
+    pacingIntro: {
+      low:    'Pacing settings.',
+      medium: `Let me help you adjust the pacing. There are three options: 0.5x, 1.0x, and 1.5x. Say the option you would like to hear an example of.`,
+      high:   "Let me help you adjust the pacing settings. How fast would you like me to speak? There are three levels: Slow, Medium, High. Say the level you'd like to hear an example of.",
+    } as VStr,
+    pacingExampleSlow: {
+      before: {
+        low:    'Slow example.',
+        medium: `You’ve selected 0.5x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'`,
+        high:   "You've selected SLOW. It sounds like this: [Replace this with the slow pacing example.]",
+      } as VStr,
+      after: {
+        low:    'Choose 0.5x.',
+        medium: "Say 'choose 0.5x' to select this, or say '1.0x' or '1.5x' to hear another example.",
+        high:   'Say choose Slow to select this, or say Medium or High to hear another example.',
+      } as VStr,
+    },
+    pacingExampleMedium: {
+      before: {
+        low:    'Medium pace example.',
+        medium: `You’ve selected 1.0x. It sounds like this: ‘FinSight is a voice assistant for everyday banking.'`,
+        high:   "You've selected MEDIUM. It sounds like this: [Replace this with the medium pacing example.]",
+      } as VStr,
+      after: {
+        low:    'Choose 1.0x.',
+        medium: "Say 'choose 1.0x' to select this, or say '0.5x' or '1.5x' to hear another example.",
+        high:   'Say choose Medium to select this, or say Slow or High to hear another example.',
+      } as VStr,
+    },
+    pacingExampleHigh: {
+      before: {
+        low:    'High pace example.',
+        medium: `You’ve selected 1.5x. It sounds like this: ‘FinSight is a voice assistant for everyday
+              banking.'`,
+        high:   "You've selected HIGH. It sounds like this: [Replace this with the high pacing example.]",
+      } as VStr,
+      after: {
+        low:    'Choose 1.5x.',
+        medium: "Say 'choose 1.5x' to select this, or say '0.5x' or '1.0x' to hear another example.",
+        high:   'Say choose High to select this, or say Slow or Medium to hear another example.',
+      } as VStr,
+    },
     paceChanged: (pace: number): VStr => ({
       low:    `${pace}x.`,
       medium: `Speech pace set to ${pace}x.`,
       high:   `Speech pace updated to ${pace}x. The app will now speak ${pace < 1 ? 'slower' : pace > 1 ? 'faster' : 'at normal speed'}.`,
     }),
+    pacingSelected: (label: string): VStr => ({
+      low:    `${label}.`,
+      medium: `Pacing has been set to ${label}.`,
+      high:   `Pacing has been set to ${label}.`,
+    }),
+  },
+
+  // ── Global controls ───────────────────────────────────────────────────────
+  global: {
+    noProblem: {
+      low:    'No problem.',
+      medium: 'No problem.',
+      high:   'No problem.',
+    } as VStr,
+    goBack: {
+      low:    'Going back.',
+      medium: 'No problem. Let’s go back.',
+      high:   'No problem. Let’s go back.',
+    } as VStr,
   },
 
   // ── Main screen ────────────────────────────────────────────────────────────
   main: {
     welcome: {
-      low:    'Listening.',
-      medium: 'Welcome to FinSight. I am listening. Say deposit a check, check balance, send money, or transfer money.',
-      high:   'Welcome to FinSight, your voice-guided banking assistant. I am listening. You can say: deposit a check, check your balance, send money, or transfer money between accounts.',
+      low:    'Home page.',
+      medium: 'What would you like to do today? You can say a specific banking task in mind, ask me to read menu for all possible tasks, or you can adjust voice setting.',
+      high:   'What would you like to do today? You can say a specific banking task in mind, ask me to read menu for all possible tasks, or you can adjust voice setting.',
+    } as VStr,
+    depositOnlyPrompt: {
+      low:    `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
+      medium: `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
+      high:   `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
     } as VStr,
     featureComingSoon: (feature: string): VStr => ({
       low:    'Coming soon.',
-      medium: `${feature} is coming soon.`,
+      medium: `Currently, you can only ‘deposit a check’. We’re working on more features. Do you want to deposit a check?`,
       high:   `${feature} is not available yet. It will be added in a future update.`,
     }),
   },
@@ -60,13 +209,13 @@ export const ttsStrings = {
   depositOverview: {
     intro: {
       low:    'Deposit check.',
-      medium: 'You chose to deposit a check.',
-      high:   'You have chosen to deposit a check.',
+      medium: 'You selected deposit a check.',
+      high:   'You selected deposit a check.',
     } as VStr,
     process: {
       low:    'Three steps.',
-      medium: 'I will guide you through three steps: choose an account, enter the amount, and capture the front and back of the check.',
-      high:   'I will guide you through the process. First you will choose an account, then enter the check amount, and finally capture the front and back of the check.',
+      medium: `I'll guide you through depositing your check. You'll select an account, and I'll walk you through capturing your check image — I'll tell you when the image is captured. From there, I'll read you the check amount and you'll confirm the deposit. `,
+      high:   'We will proceed in three steps. First, choose an account. Next, enter the check amount. Then, capture the front and back of the check.',
     } as VStr,
     continuePrompt: {
       low:    'Say continue.',
@@ -80,12 +229,12 @@ export const ttsStrings = {
     intro: {
       low:    'Privacy.',
       medium: 'Your privacy matters.',
-      high:   'Before we begin, here is a quick privacy note.',
+      high:   'Your privacy matters.',
     } as VStr,
     details: {
       low:    'Not saved in app.',
-      medium: "Your deposit information is used only for this flow and isn't stored in the app after this session.",
-      high:   "Your deposit information is used only to guide this deposit flow and is not stored in the app after this session.",
+      medium: 'Your deposit information is used only for this flow and is not stored in the app after this session.',
+      high:   'Your deposit information is used only for this flow and is not stored in the app after this session.',
     } as VStr,
     continuePrompt: {
       low:    'Continue.',
@@ -98,13 +247,13 @@ export const ttsStrings = {
   accountSelect: {
     prompt: {
       low:    'Which account?',
-      medium: 'Which account do you want to deposit to?',
-      high:   'Which account would you like to deposit your check to?',
+      medium: 'Which account do you want to deposit into?',
+      high:   'Which account do you want to deposit into?',
     } as VStr,
     accountCount: (n: number): VStr => ({
       low:    '',
-      medium: `You have ${n} accounts.`,
-      high:   `You have ${n} accounts. I will read them out now.`,
+      medium: `You have ${n} accounts. Which one would you like to use?`,
+      high:   `You have ${n} accounts. Which one would you like to use?`,
     }),
     accountDetail: (typeLabel: string, digits: string, balance: string): VStr => ({
       low:    `${typeLabel} ending in ${digits}.`,
@@ -116,15 +265,55 @@ export const ttsStrings = {
       medium: `${typeLabel} ending in ${digits} selected.`,
       high:   `You selected your ${typeLabel} account ending in ${digits}.`,
     }),
+    dailyLimitSelected: (typeLabel: string, limit: string): VStr => ({
+      low:    `${limit}.`,
+      medium: `You selected ${typeLabel}. Your daily deposit limit is ${limit} for this account.`,
+      high:   `You selected ${typeLabel}. Your daily deposit limit is ${limit} for this account.`,
+    }),
     continuePrompt: {
       low:    '',
-      medium: 'Say continue to proceed, or select a different account.',
-      high:   'Say continue to proceed with this account, or select a different account to change your selection.',
+      medium: 'Say continue to proceed, or choose a different account.',
+      high:   'Say continue to proceed, or choose a different account.',
     } as VStr,
     noAccount: {
       low:    'Select an account.',
       medium: 'Please select an account first.',
       high:   'Please select an account before continuing.',
+    } as VStr,
+    readyPrompt: {
+      low:    'Continue.',
+      medium: `Say continue when you're ready.`,
+      high:   `Say continue when you're ready.`,
+    } as VStr,
+    preCaptureIntro: {
+      low:    'Capture next.',
+      medium: `We will now proceed to capture your check. I will guide you through positioning the check and capturing the required details.`,
+      high:   `We will now proceed to capture your check. I will guide you through positioning the check and capturing the required details.`,
+    } as VStr,
+    preCaptureSurface: {
+      low:    'Use flat surface.',
+      medium: `For best results, place the check on a flat, smooth surface.`,
+      high:   `For best results, place the check on a flat, smooth surface.`,
+    } as VStr,
+    preCaptureRetention: {
+      low:    'Amount kept.',
+      medium: `Only the amount you confirm at the time of deposit will be retained.`,
+      high:   `Only the amount you confirm at the time of deposit will be retained.`,
+    } as VStr,
+    differentAccountOrHome: {
+      low:    'Different account or home?',
+      medium: 'No problem. Would you like to choose a different account or go back to home?',
+      high:   'No problem. Would you like to choose a different account or go back to home?',
+    } as VStr,
+    startOverOrHome: {
+      low:    'Start over or home?',
+      medium: 'No problem. Would you like to start over or go back to the Home page?',
+      high:   'No problem. Would you like to start over or go back to the Home page?',
+    } as VStr,
+    startingOverCheckDeposit: {
+      low:    'Starting over.',
+      medium: 'Starting over check deposit.',
+      high:   'Starting over check deposit.',
     } as VStr,
   },
 
@@ -137,61 +326,165 @@ export const ttsStrings = {
     }),
     prompt: {
       low:    'How much?',
-      medium: 'How much are you depositing?',
-      high:   "How much would you like to deposit? Say the amount, for example, 'one hundred fifty dollars'.",
+      medium: "Please say the amount you would like to deposit. For example, one hundred fifty dollars.",
+      high:   "Please say the amount you would like to deposit. For example, one hundred fifty dollars.",
     } as VStr,
     dailyLimit: (limit: string): VStr => ({
       low:    '',
-      medium: `Daily limit: ${limit}.`,
-      high:   `Your daily deposit limit is ${limit}.`,
+      medium: `The daily deposit limit is ${limit}.`,
+      high:   `The daily deposit limit is ${limit}.`,
     }),
     retryPrompt: {
       low:    'Try again.',
-      medium: 'Okay, how much are you depositing?',
-      high:   "Let's try that again. How much would you like to deposit?",
+      medium: 'Let us try that again. Please say the deposit amount.',
+      high:   'Let us try that again. Please say the deposit amount.',
     } as VStr,
+    overMobileDepositLimit: {
+      low:    'Amount is over the limit.',
+      medium: 'That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.',
+      high:   'That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.',
+    } as VStr,
+    detectedAmountOverMobileDepositLimit: (amount: string): VStr => ({
+      low:    `${amount} is over the limit.`,
+      medium: `I detected an amount of ${amount}. That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.`,
+      high:   `I detected an amount of ${amount}. That amount is over the mobile deposit limit. You can visit a bank branch, use an ATM, or I can help connect you to your bank.`,
+    }),
     didntCatch: {
       low:    "Didn't catch that.",
-      medium: "Sorry, I didn't catch that. Please say an amount like 'one hundred fifty dollars'.",
-      high:   "Sorry, I wasn't able to understand the amount. Please say it clearly, for example: one hundred fifty dollars.",
+      medium: "Sorry, I did not catch that. Please say an amount like one hundred fifty dollars.",
+      high:   "Sorry, I did not catch that. Please say an amount like one hundred fifty dollars.",
     } as VStr,
     voiceConfirm: (amount: string): VStr => ({
       low:    `${amount}. Correct?`,
-      medium: `I heard ${amount}. Is that correct? Say yes to continue or no to try again.`,
-      high:   `I heard ${amount}. Is that the correct deposit amount? Say yes to continue, or no to say the amount again.`,
+      medium: `I heard ${amount}. Is that correct? Say yes or no.`,
+      high:   `I heard ${amount}. Is that correct? Say yes or no.`,
     }),
     typedConfirm: (amount: string): VStr => ({
       low:    `${amount}.`,
-      medium: `${amount}. Is that correct? Say yes to continue or no to change it.`,
-      high:   `The deposit amount is ${amount}. Is that correct? Say yes to continue, or no to change it.`,
+      medium: `The deposit amount is ${amount}. Is that correct? Say yes or no.`,
+      high:   `The deposit amount is ${amount}. Is that correct? Say yes or no.`,
     }),
   },
 
   // ── Check flip ─────────────────────────────────────────────────────────────
   checkFlip: {
-    frontCaptured: {
-      low:    'Front captured.',
-      medium: 'Front captured successfully.',
-      high:   'The front of your check has been captured successfully.',
+    sideCaptured: (side: 'front' | 'back'): VStr => ({
+      low:    side === 'front' ? 'Front captured.' : 'Back captured.',
+      medium:
+        side === 'front'
+          ? 'Front captured successfully.'
+          : 'Back captured successfully.',
+      high:
+        side === 'front'
+          ? 'The front of your check has been captured successfully.'
+          : 'The back of your check has been captured successfully.',
+    }),
+    backDetectedContinue: {
+      low:    'Back detected. Say continue.',
+      medium: "I've detected the back of your check. Say 'continue' to move on.",
+      high:   "I've detected the back of your check. Say 'continue' to move on.",
     } as VStr,
-    flipInstruction: {
-      low:    'Flip to show the back.',
-      medium: 'Now flip the check to show the back, where you would sign it.',
-      high:   'Now please flip your check over to show the back side, where you endorse or sign the check.',
+    frontCaptureIntro: {
+      low:    'Proceed to front capture. Flip the check. Say continue when ready.',
+      medium: "Thank you. We'll now proceed to capturing the front. Please flip the check over. Before proceeding, ensure you have signed the back. Say 'continue' when you are prepared to continue.",
+      high:   "Thank you. We'll now proceed to capturing the front. Please flip the check over. Before proceeding, ensure you have signed the back. Say 'continue' when you are prepared to continue.",
     } as VStr,
-    tapReady: {
-      low:    'Tap when ready.',
-      medium: 'Tap the screen when ready.',
-      high:   'Tap anywhere on the screen when you are ready to capture the back of the check.',
+    flipInstruction: (nextSide: 'front' | 'back'): VStr => ({
+      low:    nextSide === 'back' ? 'Flip to show the back.' : 'Flip to show the front.',
+      medium:
+        nextSide === 'back'
+          ? 'Please flip the check over. Before proceeding, ensure you have signed the back.'
+          : 'Please flip the check over to show the front of the check.',
+      high:
+        nextSide === 'back'
+          ? 'Please flip the check over. Before proceeding, ensure you have signed the back.'
+          : 'Please flip the check over to show the front of the check.',
+    }),
+    continuePrompt: {
+      low:    'Continue when ready.',
+      medium: 'Say continue when you are ready.',
+      high:   'Say continue when you are ready.',
     } as VStr,
   },
 
   // ── Check capture ──────────────────────────────────────────────────────────
   checkCapture: {
-    setupInstruction: {
-      low:    'Lift phone and hold over check.',
-      medium: "Now slowly lift your phone straight up. I'll guide you in real time.",
-      high:   "Now slowly lift your phone straight up over the check. I will guide you in real time with positioning instructions.",
+    setupOrientation: {
+      low:    'Rotate phone.',
+      medium: 'Rotate your phone horizontally so the charging port is on your right.',
+      high:   'Rotate your phone horizontally so the charging port is on your right.',
+    } as VStr,
+    setupPlacement: (side: 'front' | 'back'): VStr => ({
+      low: side === 'front' ? 'Place phone on front.' : 'Place phone on back.',
+      medium:
+        side === 'front'
+          ? 'Perfect. Now place your phone at the bottom left corner of the check.'
+          : 'Perfect. Now place your phone at the bottom left corner of the check.',
+      high:
+        side === 'front'
+          ? 'Perfect. Now place your phone at the bottom left corner of the check.'
+          : 'Perfect. Now place your phone at the bottom left corner of the check.',
+    }),
+    readyPrompt: {
+      low:    'Continue when ready.',
+      medium: 'Say continue when you are ready.',
+      high:   'Say continue when you are ready.',
+    } as VStr,
+    retryPlacementPrompt: {
+      low:    'Try again. Bottom left. Say ready.',
+      medium: "Let's try again. Place your phone at the bottom left corner of the check. Say 'ready' when you're done.",
+      high:   "Let's try again. Place your phone at the bottom left corner of the check. Say 'ready' when you're done.",
+    } as VStr,
+    checkOutOfFrame: {
+      low:    'Check out of frame. Try again.',
+      medium: "The check is not fully visible. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "The check is not fully visible. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    imageBlurred: {
+      low:    'Image blurred. Try again.',
+      medium: "The image is not clear due to movement. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "The image is not clear due to movement. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    glareDetected: {
+      low:    'Glare detected. Try again.',
+      medium: "There is too much glare on the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "There is too much glare on the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    insufficientLighting: {
+      low:    'Insufficient lighting. Try again.',
+      medium: "The lighting is insufficient to read the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "The lighting is insufficient to read the check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    checkNotDetected: {
+      low:    'Check not detected. Try again.',
+      medium: "I was unable to detect a check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+      high:   "I was unable to detect a check. Please follow the guide again. Say 'Try again' whenever you're ready.",
+    } as VStr,
+    checkNotSigned: {
+      low:    'Check not signed. Please sign the back and continue.',
+      medium: "I've detected the back of your check. But, I was unable to detect an endorsement. Please sign the back of the check before continuing. And let me know whenever you're ready.",
+      high:   "I've detected the back of your check. But, I was unable to detect an endorsement. Please sign the back of the check before continuing. And let me know whenever you're ready.",
+    } as VStr,
+    liveGuidanceStart: (side: 'front' | 'back'): VStr => ({
+      low:    'Guiding now.',
+      medium:
+        side === 'front'
+          ? "Slowly lift your phone up. I'll guide you in real time."
+          : "Slowly lift your phone up. I'll guide you in real time.",
+      high:
+        side === 'front'
+          ? "Slowly lift your phone up. I'll guide you in real time."
+          : "Slowly lift your phone up. I'll guide you in real time.",
+    }),
+    frontDetectedReview: (amount: string): VStr => ({
+      low:    `Front detected. ${amount}.`,
+      medium: `I've detected the front of your check. The amount is ${amount}. Are these details correct?`,
+      high:   `I've detected the front of your check. The amount is ${amount}. Are these details correct?`,
+    }),
+    proceedToBackCapture: {
+      low:    'Proceeding to back.',
+      medium: "Thank you. We'll now proceed to capturing the back.",
+      high:   "Thank you. We'll now proceed to capturing the back.",
     } as VStr,
     capturingNow: {
       low:    'Capturing.',
@@ -203,14 +496,106 @@ export const ttsStrings = {
       medium: 'Failed to capture image. Please try again.',
       high:   'The image capture failed. Please try again, making sure the check is well lit and fully in frame.',
     } as VStr,
+    guidance: {
+      searching: {
+        low:    'Move slowly.',
+        medium: 'Move your phone slowly over the check.',
+        high:   'Move your phone slowly over the check.',
+      } as VStr,
+      checkFound: {
+        low:    'Keep moving.',
+        medium: 'Keep moving slowly.',
+        high:   'Keep moving slowly.',
+      } as VStr,
+      moveLeft: {
+        low:    'Left.',
+        medium: 'Move it (slightly) to the left.',
+        high:   'Move slightly to the left.',
+      } as VStr,
+      moveRight: {
+        low:    'Right.',
+        medium: 'Move it (slightly) to the right.',
+        high:   'Move slightly to the right.',
+      } as VStr,
+      moveUp: {
+        low:    'Top.',
+        medium: 'Move it (slightly) closer to you.',
+        high:   'Move slightly forward.',
+      } as VStr,
+      moveDown: {
+        low:    'Bottom.',
+        medium: 'Move it (slightly) away from you.',
+        high:   'Move slightly back.',
+      } as VStr,
+      raisePhone: {
+        low:    'Higher.',
+        medium: 'A bit higher.',
+        high:   'A bit higher.',
+      } as VStr,
+      lowerPhone: {
+        low:    'Lower.',
+        medium: 'A bit lower.',
+        high:   'A bit lower.',
+      } as VStr,
+      tiltLeft: {
+        low:    'Tilt left.',
+        medium: 'Tilt your phone a little to the left.',
+        high:   'Tilt your phone a little to the left.',
+      } as VStr,
+      tiltRight: {
+        low:    'Tilt right.',
+        medium: 'Tilt your phone a little to the right.',
+        high:   'Tilt your phone a little to the right.',
+      } as VStr,
+      tooMuchLight: {
+        low:    'Shade check.',
+        medium: 'Too much light. Try shading the check slightly.',
+        high:   'Too much light. Try shading the check slightly.',
+      } as VStr,
+      notEnoughLight: {
+        low:    'Brighter spot.',
+        medium: 'Not enough light. Move to a brighter spot.',
+        high:   'Not enough light. Move to a brighter spot.',
+      } as VStr,
+      holdSteady: {
+        low:    'Hold steady.',
+        medium: 'Perfect. Hold steady.',
+        high:   'Perfect. Hold steady.',
+      } as VStr,
+      processingAfterCapture: {
+        low:    'Processing.',
+        medium: 'Processing.',
+        high:   'Processing.',
+      } as VStr,
+    },
   },
 
   // ── OCR processing ─────────────────────────────────────────────────────────
   ocrProcessing: {
     processing: {
       low:    'Processing.',
-      medium: 'Check captured. Preparing your deposit details.',
-      high:   'Your check has been captured. I am now preparing your deposit details.',
+      medium: `Your check has been successfully captured. Your image has been submitted to your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details shortly.`,
+      high:   `Your check has been successfully captured. Your image has been submitted to your bank for processing. You can rotate your phone back to portrait mode. I'll read you the details shortly.`,
+    } as VStr,
+    waitingForOperator: {
+      low:    'Reviewing.',
+      medium: 'Reviewing your check details now.',
+      high:   'Reviewing your check details now.',
+    } as VStr,
+    detailsFound: {
+      low:    'Details found.',
+      medium: 'Check details found. Reviewing now.',
+      high:   'Check details found. Reviewing now.',
+    } as VStr,
+    usingEnteredAmount: {
+      low:    'Using entered amount.',
+      medium: 'Could not read all check details. Using your entered amount.',
+      high:   'Could not read all check details. Using your entered amount.',
+    } as VStr,
+    serviceUnavailable: {
+      low:    'Service unavailable.',
+      medium: 'Could not connect to the check reading service. Please try again.',
+      high:   'Could not connect to the check reading service. Please try again.',
     } as VStr,
   },
 
@@ -218,9 +603,18 @@ export const ttsStrings = {
   confirmation: {
     intro: {
       low:    'Check captured.',
-      medium: 'Your check has been captured. Let me read the details.',
-      high:   'Your check has been captured successfully. Let me read the deposit details to you.',
+      medium: 'Your check has been captured successfully. Let me read the deposit details.',
+      high:   'Your check has been captured successfully. Let me read the deposit details.',
     } as VStr,
+    reviewSummary: (amount: string, accountDigits?: string): VStr => ({
+      low:    `${amount}.`,
+      medium: accountDigits
+        ? `I have deposited ${amount} into your checking account ending in ${accountDigits}.`
+        : `I have deposited ${amount} into your selected account.`,
+      high: accountDigits
+        ? `I have deposited ${amount} into your checking account ending in ${accountDigits}.`
+        : `I have deposited ${amount} into your selected account.`,
+    }),
     depositAmount: (amount: string): VStr => ({
       low:    `${amount}.`,
       medium: `Depositing ${amount}.`,
@@ -236,14 +630,33 @@ export const ttsStrings = {
       medium: `To your ${label} account.`,
       high:   `This will be deposited to your ${label} account.`,
     }),
+    finalConfirmPrompt: (amount: string, accountLabel: string, accountDigits?: string): VStr => ({
+      low: 'Confirm or cancel?',
+      medium: accountDigits
+        ? `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account ending in ${accountDigits}. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`
+        : `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+      high: accountDigits
+        ? `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account ending in ${accountDigits}. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`
+        : `I'm about to deposit ${amount} into your ${accountLabel.toLowerCase()} account. Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+    }),
     confirmPrompt: {
       low:    'Confirm or cancel?',
-      medium: "Say 'confirm' to complete the deposit, or 'cancel' to start over.",
-      high:   "To complete your deposit, say confirm. To cancel this deposit, say cancel.",
+      medium: `Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+      high:   `Say "confirm" to proceed, or "cancel" to stop. You have 10 seconds to respond. If no response is detected, the deposit will proceed.`,
+    } as VStr,
+    countdownTen: {
+      low:    'Ten left.',
+      medium: '10 seconds left',
+      high:   '10 seconds left',
+    } as VStr,
+    countdownFive: {
+      low:    'Five left.',
+      medium: '5 seconds left',
+      high:   '5 seconds left',
     } as VStr,
     submitting: {
       low:    'Submitting.',
-      medium: 'Submitting deposit...',
+      medium: 'Submitting your deposit now. Please wait.',
       high:   'Submitting your deposit now. Please wait.',
     } as VStr,
     submitError: {
@@ -252,9 +665,9 @@ export const ttsStrings = {
       high:   'There was a problem submitting your deposit. Please check your connection and try again.',
     } as VStr,
     editAmount: {
-      low:    'Editing amount.',
-      medium: 'Returning to amount entry.',
-      high:   'Taking you back to the amount entry screen.',
+      low:    'You may lose progress.',
+      medium: 'Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.',
+      high:   'Are you sure? If you stop now, you may lose your progress. You can scan the check again, start over, or exit to go home.',
     } as VStr,
     editAccount: {
       low:    'Editing account.',
@@ -265,11 +678,21 @@ export const ttsStrings = {
 
   // ── Success ────────────────────────────────────────────────────────────────
   success: {
+    received: (amount: string, date: string): VStr => ({
+      low:    'Deposit received.',
+      medium: `We have received your check. Your deposit of ${amount} has been submitted on ${date}.`,
+      high:   `We have received your check. Your deposit of ${amount} has been submitted on ${date}.`,
+    }),
     submitted: {
       low:    'Deposit submitted.',
-      medium: 'Deposit submitted successfully.',
-      high:   'Your deposit has been submitted successfully and is now being processed.',
+      medium: 'Your deposit has been submitted successfully.',
+      high:   'Your deposit has been submitted successfully.',
     } as VStr,
+    availableByDate: (date: string): VStr => ({
+      low:    '',
+      medium: `The remaining funds will be available by ${date}.`,
+      high:   `The remaining funds will be available by ${date}.`,
+    }),
     availability: {
       low:    '',
       medium: 'Your check will be reviewed and funds will be available within 1 to 2 business days.',
@@ -282,8 +705,8 @@ export const ttsStrings = {
     }),
     exitPrompt: {
       low:    '',
-      medium: "Say 'done' or 'go home' to return to the main screen.",
-      high:   "Say done or go home to return to the main screen.",
+      medium: 'Your session is complete. Returning to home.',
+      high:   'Your session is complete. Returning to home.',
     } as VStr,
   },
 

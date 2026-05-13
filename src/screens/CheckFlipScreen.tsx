@@ -16,10 +16,9 @@ import { RouteProp, useFocusEffect } from '@react-navigation/native';
 import ttsService from '@services/ttsService';
 import { DepositStackParamList } from '@/types/index';
 import { AccessibleButton } from '@components/AccessibleButton';
-import { VoiceBanner } from '@components/VoiceBanner';
+import { VisualMic } from '@components/VisualMic';
 import { useTTS } from '@hooks/useTTS';
 import { useVoiceCommands } from '@hooks/useVoiceCommands';
-import { useAlwaysOnVoice } from '@hooks/useAlwaysOnVoice';
 import { useVoiceSettings } from '@hooks/useVoiceSettings';
 import { DARK_COLORS } from '@utils/constants';
 import { ttsStrings, v } from '@utils/ttsStrings';
@@ -31,10 +30,24 @@ type Props = {
 };
 
 export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
-  const { frontImageUri, accountId, accountType, amount } = route.params;
+  const {
+    capturedImageUri,
+    capturedSide,
+    nextSide,
+    frontImageUri,
+    reviewPending,
+    reviewText,
+    completedCapture,
+    completionText,
+    skipIntroSpeech,
+    accountId,
+    accountType,
+    amount,
+  } = route.params;
   const { speakMedium } = useTTS();
-  const { voiceState } = useAlwaysOnVoice();
   const { verbosity } = useVoiceSettings();
+  const nextSideLabel = nextSide === 'front' ? 'front' : 'back';
+  const capturedSideLabel = capturedSide === 'front' ? 'Front' : 'Back';
 
   // Stop any lingering TTS when leaving this screen (e.g. user says "ready" quickly)
   useFocusEffect(
@@ -45,24 +58,53 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
   // Announce instructions on mount
   useEffect(() => {
-    setTimeout(() => {
-      speakMedium(v(verbosity, ttsStrings.checkFlip.frontCaptured));
+    if (skipIntroSpeech) {
+      return;
+    }
+
+    if (completedCapture) {
+      if (!completionText) return;
+
+      const timer = setTimeout(() => {
+        speakMedium(completionText);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+
+    if (reviewPending) {
+      if (!reviewText) return;
+
+      const timer = setTimeout(() => {
+        speakMedium(reviewText);
+      }, 500);
+
+      return () => clearTimeout(timer);
+    }
+
+    const timer = setTimeout(() => {
+      speakMedium(v(verbosity, ttsStrings.checkFlip.sideCaptured(capturedSide)));
       setTimeout(() => {
-        speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction));
+        speakMedium(v(verbosity, ttsStrings.checkFlip.flipInstruction(nextSide)));
         setTimeout(() => {
-          speakMedium(v(verbosity, ttsStrings.checkFlip.tapReady));
+          speakMedium(v(verbosity, ttsStrings.checkFlip.continuePrompt));
         }, 2000);
       }, 1200);
     }, 400);
-  }, []);
+
+    return () => clearTimeout(timer);
+  }, [capturedSide, completedCapture, completionText, nextSide, reviewPending, reviewText, skipIntroSpeech, speakMedium, verbosity]);
 
   const proceedToBackSide = () => {
+    if (completedCapture) return;
+
     navigation.navigate('CheckCapture', {
       accountId,
       accountType,
       amount,
-      side: 'back',
+      side: nextSide,
       frontImageUri,
+      backImageUri: route.params.backImageUri,
     });
   };
 
@@ -92,49 +134,63 @@ export const CheckFlipScreen: React.FC<Props> = ({ navigation, route }) => {
 
         {/* Title */}
         <Text style={styles.title} accessible accessibilityRole="header">
-          Front Captured Successfully
+          {capturedSideLabel} Captured Successfully
         </Text>
 
         {/* Instruction */}
         <Text style={styles.instruction}>
-          Now flip the check to show the back, where you would sign it.
+          {completedCapture
+            ? 'Capture is complete. You can rotate your phone back to portrait mode while the deposit details are prepared.'
+            : reviewPending
+            ? 'Front capture is complete. Review the detected details, then continue when you are ready to capture the other side.'
+            : nextSide === 'back'
+              ? 'Now flip the check to show the back, where you would sign it.'
+              : 'Now flip the check to show the front of the check.'}
         </Text>
 
         {/* Thumbnail (optional) */}
-        {frontImageUri && (
+        {capturedImageUri && (
           <View style={styles.thumbnailContainer}>
             <Image
-              source={{ uri: frontImageUri }}
+              source={{ uri: capturedImageUri }}
               style={styles.thumbnail}
               resizeMode="contain"
               accessible
-              accessibilityLabel="Captured front image preview"
+              accessibilityLabel={`Captured ${capturedSide} image preview`}
             />
             <View style={styles.thumbnailOverlay}>
-              <Text style={styles.thumbnailLabel}>FRONT</Text>
+              <Text style={styles.thumbnailLabel}>{capturedSide.toUpperCase()}</Text>
             </View>
           </View>
         )}
 
         {/* Flip animation hint */}
         <View style={styles.flipHint}>
-          <Text style={styles.flipText}>↻ Flip Check Over</Text>
+          <Text style={styles.flipText}>
+            {completedCapture ? '✓ Capture Complete' : '↻ Flip Check Over'}
+          </Text>
         </View>
       </View>
 
       {/* Footer */}
       <View style={styles.footer}>
-        <VoiceBanner
-          state={voiceState}
-          listeningText="Say 'ready' when the back side is facing the camera."
-        />
         <AccessibleButton
-          label="Ready"
+          label={completedCapture ? 'Capture Complete' : reviewPending ? 'Awaiting Review' : `Capture ${nextSideLabel}`}
           onPress={proceedToBackSide}
           size="large"
           style={styles.readyButton}
-          accessibilityHint="Proceed to capture the back side of the check"
+          accessibilityHint={
+            completedCapture
+              ? 'Use the operator controls to continue the deposit flow'
+              : reviewPending
+              ? 'Use the operator review controls before proceeding'
+              : `Proceed to capture the ${nextSideLabel} side of the check`
+          }
+          disabled={Boolean(reviewPending || completedCapture)}
         />
+        <View style={styles.micWrap}>
+          <VisualMic size="small" />
+        </View>
       </View>
     </SafeAreaView>
   );
@@ -212,6 +268,10 @@ const styles = StyleSheet.create({
     paddingBottom: 24,
     paddingTop: 16,
     gap: 12,
+  },
+  micWrap: {
+    alignItems: 'center',
+    paddingTop: 8,
   },
   readyButton: {
     width: '100%',

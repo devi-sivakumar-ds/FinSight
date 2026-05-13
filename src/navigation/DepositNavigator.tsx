@@ -10,7 +10,6 @@ import { COLORS } from '@utils/constants';
 import { DepositOverviewScreen } from '@screens/DepositOverviewScreen';
 import { DepositPrivacyScreen } from '@screens/DepositPrivacyScreen';
 import { AccountSelectScreen } from '@screens/AccountSelectScreen';
-import { AmountInputScreen } from '@screens/AmountInputScreen';
 import { CheckCaptureScreen } from '@screens/CheckCaptureScreen';
 import { CheckFlipScreen } from '@screens/CheckFlipScreen';
 import { OCRProcessingScreen } from '@screens/OCRProcessingScreen';
@@ -33,7 +32,6 @@ export const DepositNavigator: React.FC = () => {
       <Stack.Screen name="DepositOverview" component={DepositOverviewScreen} />
       <Stack.Screen name="DepositPrivacy" component={DepositPrivacyScreen} />
       <Stack.Screen name="AccountSelect" component={AccountSelectScreen} />
-      <Stack.Screen name="AmountInput" component={AmountInputScreen} />
       <Stack.Screen name="CheckCapture" component={CheckCaptureScreen} />
       <Stack.Screen name="CheckFlip" component={CheckFlipScreen} />
       <Stack.Screen name="OCRProcessing" component={OCRProcessingScreen} />

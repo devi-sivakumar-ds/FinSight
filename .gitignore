@@ -165,3 +165,7 @@ serviceAccountKey.json
 *.backup
 
 *.md
+
+/tmp_*
+
+wizard-dashboard/logs/
